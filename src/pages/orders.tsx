@@ -46,16 +46,16 @@ const Orders = () => {
 
   const fetchOrders = async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        router.push('/login');
-        return;
-      }
-
+      // SECURITY FIX: Don't check localStorage for token - it's in httpOnly cookie
+      // The API call will automatically send the cookie
       const response = await orderService.getMyOrders();
       setOrders(response.data.orders);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching orders:', error);
+      // If unauthorized (401), redirect to login
+      if (error.response?.status === 401) {
+        router.push('/login');
+      }
     } finally {
       setLoading(false);
     }

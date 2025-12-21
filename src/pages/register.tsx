@@ -147,9 +147,28 @@ export default function Register() {
     setLoading(true);
 
     try {
-      await register(formData);
-      alert('Registration successful! Please login.');
-      router.push('/login');
+      const response = await register(formData);
+
+      // SECURITY FIX: Don't store JWT token - it's in httpOnly cookie
+      // Only store non-sensitive user data for UI purposes
+      if (response.user) {
+        localStorage.setItem('user', JSON.stringify({
+          _id: response.user._id,
+          name: response.user.name,
+          email: response.user.email,
+          role: response.user.role
+        }));
+        localStorage.setItem('role', response.user.role);
+
+        // Redirect based on role (user is now logged in automatically)
+        if (response.user.role === 'admin') {
+          router.push('/admin/dashboard');
+        } else if (response.user.role === 'distributor') {
+          router.push('/distributor/dashboard');
+        } else {
+          router.push('/');
+        }
+      }
     } catch (err: any) {
       const errorMessage = err.response?.data?.message ||
                           err.response?.data?.error ||

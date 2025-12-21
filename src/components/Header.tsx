@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
+import authService from '../services/auth.service';
 
 export default function Header() {
   const router = useRouter();
@@ -48,11 +49,20 @@ export default function Header() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setUser(null);
-    router.push('/login');
+  const handleLogout = async () => {
+    try {
+      // Call backend to clear httpOnly cookie
+      await authService.logout();
+      setUser(null);
+      router.push('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Clear client-side data even if backend call fails
+      localStorage.removeItem('user');
+      localStorage.removeItem('role');
+      setUser(null);
+      router.push('/login');
+    }
   };
 
   return (

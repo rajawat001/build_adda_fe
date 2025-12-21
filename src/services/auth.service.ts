@@ -20,11 +20,25 @@ interface RegisterData {
   };
 }
 
-interface User {
+export interface User {
   _id: string;
-  name: string;
+  name?: string;
+  businessName?: string;
   email: string;
   role: string;
+  phone?: string;
+  addresses?: any[];
+  wishlist?: any[];
+  cart?: any[];
+  emailVerified?: boolean;
+  profileImage?: string;
+  createdAt?: string;
+  // Distributor-specific fields
+  pincode?: string;
+  address?: string;
+  location?: any;
+  isApproved?: boolean;
+  products?: any[];
 }
 
 interface AuthResponse {

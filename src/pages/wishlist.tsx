@@ -30,16 +30,16 @@ const Wishlist = () => {
 
   const fetchWishlist = async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        router.push('/login');
-        return;
-      }
-
+      // SECURITY FIX: Don't check localStorage for token - it's in httpOnly cookie
+      // The API call will automatically send the cookie
       const response = await productService.getWishlist();
       setWishlistItems(response.data.wishlist);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching wishlist:', error);
+      // If unauthorized (401), redirect to login
+      if (error.response?.status === 401) {
+        router.push('/login');
+      }
     } finally {
       setLoading(false);
     }

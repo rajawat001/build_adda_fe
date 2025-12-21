@@ -3,15 +3,7 @@ import { useRouter } from 'next/router';
 import SEO from '../components/SEO';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import authService from '../services/auth.service';
-
-interface UserProfile {
-  _id: string;
-  name: string;
-  email: string;
-  phone: string;
-  addresses: Address[];
-}
+import authService, { User } from '../services/auth.service';
 
 interface Address {
   _id?: string;
@@ -25,7 +17,7 @@ interface Address {
 }
 
 const Profile = () => {
-  const [user, setUser] = useState<UserProfile | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [showAddressForm, setShowAddressForm] = useState(false);
@@ -56,23 +48,23 @@ const Profile = () => {
 
   const fetchProfile = async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        router.push('/login');
-        return;
-      }
-
+      // SECURITY FIX: Don't check localStorage for token - it's in httpOnly cookie
+      // The API call will automatically send the cookie
       const response = await authService.getProfile();
-      setUser(response.data.user);
+      setUser(response.user);
       setFormData({
-        name: response.data.user.name,
-        phone: response.data.user.phone || '',
+        name: response.user.name || response.user.businessName || '',
+        phone: response.user.phone || '',
         currentPassword: '',
         newPassword: '',
         confirmPassword: ''
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching profile:', error);
+      // If unauthorized (401), redirect to login
+      if (error.response?.status === 401) {
+        router.push('/login');
+      }
     } finally {
       setLoading(false);
     }
@@ -177,8 +169,8 @@ const Profile = () => {
             <li className="active">Profile Information</li>
             <li onClick={() => router.push('/orders')}>My Orders</li>
             <li onClick={() => router.push('/wishlist')}>My Wishlist</li>
-            <li onClick={() => {
-              localStorage.removeItem('token');
+            <li onClick={async () => {
+              await authService.logout();
               router.push('/login');
             }}>Logout</li>
           </ul>
@@ -256,7 +248,7 @@ const Profile = () => {
               <div className="profile-info">
                 <div className="info-row">
                   <span className="label">Name:</span>
-                  <span className="value">{user?.name}</span>
+                  <span className="value">{user?.name || user?.businessName}</span>
                 </div>
                 <div className="info-row">
                   <span className="label">Email:</span>
