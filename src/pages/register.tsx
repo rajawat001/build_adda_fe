@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import SEO from '../components/SEO';
 import { register } from '../services/auth.service';
-import { getCurrentLocation } from '../utils/location';
+import { getLocationDetails } from '../utils/location';
 
 interface ValidationErrors {
   name?: string;
@@ -121,17 +121,25 @@ export default function Register() {
 
   const handleGetLocation = async () => {
     try {
-      const coords = await getCurrentLocation();
+      setLoading(true);
+      const locationDetails = await getLocationDetails();
+
       setFormData({
         ...formData,
         location: {
           type: 'Point',
-          coordinates: [coords.longitude, coords.latitude]
-        }
+          coordinates: [locationDetails.coordinates.longitude, locationDetails.coordinates.latitude]
+        },
+        pincode: locationDetails.pincode,
+        address: locationDetails.address
       });
-      alert('Location captured successfully!');
-    } catch (error) {
-      alert('Unable to get location. Please enable location services.');
+
+      alert(`Location captured successfully!\nPincode: ${locationDetails.pincode}\nCity: ${locationDetails.city}, ${locationDetails.state}`);
+    } catch (error: any) {
+      console.error('Location error:', error);
+      alert('Unable to get location. Please enable location services and try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
