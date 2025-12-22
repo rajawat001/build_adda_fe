@@ -58,7 +58,6 @@ const Products = () => {
   const fetchProducts = async () => {
     try {
       const response = await productService.getAllProducts();
-      console.log('Products response:', response);
       
       // Handle different response structures
       let productsList: Product[] = [];
@@ -84,7 +83,6 @@ const Products = () => {
   const fetchCategories = async () => {
     try {
       const response = await productService.getCategories();
-      console.log('Categories response:', response);
       
       // Handle different response structures
       let categoriesList: Category[] = [];

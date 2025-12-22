@@ -6,21 +6,43 @@ import authService from '../services/auth.service';
 export default function Header() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
+  const [role, setRole] = useState<string | null>(null);
   const [cartCount, setCartCount] = useState(0);
   const [wishlistCount, setWishlistCount] = useState(0);
 
   useEffect(() => {
     loadUserData();
-  }, []);
+
+    // Listen for storage changes (when user logs in/out)
+    const handleStorageChange = () => {
+      loadUserData();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    // Also listen for custom event we'll trigger on login
+    window.addEventListener('userLogin', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('userLogin', handleStorageChange);
+    };
+  }, [router.pathname]); // Reload when route changes
 
   const loadUserData = () => {
     try {
       const userData = localStorage.getItem('user');
-      
+      const userRole = localStorage.getItem('role');
+
       // Check if userData exists and is valid JSON
       if (userData && userData !== 'undefined' && userData !== 'null') {
         const parsedUser = JSON.parse(userData);
         setUser(parsedUser);
+      }
+
+      // Set user role
+      if (userRole && userRole !== 'undefined' && userRole !== 'null') {
+        setRole(userRole);
       }
       
       // Load cart
@@ -54,6 +76,7 @@ export default function Header() {
       // Call backend to clear httpOnly cookie
       await authService.logout();
       setUser(null);
+      setRole(null);
       router.push('/login');
     } catch (error) {
       console.error('Logout error:', error);
@@ -61,6 +84,7 @@ export default function Header() {
       localStorage.removeItem('user');
       localStorage.removeItem('role');
       setUser(null);
+      setRole(null);
       router.push('/login');
     }
   };
@@ -77,20 +101,45 @@ export default function Header() {
             <Link href="/">Home</Link>
             <Link href="/products">Products</Link>
             <Link href="/distributors">Distributors</Link>
-            
+
             {user ? (
               <>
-                <Link href="/wishlist">
-                  Wishlist ({wishlistCount})
-                </Link>
-                <Link href="/cart">
-                  Cart ({cartCount})
-                </Link>
-                <Link href="/orders">Orders</Link>
-                <Link href="/profile">Profile</Link>
-                <button onClick={handleLogout} className="btn-logout">
-                  Logout
-                </button>
+                {role === 'admin' ? (
+                  // Admin Navigation
+                  <>
+                    <Link href="/admin/dashboard" className="dashboard-link">
+                      Admin Dashboard
+                    </Link>
+                    <button onClick={handleLogout} className="btn-logout">
+                      Logout
+                    </button>
+                  </>
+                ) : role === 'distributor' ? (
+                  // Distributor Navigation
+                  <>
+                    <Link href="/distributor/dashboard" className="dashboard-link">
+                      Distributor Dashboard
+                    </Link>
+                    <button onClick={handleLogout} className="btn-logout">
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  // Regular User Navigation
+                  <>
+                    <Link href="/wishlist">
+                      Wishlist ({wishlistCount})
+                    </Link>
+                    <Link href="/cart">
+                      Cart ({cartCount})
+                    </Link>
+                    <Link href="/orders">Orders</Link>
+                    <Link href="/profile">Profile</Link>
+                    <button onClick={handleLogout} className="btn-logout">
+                      Logout
+                    </button>
+                  </>
+                )}
               </>
             ) : (
               <>

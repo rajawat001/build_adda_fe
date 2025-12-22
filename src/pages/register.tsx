@@ -160,6 +160,9 @@ export default function Register() {
         }));
         localStorage.setItem('role', response.user.role);
 
+        // Trigger custom event to update header
+        window.dispatchEvent(new Event('userLogin'));
+
         // Redirect based on role (user is now logged in automatically)
         if (response.user.role === 'admin') {
           router.push('/admin/dashboard');

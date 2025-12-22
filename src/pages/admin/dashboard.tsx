@@ -65,34 +65,39 @@ const AdminDashboard = () => {
   }, [activeTab]);
 
   const checkAuth = () => {
-    const token = localStorage.getItem('token');
+    // SECURITY FIX: Don't check localStorage for token - it's in httpOnly cookie
+    // Just check if user role is stored for UI purposes
     const role = localStorage.getItem('role');
-    
-    if (!token || role !== 'admin') {
+
+    if (role !== 'admin') {
       router.push('/login');
     }
   };
 
   const fetchData = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const headers = { Authorization: `Bearer ${token}` };
+      // SECURITY FIX: Don't manually add Authorization header
+      // Browser automatically sends httpOnly cookie
 
       if (activeTab === 'dashboard') {
-        const response = await api.get('/admin/stats', { headers });
+        const response = await api.get('/admin/stats');
         setStats(response.data);
       } else if (activeTab === 'users') {
-        const response = await api.get('/admin/users', { headers });
+        const response = await api.get('/admin/users');
         setUsers(response.data.users);
       } else if (activeTab === 'distributors') {
-        const response = await api.get('/admin/distributors', { headers });
+        const response = await api.get('/admin/distributors');
         setDistributors(response.data.distributors);
       } else if (activeTab === 'coupons') {
-        const response = await api.get('/admin/coupons', { headers });
+        const response = await api.get('/admin/coupons');
         setCoupons(response.data.coupons);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching data:', error);
+      // If unauthorized, redirect to login
+      if (error.response?.status === 401) {
+        router.push('/login');
+      }
     } finally {
       setLoading(false);
     }
@@ -271,39 +276,39 @@ const AdminDashboard = () => {
                   <div className="stat-icon revenue">💰</div>
                   <div className="stat-details">
                     <p className="stat-label">Total Revenue</p>
-                    <p className="stat-value">₹{stats.totalRevenue.toLocaleString()}</p>
+                    <p className="stat-value">₹{(stats.totalRevenue || 0).toLocaleString()}</p>
                   </div>
                 </div>
-                
+
                 <div className="stat-card">
                   <div className="stat-icon orders">📦</div>
                   <div className="stat-details">
                     <p className="stat-label">Total Orders</p>
-                    <p className="stat-value">{stats.totalOrders}</p>
+                    <p className="stat-value">{stats.totalOrders || 0}</p>
                   </div>
                 </div>
-                
+
                 <div className="stat-card">
                   <div className="stat-icon users">👥</div>
                   <div className="stat-details">
                     <p className="stat-label">Total Users</p>
-                    <p className="stat-value">{stats.totalUsers}</p>
+                    <p className="stat-value">{stats.totalUsers || 0}</p>
                   </div>
                 </div>
-                
+
                 <div className="stat-card">
                   <div className="stat-icon distributors">🏢</div>
                   <div className="stat-details">
                     <p className="stat-label">Total Distributors</p>
-                    <p className="stat-value">{stats.totalDistributors}</p>
+                    <p className="stat-value">{stats.totalDistributors || 0}</p>
                   </div>
                 </div>
-                
+
                 <div className="stat-card">
                   <div className="stat-icon products">🏷️</div>
                   <div className="stat-details">
                     <p className="stat-label">Total Products</p>
-                    <p className="stat-value">{stats.totalProducts}</p>
+                    <p className="stat-value">{stats.totalProducts || 0}</p>
                   </div>
                 </div>
               </div>
