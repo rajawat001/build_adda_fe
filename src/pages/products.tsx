@@ -92,9 +92,12 @@ const Products = () => {
 
     // Category filter
     if (filters.category) {
-      filtered = filtered.filter(product => 
-        product.category._id === filters.category
-      );
+      filtered = filtered.filter(product => {
+        const categoryId = typeof product.category === 'string' 
+          ? product.category 
+          : product.category._id;
+        return categoryId === filters.category;
+      });
     }
 
     // Price filter
