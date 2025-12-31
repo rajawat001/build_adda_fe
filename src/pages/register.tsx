@@ -181,11 +181,24 @@ export default function Register() {
         }
       }
     } catch (err: any) {
-      const errorMessage = err.response?.data?.message ||
-                          err.response?.data?.error ||
-                          err.message ||
-                          'Registration failed. Please try again.';
-      setError(errorMessage);
+      console.error('Registration error:', err.response?.data);
+
+      // Handle validation errors from backend
+      if (err.response?.data?.validationErrors) {
+        const backendErrors: ValidationErrors = {};
+        err.response.data.validationErrors.forEach((error: any) => {
+          backendErrors[error.field as keyof ValidationErrors] = error.message;
+        });
+        setValidationErrors(backendErrors);
+        setError('Please fix the validation errors below');
+      } else {
+        // Handle general errors
+        const errorMessage = err.response?.data?.message ||
+                            err.response?.data?.error ||
+                            err.message ||
+                            'Registration failed. Please try again.';
+        setError(errorMessage);
+      }
     } finally {
       setLoading(false);
     }
