@@ -6,29 +6,7 @@ import Footer from '../components/Footer';
 import ProductCard from '../components/ProductCard';
 import Filter from '../components/Filter';
 import productService from '../services/product.service';
-
-interface Product {
-  _id: string;
-  name: string;
-  description: string;
-  price: number;
-  image: string;
-  images: string[];
-  category: {
-    _id: string;
-    name: string;
-  };
-  distributor: {
-    _id: string;
-    businessName: string;
-  };
-  stock: number;
-}
-
-interface Category {
-  _id: string;
-  name: string;
-}
+import { Product, Category } from '../types';
 
 const Products = () => {
   const [products, setProducts] = useState<Product[]>([]);

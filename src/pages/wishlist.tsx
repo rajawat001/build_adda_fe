@@ -5,19 +5,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import ProductCard from '../components/ProductCard';
 import productService from '../services/product.service';
-
-interface Product {
-  _id: string;
-  name: string;
-  price: number;
-  image: string;
-  category: string;
-  distributor: {
-    _id: string;
-    businessName: string;
-  };
-  stock: number;
-}
+import { Product } from '../types';
 
 const Wishlist = () => {
   const [wishlistItems, setWishlistItems] = useState<Product[]>([]);

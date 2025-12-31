@@ -5,6 +5,7 @@ import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import ProductCard from '../../components/ProductCard';
 import api from '../../services/api';
+import { Product } from '../../types';
 
 interface Distributor {
   _id: string;
@@ -21,20 +22,6 @@ interface Distributor {
     coordinates: number[];
   };
   isVerified: boolean;
-}
-
-interface Product {
-  _id: string;
-  name: string;
-  description: string;
-  price: number;
-  image: string;
-  category: string;
-  stock: number;
-  distributor: {
-    _id: string;
-    businessName: string;
-  };
 }
 
 export default function DistributorProfile() {
