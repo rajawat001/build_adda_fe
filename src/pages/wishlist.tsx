@@ -4,7 +4,7 @@ import SEO from '../components/SEO';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import ProductCard from '../components/ProductCard';
-import { productService } from '../services/product.service';
+import productService from '../services/product.service';
 
 interface Product {
   _id: string;
