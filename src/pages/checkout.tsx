@@ -4,6 +4,7 @@ import SEO from '../components/SEO';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { createOrder, verifyPayment } from '../services/order.service';
+import authService from '../services/auth.service';
 
 declare global {
   interface Window {
@@ -11,9 +12,23 @@ declare global {
   }
 }
 
+interface Address {
+  _id?: string;
+  fullName: string;
+  phone: string;
+  address: string;
+  city: string;
+  state: string;
+  pincode: string;
+  isDefault: boolean;
+}
+
 export default function Checkout() {
   const router = useRouter();
   const [cartItems, setCartItems] = useState<any[]>([]);
+  const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<string>('');
+  const [showAddressForm, setShowAddressForm] = useState(false);
   const [formData, setFormData] = useState({
     shippingAddress: '',
     phone: '',
@@ -21,8 +36,27 @@ export default function Checkout() {
     couponCode: '',
     paymentMethod: 'razorpay'
   });
+  const [newAddress, setNewAddress] = useState<Address>({
+    fullName: '',
+    phone: '',
+    address: '',
+    city: '',
+    state: '',
+    pincode: '',
+    isDefault: false
+  });
   const [discount, setDiscount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [addressError, setAddressError] = useState<string>('');
+  const [addressFieldErrors, setAddressFieldErrors] = useState({
+    fullName: '',
+    phone: '',
+    address: '',
+    city: '',
+    state: '',
+    pincode: ''
+  });
 
   useEffect(() => {
     const cart = JSON.parse(localStorage.getItem('cart') || '[]');
@@ -32,11 +66,211 @@ export default function Checkout() {
     }
     setCartItems(cart);
 
+    // Fetch user profile to get saved addresses
+    fetchUserProfile();
+
     const script = document.createElement('script');
     script.src = 'https://checkout.razorpay.com/v1/checkout.js';
     script.async = true;
     document.body.appendChild(script);
   }, []);
+
+  const fetchUserProfile = async () => {
+    try {
+      const response = await authService.getProfile();
+      if (response.user && response.user.addresses) {
+        setSavedAddresses(response.user.addresses);
+        setIsAuthenticated(true);
+
+        // Auto-select default address
+        const defaultAddress = response.user.addresses.find((addr: Address) => addr.isDefault);
+        if (defaultAddress && defaultAddress._id) {
+          setSelectedAddressId(defaultAddress._id);
+          updateFormDataFromAddress(defaultAddress);
+        }
+      }
+    } catch (error: any) {
+      // User not authenticated, they can still checkout with manual address entry
+      setIsAuthenticated(false);
+      console.log('User not authenticated, proceeding with manual address entry');
+    }
+  };
+
+  const updateFormDataFromAddress = (address: Address) => {
+    setFormData(prev => ({
+      ...prev,
+      shippingAddress: `${address.address}, ${address.city}, ${address.state}`,
+      phone: address.phone,
+      pincode: address.pincode
+    }));
+  };
+
+  const handleAddressSelect = (addressId: string) => {
+    setSelectedAddressId(addressId);
+    const selected = savedAddresses.find(addr => addr._id === addressId);
+    if (selected) {
+      updateFormDataFromAddress(selected);
+    }
+  };
+
+  const validateNewAddress = () => {
+    const errors = {
+      fullName: '',
+      phone: '',
+      address: '',
+      city: '',
+      state: '',
+      pincode: ''
+    };
+
+    let isValid = true;
+
+    if (!newAddress.fullName || newAddress.fullName.trim().length < 2) {
+      errors.fullName = 'Full name must be at least 2 characters';
+      isValid = false;
+    }
+
+    if (!newAddress.phone || !/^[6-9]\d{9}$/.test(newAddress.phone)) {
+      errors.phone = 'Please enter a valid 10-digit Indian phone number';
+      isValid = false;
+    }
+
+    if (!newAddress.address || newAddress.address.trim().length < 10) {
+      errors.address = 'Address must be at least 10 characters';
+      isValid = false;
+    }
+
+    if (!newAddress.city || newAddress.city.trim().length < 2) {
+      errors.city = 'City is required';
+      isValid = false;
+    }
+
+    if (!newAddress.state || newAddress.state.trim().length < 2) {
+      errors.state = 'State is required';
+      isValid = false;
+    }
+
+    if (!newAddress.pincode || !/^\d{6}$/.test(newAddress.pincode)) {
+      errors.pincode = 'Please enter a valid 6-digit pincode';
+      isValid = false;
+    }
+
+    setAddressFieldErrors(errors);
+    return isValid;
+  };
+
+  const handleAddNewAddress = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAddressError('');
+
+    if (!validateNewAddress()) {
+      setAddressError('Please fix the errors below');
+      return;
+    }
+
+    try {
+      await authService.addAddress(newAddress);
+      setAddressError('');
+      await fetchUserProfile();
+      setShowAddressForm(false);
+      setNewAddress({
+        fullName: '',
+        phone: '',
+        address: '',
+        city: '',
+        state: '',
+        pincode: '',
+        isDefault: false
+      });
+      setAddressFieldErrors({
+        fullName: '',
+        phone: '',
+        address: '',
+        city: '',
+        state: '',
+        pincode: ''
+      });
+    } catch (error: any) {
+      setAddressError(error.response?.data?.error || error.response?.data?.message || 'Error adding address');
+    }
+  };
+
+  const handleEditAddress = async (addressId: string) => {
+    const address = savedAddresses.find(addr => addr._id === addressId);
+    if (address) {
+      setNewAddress(address);
+      setShowAddressForm(true);
+    }
+  };
+
+  const handleUpdateAddress = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newAddress._id) return;
+
+    setAddressError('');
+
+    if (!validateNewAddress()) {
+      setAddressError('Please fix the errors below');
+      return;
+    }
+
+    try {
+      await authService.updateAddress(newAddress._id, newAddress);
+      setAddressError('');
+      await fetchUserProfile();
+      setShowAddressForm(false);
+      setNewAddress({
+        fullName: '',
+        phone: '',
+        address: '',
+        city: '',
+        state: '',
+        pincode: '',
+        isDefault: false
+      });
+      setAddressFieldErrors({
+        fullName: '',
+        phone: '',
+        address: '',
+        city: '',
+        state: '',
+        pincode: ''
+      });
+    } catch (error: any) {
+      setAddressError(error.response?.data?.error || error.response?.data?.message || 'Error updating address');
+    }
+  };
+
+  const handleDeleteAddress = async (addressId: string) => {
+    if (!confirm('Are you sure you want to delete this address?')) return;
+
+    try {
+      await authService.deleteAddress(addressId);
+      alert('Address deleted successfully');
+      await fetchUserProfile();
+      if (selectedAddressId === addressId) {
+        setSelectedAddressId('');
+        setFormData(prev => ({
+          ...prev,
+          shippingAddress: '',
+          phone: '',
+          pincode: ''
+        }));
+      }
+    } catch (error: any) {
+      alert(error.response?.data?.message || 'Error deleting address');
+    }
+  };
+
+  const handleSetDefaultAddress = async (addressId: string) => {
+    try {
+      await authService.updateAddress(addressId, { isDefault: true });
+      alert('Default address updated');
+      await fetchUserProfile();
+    } catch (error: any) {
+      alert(error.response?.data?.message || 'Error setting default address');
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setFormData({
@@ -143,38 +377,229 @@ export default function Checkout() {
           <div className="checkout-content">
             <form className="checkout-form" onSubmit={handleSubmit}>
               <h2>Shipping Details</h2>
-              
-              <div className="form-group">
-                <label>Shipping Address</label>
-                <textarea
-                  name="shippingAddress"
-                  value={formData.shippingAddress}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
 
-              <div className="form-group">
-                <label>Phone Number</label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
+              {isAuthenticated && savedAddresses.length > 0 && (
+                <div className="saved-addresses-section">
+                  <h3>Select Delivery Address</h3>
+                  <div className="addresses-grid">
+                    {savedAddresses.map((address) => (
+                      <div
+                        key={address._id}
+                        className={`address-card-checkout ${selectedAddressId === address._id ? 'selected' : ''}`}
+                        onClick={() => handleAddressSelect(address._id!)}
+                      >
+                        {address.isDefault && <span className="default-badge">Default</span>}
+                        <div className="address-content">
+                          <p className="address-name">{address.fullName}</p>
+                          <p>{address.phone}</p>
+                          <p>{address.address}</p>
+                          <p>{address.city}, {address.state} - {address.pincode}</p>
+                        </div>
+                        <div className="address-actions-checkout">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditAddress(address._id!);
+                            }}
+                            className="btn-edit"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteAddress(address._id!);
+                            }}
+                            className="btn-delete"
+                          >
+                            Delete
+                          </button>
+                          {!address.isDefault && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleSetDefaultAddress(address._id!);
+                              }}
+                              className="btn-set-default"
+                            >
+                              Set Default
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAddressForm(!showAddressForm);
+                      setNewAddress({
+                        fullName: '',
+                        phone: '',
+                        address: '',
+                        city: '',
+                        state: '',
+                        pincode: '',
+                        isDefault: false
+                      });
+                    }}
+                    className="btn-add-address"
+                  >
+                    {showAddressForm ? 'Cancel' : '+ Add New Address'}
+                  </button>
+                </div>
+              )}
 
-              <div className="form-group">
-                <label>Pincode</label>
-                <input
-                  type="text"
-                  name="pincode"
-                  value={formData.pincode}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
+              {showAddressForm && isAuthenticated && (
+                <form className="new-address-form" onSubmit={newAddress._id ? handleUpdateAddress : handleAddNewAddress}>
+                  <h3>{newAddress._id ? 'Edit Address' : 'Add New Address'}</h3>
+
+                  {addressError && <div className="error-message" style={{marginBottom: '1rem'}}>{addressError}</div>}
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Full Name *</label>
+                      <input
+                        type="text"
+                        value={newAddress.fullName}
+                        onChange={(e) => {
+                          setNewAddress({ ...newAddress, fullName: e.target.value });
+                          setAddressFieldErrors({...addressFieldErrors, fullName: ''});
+                        }}
+                        className={addressFieldErrors.fullName ? 'input-error' : ''}
+                      />
+                      {addressFieldErrors.fullName && <span className="validation-error">{addressFieldErrors.fullName}</span>}
+                    </div>
+                    <div className="form-group">
+                      <label>Phone *</label>
+                      <input
+                        type="tel"
+                        value={newAddress.phone}
+                        onChange={(e) => {
+                          setNewAddress({ ...newAddress, phone: e.target.value });
+                          setAddressFieldErrors({...addressFieldErrors, phone: ''});
+                        }}
+                        placeholder="10-digit number"
+                        className={addressFieldErrors.phone ? 'input-error' : ''}
+                      />
+                      {addressFieldErrors.phone && <span className="validation-error">{addressFieldErrors.phone}</span>}
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label>Address * (minimum 10 characters)</label>
+                    <textarea
+                      value={newAddress.address}
+                      onChange={(e) => {
+                        setNewAddress({ ...newAddress, address: e.target.value });
+                        setAddressFieldErrors({...addressFieldErrors, address: ''});
+                      }}
+                      placeholder="House/Flat no, Building, Street, Landmark"
+                      className={addressFieldErrors.address ? 'input-error' : ''}
+                    />
+                    {addressFieldErrors.address && <span className="validation-error">{addressFieldErrors.address}</span>}
+                  </div>
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>City *</label>
+                      <input
+                        type="text"
+                        value={newAddress.city}
+                        onChange={(e) => {
+                          setNewAddress({ ...newAddress, city: e.target.value });
+                          setAddressFieldErrors({...addressFieldErrors, city: ''});
+                        }}
+                        className={addressFieldErrors.city ? 'input-error' : ''}
+                      />
+                      {addressFieldErrors.city && <span className="validation-error">{addressFieldErrors.city}</span>}
+                    </div>
+                    <div className="form-group">
+                      <label>State *</label>
+                      <input
+                        type="text"
+                        value={newAddress.state}
+                        onChange={(e) => {
+                          setNewAddress({ ...newAddress, state: e.target.value });
+                          setAddressFieldErrors({...addressFieldErrors, state: ''});
+                        }}
+                        className={addressFieldErrors.state ? 'input-error' : ''}
+                      />
+                      {addressFieldErrors.state && <span className="validation-error">{addressFieldErrors.state}</span>}
+                    </div>
+                    <div className="form-group">
+                      <label>Pincode *</label>
+                      <input
+                        type="text"
+                        value={newAddress.pincode}
+                        onChange={(e) => {
+                          setNewAddress({ ...newAddress, pincode: e.target.value });
+                          setAddressFieldErrors({...addressFieldErrors, pincode: ''});
+                        }}
+                        placeholder="6 digits"
+                        className={addressFieldErrors.pincode ? 'input-error' : ''}
+                      />
+                      {addressFieldErrors.pincode && <span className="validation-error">{addressFieldErrors.pincode}</span>}
+                    </div>
+                  </div>
+                  <div className="form-group checkbox-group">
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={newAddress.isDefault}
+                        onChange={(e) => setNewAddress({ ...newAddress, isDefault: e.target.checked })}
+                      />
+                      Set as default address
+                    </label>
+                  </div>
+                  <button
+                    type="submit"
+                    className="btn-save-address"
+                  >
+                    {newAddress._id ? 'Update Address' : 'Save Address'}
+                  </button>
+                </form>
+              )}
+
+              {(!isAuthenticated || savedAddresses.length === 0 || !selectedAddressId) && !showAddressForm && (
+                <>
+                  <div className="form-group">
+                    <label>Shipping Address *</label>
+                    <textarea
+                      name="shippingAddress"
+                      value={formData.shippingAddress}
+                      onChange={handleChange}
+                      required
+                      placeholder="Enter your complete address"
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Phone Number *</label>
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      required
+                      placeholder="10-digit phone number"
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Pincode *</label>
+                    <input
+                      type="text"
+                      name="pincode"
+                      value={formData.pincode}
+                      onChange={handleChange}
+                      required
+                      placeholder="6-digit pincode"
+                    />
+                  </div>
+                </>
+              )}
 
               <h2>Payment Method</h2>
               

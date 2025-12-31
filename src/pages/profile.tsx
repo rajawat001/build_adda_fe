@@ -22,6 +22,8 @@ const Profile = () => {
   const [editing, setEditing] = useState(false);
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [editingAddress, setEditingAddress] = useState<Address | null>(null);
+  const [error, setError] = useState<string>('');
+  const [success, setSuccess] = useState<string>('');
   const router = useRouter();
 
   const [formData, setFormData] = useState({
@@ -40,6 +42,15 @@ const Profile = () => {
     state: '',
     pincode: '',
     isDefault: false
+  });
+
+  const [addressErrors, setAddressErrors] = useState({
+    fullName: '',
+    phone: '',
+    address: '',
+    city: '',
+    state: '',
+    pincode: ''
   });
 
   useEffect(() => {
@@ -97,18 +108,77 @@ const Profile = () => {
     }
   };
 
+  const validateAddress = () => {
+    const errors = {
+      fullName: '',
+      phone: '',
+      address: '',
+      city: '',
+      state: '',
+      pincode: ''
+    };
+
+    let isValid = true;
+
+    // Full Name validation
+    if (!addressData.fullName || addressData.fullName.trim().length < 2) {
+      errors.fullName = 'Full name must be at least 2 characters';
+      isValid = false;
+    }
+
+    // Phone validation
+    if (!addressData.phone || !/^[6-9]\d{9}$/.test(addressData.phone)) {
+      errors.phone = 'Please enter a valid 10-digit Indian phone number';
+      isValid = false;
+    }
+
+    // Address validation
+    if (!addressData.address || addressData.address.trim().length < 10) {
+      errors.address = 'Address must be at least 10 characters';
+      isValid = false;
+    }
+
+    // City validation
+    if (!addressData.city || addressData.city.trim().length < 2) {
+      errors.city = 'City is required';
+      isValid = false;
+    }
+
+    // State validation
+    if (!addressData.state || addressData.state.trim().length < 2) {
+      errors.state = 'State is required';
+      isValid = false;
+    }
+
+    // Pincode validation
+    if (!addressData.pincode || !/^\d{6}$/.test(addressData.pincode)) {
+      errors.pincode = 'Please enter a valid 6-digit pincode';
+      isValid = false;
+    }
+
+    setAddressErrors(errors);
+    return isValid;
+  };
+
   const handleAddAddress = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+    setError('');
+    setSuccess('');
+
+    if (!validateAddress()) {
+      setError('Please fix the errors below');
+      return;
+    }
+
     try {
       if (editingAddress?._id) {
         await authService.updateAddress(editingAddress._id, addressData);
-        alert('Address updated successfully');
+        setSuccess('Address updated successfully');
       } else {
         await authService.addAddress(addressData);
-        alert('Address added successfully');
+        setSuccess('Address added successfully');
       }
-      
+
       setShowAddressForm(false);
       setEditingAddress(null);
       setAddressData({
@@ -120,9 +190,20 @@ const Profile = () => {
         pincode: '',
         isDefault: false
       });
+      setAddressErrors({
+        fullName: '',
+        phone: '',
+        address: '',
+        city: '',
+        state: '',
+        pincode: ''
+      });
       fetchProfile();
+
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccess(''), 3000);
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Error saving address');
+      setError(error.response?.data?.error || error.response?.data?.message || 'Error saving address');
     }
   };
 
@@ -268,6 +349,8 @@ const Profile = () => {
               <button onClick={() => {
                 setShowAddressForm(true);
                 setEditingAddress(null);
+                setError('');
+                setSuccess('');
                 setAddressData({
                   fullName: '',
                   phone: '',
@@ -277,76 +360,114 @@ const Profile = () => {
                   pincode: '',
                   isDefault: false
                 });
+                setAddressErrors({
+                  fullName: '',
+                  phone: '',
+                  address: '',
+                  city: '',
+                  state: '',
+                  pincode: ''
+                });
               }}>
                 Add New Address
               </button>
             </div>
-            
+
+            {error && <div className="error-message">{error}</div>}
+            {success && <div className="success-message">{success}</div>}
+
             {showAddressForm && (
               <form onSubmit={handleAddAddress} className="address-form">
                 <div className="form-row">
                   <div className="form-group">
-                    <label>Full Name</label>
+                    <label>Full Name *</label>
                     <input
                       type="text"
                       value={addressData.fullName}
-                      onChange={(e) => setAddressData({...addressData, fullName: e.target.value})}
-                      required
+                      onChange={(e) => {
+                        setAddressData({...addressData, fullName: e.target.value});
+                        setAddressErrors({...addressErrors, fullName: ''});
+                      }}
+                      className={addressErrors.fullName ? 'input-error' : ''}
                     />
+                    {addressErrors.fullName && <span className="validation-error">{addressErrors.fullName}</span>}
                   </div>
-                  
+
                   <div className="form-group">
-                    <label>Phone</label>
+                    <label>Phone *</label>
                     <input
                       type="tel"
                       value={addressData.phone}
-                      onChange={(e) => setAddressData({...addressData, phone: e.target.value})}
-                      required
+                      onChange={(e) => {
+                        setAddressData({...addressData, phone: e.target.value});
+                        setAddressErrors({...addressErrors, phone: ''});
+                      }}
+                      placeholder="10-digit number"
+                      className={addressErrors.phone ? 'input-error' : ''}
                     />
+                    {addressErrors.phone && <span className="validation-error">{addressErrors.phone}</span>}
                   </div>
                 </div>
-                
+
                 <div className="form-group">
-                  <label>Address</label>
+                  <label>Address * (minimum 10 characters)</label>
                   <textarea
                     value={addressData.address}
-                    onChange={(e) => setAddressData({...addressData, address: e.target.value})}
-                    required
+                    onChange={(e) => {
+                      setAddressData({...addressData, address: e.target.value});
+                      setAddressErrors({...addressErrors, address: ''});
+                    }}
+                    placeholder="House/Flat no, Building, Street, Landmark"
+                    className={addressErrors.address ? 'input-error' : ''}
                   />
+                  {addressErrors.address && <span className="validation-error">{addressErrors.address}</span>}
                 </div>
-                
+
                 <div className="form-row">
                   <div className="form-group">
-                    <label>City</label>
+                    <label>City *</label>
                     <input
                       type="text"
                       value={addressData.city}
-                      onChange={(e) => setAddressData({...addressData, city: e.target.value})}
-                      required
+                      onChange={(e) => {
+                        setAddressData({...addressData, city: e.target.value});
+                        setAddressErrors({...addressErrors, city: ''});
+                      }}
+                      className={addressErrors.city ? 'input-error' : ''}
                     />
+                    {addressErrors.city && <span className="validation-error">{addressErrors.city}</span>}
                   </div>
-                  
+
                   <div className="form-group">
-                    <label>State</label>
+                    <label>State *</label>
                     <input
                       type="text"
                       value={addressData.state}
-                      onChange={(e) => setAddressData({...addressData, state: e.target.value})}
-                      required
+                      onChange={(e) => {
+                        setAddressData({...addressData, state: e.target.value});
+                        setAddressErrors({...addressErrors, state: ''});
+                      }}
+                      className={addressErrors.state ? 'input-error' : ''}
                     />
+                    {addressErrors.state && <span className="validation-error">{addressErrors.state}</span>}
                   </div>
-                  
+
                   <div className="form-group">
-                    <label>Pincode</label>
+                    <label>Pincode *</label>
                     <input
                       type="text"
                       value={addressData.pincode}
-                      onChange={(e) => setAddressData({...addressData, pincode: e.target.value})}
-                      required
+                      onChange={(e) => {
+                        setAddressData({...addressData, pincode: e.target.value});
+                        setAddressErrors({...addressErrors, pincode: ''});
+                      }}
+                      placeholder="6 digits"
+                      className={addressErrors.pincode ? 'input-error' : ''}
                     />
+                    {addressErrors.pincode && <span className="validation-error">{addressErrors.pincode}</span>}
                   </div>
                 </div>
-                
+
                 <div className="form-group checkbox-group">
                   <label>
                     <input
@@ -357,17 +478,18 @@ const Profile = () => {
                     Set as default address
                   </label>
                 </div>
-                
+
                 <div className="form-actions">
                   <button type="submit" className="btn-primary">
                     {editingAddress ? 'Update' : 'Add'} Address
                   </button>
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     className="btn-secondary"
                     onClick={() => {
                       setShowAddressForm(false);
                       setEditingAddress(null);
+                      setError('');
                     }}
                   >
                     Cancel
@@ -381,14 +503,33 @@ const Profile = () => {
                 user.addresses.map((address) => (
                   <div key={address._id} className="address-card">
                     {address.isDefault && <span className="default-badge">Default</span>}
-                    <p className="address-name">{address.fullName}</p>
-                    <p>{address.phone}</p>
-                    <p>{address.address}</p>
-                    <p>{address.city}, {address.state} - {address.pincode}</p>
-                    
+                    <div className="address-content">
+                      <p className="address-name">{address.fullName}</p>
+                      <p>{address.phone}</p>
+                      <p>{address.address}</p>
+                      <p>{address.city}, {address.state} - {address.pincode}</p>
+                    </div>
+
                     <div className="address-actions">
-                      <button onClick={() => handleEditAddress(address)}>Edit</button>
-                      <button onClick={() => handleDeleteAddress(address._id!)}>Delete</button>
+                      <button onClick={() => handleEditAddress(address)} className="btn-edit">Edit</button>
+                      <button onClick={() => handleDeleteAddress(address._id!)} className="btn-delete">Delete</button>
+                      {!address.isDefault && (
+                        <button
+                          onClick={async () => {
+                            try {
+                              await authService.updateAddress(address._id!, { isDefault: true });
+                              setSuccess('Default address updated successfully');
+                              fetchProfile();
+                              setTimeout(() => setSuccess(''), 3000);
+                            } catch (error: any) {
+                              setError(error.response?.data?.message || 'Error setting default address');
+                            }
+                          }}
+                          className="btn-set-default"
+                        >
+                          Set Default
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))
