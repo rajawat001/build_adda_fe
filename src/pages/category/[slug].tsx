@@ -1,0 +1,278 @@
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
+import Head from 'next/head';
+import Header from '../../components/Header';
+import Footer from '../../components/Footer';
+import ProductCard from '../../components/ProductCard';
+import productService from '../../services/product.service';
+import { Product, Category } from '../../types';
+
+const CategoryPage: React.FC = () => {
+  const router = useRouter();
+  const { slug } = router.query;
+
+  const [products, setProducts] = useState<Product[]>([]);
+  const [category, setCategory] = useState<Category | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [sortBy, setSortBy] = useState('newest');
+
+  useEffect(() => {
+    if (slug) {
+      fetchCategoryAndProducts();
+    }
+  }, [slug]);
+
+  useEffect(() => {
+    if (products.length > 0) {
+      applySorting();
+    }
+  }, [sortBy]);
+
+  const fetchCategoryAndProducts = async () => {
+    setLoading(true);
+    setError('');
+
+    try {
+      // Fetch all categories to find the one matching the slug
+      const categoriesResponse = await productService.getCategories();
+      let categoriesList: Category[] = [];
+
+      if (categoriesResponse.categories) {
+        categoriesList = categoriesResponse.categories;
+      } else if (Array.isArray(categoriesResponse)) {
+        categoriesList = categoriesResponse;
+      } else if (categoriesResponse.data?.categories) {
+        categoriesList = categoriesResponse.data.categories;
+      }
+
+      // Find category by slug or ID
+      const foundCategory = categoriesList.find(
+        (cat: Category) => cat.slug === slug || cat._id === slug
+      );
+
+      if (!foundCategory) {
+        setError('Category not found');
+        setLoading(false);
+        return;
+      }
+
+      setCategory(foundCategory);
+
+      // Fetch all products and filter by category
+      const productsResponse = await productService.getAllProducts();
+      let productsList: Product[] = [];
+
+      if (productsResponse.products) {
+        productsList = productsResponse.products;
+      } else if (Array.isArray(productsResponse)) {
+        productsList = productsResponse;
+      } else if (productsResponse.data?.products) {
+        productsList = productsResponse.data.products;
+      }
+
+      // Filter products by category ID
+      const categoryProducts = productsList.filter((product: Product) => {
+        const categoryId = typeof product.category === 'string'
+          ? product.category
+          : product.category._id;
+        return categoryId === foundCategory._id;
+      });
+
+      setProducts(categoryProducts);
+    } catch (err: any) {
+      console.error('Error fetching category:', err);
+      setError(err.response?.data?.error || 'Failed to load category');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const applySorting = () => {
+    let sorted = [...products];
+
+    switch (sortBy) {
+      case 'priceLowToHigh':
+        sorted.sort((a, b) => a.price - b.price);
+        break;
+      case 'priceHighToLow':
+        sorted.sort((a, b) => b.price - a.price);
+        break;
+      case 'nameAZ':
+        sorted.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      case 'nameZA':
+        sorted.sort((a, b) => b.name.localeCompare(a.name));
+        break;
+      default:
+        // newest - keep original order
+        break;
+    }
+
+    setProducts(sorted);
+  };
+
+  const handleAddToCart = (product: Product) => {
+    try {
+      const cartData = localStorage.getItem('cart');
+      const cart = cartData && cartData !== 'undefined' ? JSON.parse(cartData) : [];
+      const existing = cart.find((item: any) => item._id === product._id);
+
+      if (existing) {
+        existing.quantity += 1;
+      } else {
+        cart.push({ ...product, quantity: 1 });
+      }
+
+      localStorage.setItem('cart', JSON.stringify(cart));
+      alert('Product added to cart!');
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+    }
+  };
+
+  const handleAddToWishlist = (product: Product) => {
+    try {
+      const wishlistData = localStorage.getItem('wishlist');
+      const wishlist = wishlistData && wishlistData !== 'undefined' ? JSON.parse(wishlistData) : [];
+      const exists = wishlist.find((item: any) => item._id === product._id);
+
+      if (exists) {
+        const updated = wishlist.filter((item: any) => item._id !== product._id);
+        localStorage.setItem('wishlist', JSON.stringify(updated));
+      } else {
+        wishlist.push(product);
+        localStorage.setItem('wishlist', JSON.stringify(wishlist));
+      }
+    } catch (error) {
+      console.error('Error updating wishlist:', error);
+    }
+  };
+
+  if (loading) {
+    return (
+      <>
+        <Head>
+          <title>Loading Category... - BuildMat</title>
+        </Head>
+        <Header />
+        <div className="category-page">
+          <div className="category-container">
+            <p className="loading-text">Loading category...</p>
+          </div>
+        </div>
+        <Footer />
+      </>
+    );
+  }
+
+  if (error || !category) {
+    return (
+      <>
+        <Head>
+          <title>Category Not Found - BuildMat</title>
+        </Head>
+        <Header />
+        <div className="category-page">
+          <div className="category-container">
+            <div className="error-state">
+              <h2>Category Not Found</h2>
+              <p>{error || 'The category you are looking for does not exist.'}</p>
+              <button onClick={() => router.push('/products')} className="btn-primary">
+                Browse All Products
+              </button>
+            </div>
+          </div>
+        </div>
+        <Footer />
+      </>
+    );
+  }
+
+  return (
+    <>
+      <Head>
+        <title>{category.name} - BuildMat</title>
+        <meta name="description" content={category.description || `Browse ${category.name} products at BuildMat`} />
+      </Head>
+
+      <Header />
+
+      <div className="category-page">
+        <div className="category-hero">
+          <div className="category-hero-content">
+            <nav className="breadcrumb">
+              <a href="/">Home</a>
+              <span className="separator">/</span>
+              <a href="/products">Products</a>
+              <span className="separator">/</span>
+              <span className="current">{category.name}</span>
+            </nav>
+
+            <h1>{category.name}</h1>
+            {category.description && (
+              <p className="category-description">{category.description}</p>
+            )}
+            <div className="category-stats">
+              <span className="stat">
+                {products.length} {products.length === 1 ? 'Product' : 'Products'} Available
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="category-container">
+          <div className="category-toolbar">
+            <div className="toolbar-left">
+              <button onClick={() => router.push('/products')} className="back-btn">
+                ← Back to All Products
+              </button>
+            </div>
+
+            <div className="toolbar-right">
+              <label htmlFor="sort">Sort by:</label>
+              <select
+                id="sort"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="sort-select"
+              >
+                <option value="newest">Newest</option>
+                <option value="priceLowToHigh">Price: Low to High</option>
+                <option value="priceHighToLow">Price: High to Low</option>
+                <option value="nameAZ">Name: A-Z</option>
+                <option value="nameZA">Name: Z-A</option>
+              </select>
+            </div>
+          </div>
+
+          {products.length === 0 ? (
+            <div className="no-products">
+              <div className="empty-icon">📦</div>
+              <h3>No Products Available</h3>
+              <p>There are currently no products in this category.</p>
+              <button onClick={() => router.push('/products')} className="btn-primary">
+                Browse Other Categories
+              </button>
+            </div>
+          ) : (
+            <div className="products-grid">
+              {products.map((product) => (
+                <ProductCard
+                  key={product._id}
+                  product={product}
+                  onAddToCart={handleAddToCart}
+                  onAddToWishlist={handleAddToWishlist}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <Footer />
+    </>
+  );
+};
+
+export default CategoryPage;

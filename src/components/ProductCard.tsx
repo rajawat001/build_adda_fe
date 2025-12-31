@@ -31,26 +31,33 @@ export default function ProductCard({ product, onAddToCart, onAddToWishlist }: P
 
   return (
     <div className="product-card">
-      <div className="product-image">
-        <img 
-          src={product.image || '/placeholder.jpg'} 
-          alt={product.name}
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = '/placeholder.jpg';
-          }}
-        />
-        {onAddToWishlist && (
-          <button 
-            className={`wishlist-btn ${isInWishlist ? 'active' : ''}`}
-            onClick={handleToggleWishlist}
-          >
-            ♥
-          </button>
-        )}
-      </div>
-      
+      <Link href={`/products/${product._id}`} className="product-image-link">
+        <div className="product-image">
+          <img
+            src={product.image || '/placeholder.jpg'}
+            alt={product.name}
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = '/placeholder.jpg';
+            }}
+          />
+          {onAddToWishlist && (
+            <button
+              className={`wishlist-btn ${isInWishlist ? 'active' : ''}`}
+              onClick={(e) => {
+                e.preventDefault();
+                handleToggleWishlist();
+              }}
+            >
+              ♥
+            </button>
+          )}
+        </div>
+      </Link>
+
       <div className="product-info">
-        <h3>{product.name}</h3>
+        <Link href={`/products/${product._id}`} className="product-title-link">
+          <h3>{product.name}</h3>
+        </Link>
         <p className="category">{categoryName}</p>
         <p className="distributor">
           By: <Link href={`/distributor/${product.distributor._id}`}>

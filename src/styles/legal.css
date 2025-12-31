@@ -1,0 +1,135 @@
+/* Legal Pages Styles (Terms, Privacy, Returns) */
+
+.legal-page {
+  background: #f9f9f9;
+  min-height: calc(100vh - 200px);
+  padding: 40px 20px;
+}
+
+.legal-container {
+  max-width: 900px;
+  margin: 0 auto;
+  background: white;
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.legal-container h1 {
+  font-size: 32px;
+  color: #333;
+  margin: 0 0 10px 0;
+  line-height: 1.2;
+}
+
+.last-updated {
+  font-size: 14px;
+  color: #666;
+  margin: 0 0 30px 0;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.legal-content {
+  color: #444;
+  line-height: 1.8;
+}
+
+.legal-content section {
+  margin-bottom: 35px;
+}
+
+.legal-content section:last-child {
+  margin-bottom: 0;
+}
+
+.legal-content h2 {
+  font-size: 24px;
+  color: #333;
+  margin: 0 0 15px 0;
+  font-weight: 600;
+}
+
+.legal-content h3 {
+  font-size: 18px;
+  color: #444;
+  margin: 20px 0 10px 0;
+  font-weight: 600;
+}
+
+.legal-content p {
+  font-size: 15px;
+  line-height: 1.8;
+  margin: 0 0 15px 0;
+  color: #555;
+}
+
+.legal-content ul,
+.legal-content ol {
+  margin: 15px 0;
+  padding-left: 30px;
+}
+
+.legal-content li {
+  font-size: 15px;
+  line-height: 1.8;
+  margin-bottom: 8px;
+  color: #555;
+}
+
+.legal-content ul {
+  list-style-type: disc;
+}
+
+.legal-content ol {
+  list-style-type: decimal;
+}
+
+.legal-content strong {
+  color: #333;
+  font-weight: 600;
+}
+
+.legal-content a {
+  color: #ff6b35;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s;
+}
+
+.legal-content a:hover {
+  border-bottom-color: #ff6b35;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .legal-page {
+    padding: 20px 15px;
+  }
+
+  .legal-container {
+    padding: 25px 20px;
+  }
+
+  .legal-container h1 {
+    font-size: 26px;
+  }
+
+  .legal-content h2 {
+    font-size: 20px;
+  }
+
+  .legal-content h3 {
+    font-size: 16px;
+  }
+
+  .legal-content p,
+  .legal-content li {
+    font-size: 14px;
+  }
+
+  .legal-content ul,
+  .legal-content ol {
+    padding-left: 20px;
+  }
+}

@@ -1,4 +1,4 @@
-import type { AppProps } from 'next/app';
+import type { AppProps} from 'next/app';
 import '../styles/globals.css';
 import '../styles/home.css';
 import '../styles/login.css';
@@ -9,6 +9,12 @@ import '../styles/products.css';
 import '../styles/profile.css';
 import '../styles/order.css';
 import '../styles/filter.css';
+import '../styles/product-detail.css';
+import '../styles/order-detail.css';
+import '../styles/legal.css';
+import '../styles/info.css';
+import '../styles/error.css';
+import '../styles/category.css';
 
 export default function App({ Component, pageProps }: AppProps) {
   return <Component {...pageProps} />;
