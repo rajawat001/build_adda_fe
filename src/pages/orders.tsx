@@ -49,7 +49,7 @@ const Orders = () => {
       // SECURITY FIX: Don't check localStorage for token - it's in httpOnly cookie
       // The API call will automatically send the cookie
       const response = await orderService.getMyOrders();
-      setOrders(response.data.orders);
+      setOrders(response.orders || []);
     } catch (error: any) {
       console.error('Error fetching orders:', error);
       // If unauthorized (401), redirect to login
@@ -62,6 +62,7 @@ const Orders = () => {
   };
 
   const getStatusColor = (status: string) => {
+    if (!status) return '#757575';
     switch (status.toLowerCase()) {
       case 'pending': return '#FFA500';
       case 'processing': return '#2196F3';
@@ -78,6 +79,33 @@ const Orders = () => {
       month: 'long',
       day: 'numeric'
     });
+  };
+
+  const canCancelOrder = (orderDate: string) => {
+    const orderTime = new Date(orderDate).getTime();
+    const currentTime = new Date().getTime();
+    const twoHoursInMs = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
+
+    return (currentTime - orderTime) <= twoHoursInMs;
+  };
+
+  const handleCancelOrder = async (orderId: string, orderDate: string) => {
+    if (!canCancelOrder(orderDate)) {
+      alert('Orders can only be cancelled within 2 hours of placement');
+      return;
+    }
+
+    const confirmCancel = confirm('Are you sure you want to cancel this order?');
+    if (!confirmCancel) return;
+
+    try {
+      await orderService.cancelOrder(orderId);
+      alert('Order cancelled successfully');
+      fetchOrders(); // Refresh the orders list
+    } catch (error: any) {
+      console.error('Error cancelling order:', error);
+      alert(error.response?.data?.error || 'Failed to cancel order');
+    }
   };
 
   if (loading) {
@@ -119,11 +147,11 @@ const Orders = () => {
                   </div>
                   
                   <div className="order-status-badge">
-                    <span 
+                    <span
                       className="status-badge"
-                      style={{ backgroundColor: getStatusColor(order.status) }}
+                      style={{ backgroundColor: getStatusColor(order.orderStatus) }}
                     >
-                      {order.status}
+                      {order.orderStatus}
                     </span>
                   </div>
                 </div>
@@ -161,8 +189,13 @@ const Orders = () => {
                     View Details
                   </button>
                   
-                  {order.status.toLowerCase() === 'pending' && (
-                    <button className="btn-cancel">Cancel Order</button>
+                  {order.orderStatus?.toLowerCase() === 'pending' && canCancelOrder(order.createdAt) && (
+                    <button
+                      className="btn-cancel"
+                      onClick={() => handleCancelOrder(order._id, order.createdAt)}
+                    >
+                      Cancel Order
+                    </button>
                   )}
                 </div>
               </div>

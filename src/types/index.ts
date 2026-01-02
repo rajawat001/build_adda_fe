@@ -54,12 +54,16 @@ export interface Order {
   items: OrderItem[];
   subtotal: number;
   discount: number;
+  tax: number;
+  taxPercentage: number;
+  deliveryCharge: number;
   totalAmount: number;
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
-  paymentMethod: 'razorpay' | 'COD';
-  paymentStatus: 'pending' | 'completed' | 'failed';
+  orderStatus: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  paymentMethod: 'Online' | 'COD';
+  paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded';
   shippingAddress: Address;
   createdAt: string;
+  updatedAt?: string;
 }
 
 // Order Item interface

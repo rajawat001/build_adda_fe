@@ -20,7 +20,8 @@ interface Distributor {
     coordinates: [number, number];
   };
   businessLicense: string;
-  isVerified: boolean;
+  isApproved: boolean;
+  rating?: number;
   distance?: number;
 }
 
@@ -51,8 +52,8 @@ const Distributors = () => {
 
   const fetchAllDistributors = async () => {
     try {
-      const response = await api.get('/distributors');
-      setDistributors(response.data.distributors);
+      const response = await api.get('/users/distributors');
+      setDistributors(response.data.distributors || []);
     } catch (error) {
       console.error('Error fetching distributors:', error);
     } finally {
@@ -68,8 +69,8 @@ const Distributors = () => {
 
     setLoading(true);
     try {
-      const response = await api.get(`/distributors/nearby?pincode=${searchPincode}&distance=${maxDistance}`);
-      setDistributors(response.data.distributors);
+      const response = await api.get(`/users/distributors/nearby?pincode=${searchPincode}&distance=${maxDistance}`);
+      setDistributors(response.data.distributors || []);
     } catch (error) {
       console.error('Error searching distributors:', error);
       alert('No distributors found in this area');
@@ -87,9 +88,9 @@ const Distributors = () => {
     setLoading(true);
     try {
       const response = await api.get(
-        `/distributors/nearby?lat=${userLocation.lat}&lng=${userLocation.lng}&distance=${maxDistance}`
+        `/users/distributors/nearby?lat=${userLocation.lat}&lng=${userLocation.lng}&distance=${maxDistance}`
       );
-      setDistributors(response.data.distributors);
+      setDistributors(response.data.distributors || []);
     } catch (error) {
       console.error('Error searching distributors:', error);
       alert('No distributors found nearby');
@@ -100,6 +101,29 @@ const Distributors = () => {
 
   const viewDistributor = (distributorId: string) => {
     router.push(`/distributor/${distributorId}`);
+  };
+
+  const renderRating = (rating: number = 0) => {
+    const stars = [];
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 >= 0.5;
+
+    for (let i = 0; i < 5; i++) {
+      if (i < fullStars) {
+        stars.push(<span key={i} className="star">★</span>);
+      } else if (i === fullStars && hasHalfStar) {
+        stars.push(<span key={i} className="star">★</span>);
+      } else {
+        stars.push(<span key={i} className="star empty">☆</span>);
+      }
+    }
+
+    return (
+      <div className="rating-stars">
+        {stars}
+        <span className="rating-count">({rating.toFixed(1)})</span>
+      </div>
+    );
   };
 
   if (loading) {
@@ -182,8 +206,11 @@ const Distributors = () => {
                 <div key={distributor._id} className="distributor-card">
                   <div className="card-header">
                     <h3>{distributor.businessName}</h3>
-                    {distributor.isVerified && (
+                    {distributor.isApproved && (
                       <span className="verified-badge">✓ Verified</span>
+                    )}
+                    {distributor.rating !== undefined && distributor.rating > 0 && (
+                      renderRating(distributor.rating)
                     )}
                   </div>
                   

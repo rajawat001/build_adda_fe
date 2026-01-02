@@ -30,11 +30,16 @@ export default function Checkout() {
   const [selectedAddressId, setSelectedAddressId] = useState<string>('');
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [formData, setFormData] = useState({
-    shippingAddress: '',
-    phone: '',
-    pincode: '',
+    shippingAddress: {
+      fullName: '',
+      phone: '',
+      address: '',
+      city: '',
+      state: '',
+      pincode: ''
+    },
     couponCode: '',
-    paymentMethod: 'razorpay'
+    paymentMethod: 'COD'
   });
   const [newAddress, setNewAddress] = useState<Address>({
     fullName: '',
@@ -64,6 +69,10 @@ export default function Checkout() {
       router.push('/cart');
       return;
     }
+
+    console.log('Cart items:', cart);
+    console.log('First item distributor:', cart[0]?.distributor);
+
     setCartItems(cart);
 
     // Fetch user profile to get saved addresses
@@ -99,9 +108,14 @@ export default function Checkout() {
   const updateFormDataFromAddress = (address: Address) => {
     setFormData(prev => ({
       ...prev,
-      shippingAddress: `${address.address}, ${address.city}, ${address.state}`,
-      phone: address.phone,
-      pincode: address.pincode
+      shippingAddress: {
+        fullName: address.fullName,
+        phone: address.phone,
+        address: address.address,
+        city: address.city,
+        state: address.state,
+        pincode: address.pincode
+      }
     }));
   };
 
@@ -273,10 +287,24 @@ export default function Checkout() {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    const { name, value } = e.target;
+
+    // Handle nested shippingAddress fields
+    if (['fullName', 'phone', 'address', 'city', 'state', 'pincode'].includes(name)) {
+      setFormData({
+        ...formData,
+        shippingAddress: {
+          ...formData.shippingAddress,
+          [name]: value
+        }
+      });
+    } else {
+      // Handle other fields (paymentMethod, couponCode)
+      setFormData({
+        ...formData,
+        [name]: value
+      });
+    }
   };
 
   const getTotal = () => {
@@ -336,6 +364,32 @@ export default function Checkout() {
     setLoading(true);
 
     try {
+      // Get distributor from first item (assuming all items from same distributor)
+      const distributor = cartItems[0]?.distributor?._id || cartItems[0]?.distributor;
+
+      // Validation checks
+      if (!distributor) {
+        const clearCart = confirm(
+          'Product distributor information is missing from your cart items.\n\n' +
+          'This happens when cart items are outdated.\n\n' +
+          'Click OK to clear your cart and start fresh, or Cancel to go back.'
+        );
+
+        if (clearCart) {
+          localStorage.removeItem('cart');
+          router.push('/products');
+        }
+
+        setLoading(false);
+        return;
+      }
+
+      if (!formData.paymentMethod) {
+        alert('Please select a payment method');
+        setLoading(false);
+        return;
+      }
+
       const orderData = {
         items: cartItems.map(item => ({
           product: item._id,
@@ -343,16 +397,17 @@ export default function Checkout() {
           price: item.price
         })),
         shippingAddress: formData.shippingAddress,
-        phone: formData.phone,
-        pincode: formData.pincode,
         paymentMethod: formData.paymentMethod,
         totalAmount: getTotal(),
-        couponCode: formData.couponCode
+        couponCode: formData.couponCode,
+        distributor: distributor
       };
+
+      console.log('Submitting order data:', orderData);
 
       const response = await createOrder(orderData);
 
-      if (formData.paymentMethod === 'razorpay') {
+      if (formData.paymentMethod === 'Online') {
         await handleRazorpayPayment(response.orderId, response.amount);
       } else {
         localStorage.removeItem('cart');
@@ -565,13 +620,14 @@ export default function Checkout() {
               {(!isAuthenticated || savedAddresses.length === 0 || !selectedAddressId) && !showAddressForm && (
                 <>
                   <div className="form-group">
-                    <label>Shipping Address *</label>
-                    <textarea
-                      name="shippingAddress"
-                      value={formData.shippingAddress}
+                    <label>Full Name *</label>
+                    <input
+                      type="text"
+                      name="fullName"
+                      value={formData.shippingAddress.fullName}
                       onChange={handleChange}
                       required
-                      placeholder="Enter your complete address"
+                      placeholder="Enter your full name"
                     />
                   </div>
 
@@ -580,10 +636,46 @@ export default function Checkout() {
                     <input
                       type="tel"
                       name="phone"
-                      value={formData.phone}
+                      value={formData.shippingAddress.phone}
                       onChange={handleChange}
                       required
                       placeholder="10-digit phone number"
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Address *</label>
+                    <textarea
+                      name="address"
+                      value={formData.shippingAddress.address}
+                      onChange={handleChange}
+                      required
+                      placeholder="Street address, building, apartment, etc."
+                      rows={3}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>City *</label>
+                    <input
+                      type="text"
+                      name="city"
+                      value={formData.shippingAddress.city}
+                      onChange={handleChange}
+                      required
+                      placeholder="City"
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>State *</label>
+                    <input
+                      type="text"
+                      name="state"
+                      value={formData.shippingAddress.state}
+                      onChange={handleChange}
+                      required
+                      placeholder="State"
                     />
                   </div>
 
@@ -592,7 +684,7 @@ export default function Checkout() {
                     <input
                       type="text"
                       name="pincode"
-                      value={formData.pincode}
+                      value={formData.shippingAddress.pincode}
                       onChange={handleChange}
                       required
                       placeholder="6-digit pincode"
@@ -609,8 +701,8 @@ export default function Checkout() {
                   value={formData.paymentMethod}
                   onChange={handleChange}
                 >
-                  <option value="razorpay">Razorpay</option>
-                  <option value="cod">Cash on Delivery</option>
+                  <option value="Online">Razorpay (Online Payment)</option>
+                  <option value="COD">Cash on Delivery</option>
                 </select>
               </div>
 

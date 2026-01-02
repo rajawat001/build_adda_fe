@@ -21,7 +21,14 @@ const Wishlist = () => {
       // SECURITY FIX: Don't check localStorage for token - it's in httpOnly cookie
       // The API call will automatically send the cookie
       const response = await productService.getWishlist();
-      setWishlistItems(response.data.wishlist);
+      const wishlist = response.wishlist || [];
+      setWishlistItems(wishlist);
+
+      // Sync localStorage with backend data (backend is source of truth)
+      localStorage.setItem('wishlist', JSON.stringify(wishlist));
+
+      // Trigger storage event to update header count
+      window.dispatchEvent(new Event('storage'));
     } catch (error: any) {
       console.error('Error fetching wishlist:', error);
       // If unauthorized (401), redirect to login
@@ -35,20 +42,58 @@ const Wishlist = () => {
 
   const removeFromWishlist = async (productId: string) => {
     try {
+      // Remove from backend
       await productService.removeFromWishlist(productId);
-      setWishlistItems(wishlistItems.filter(item => item._id !== productId));
+
+      // Update state
+      const updatedWishlist = wishlistItems.filter(item => item._id !== productId);
+      setWishlistItems(updatedWishlist);
+
+      // Update localStorage
+      localStorage.setItem('wishlist', JSON.stringify(updatedWishlist));
+
+      // Trigger storage event to update header
+      window.dispatchEvent(new Event('storage'));
     } catch (error) {
       console.error('Error removing from wishlist:', error);
+
+      // Even if backend fails, try to remove from localStorage
+      const updatedWishlist = wishlistItems.filter(item => item._id !== productId);
+      setWishlistItems(updatedWishlist);
+      localStorage.setItem('wishlist', JSON.stringify(updatedWishlist));
+      window.dispatchEvent(new Event('storage'));
     }
   };
 
   const moveToCart = async (productId: string) => {
     try {
-      await productService.addToCart(productId, 1);
+      // Find the product in wishlist
+      const product = wishlistItems.find(item => item._id === productId);
+      if (!product) return;
+
+      // Add to cart (localStorage)
+      const cartData = localStorage.getItem('cart');
+      const cart = cartData && cartData !== 'undefined' ? JSON.parse(cartData) : [];
+
+      const existingIndex = cart.findIndex((item: any) => item._id === productId);
+      if (existingIndex >= 0) {
+        cart[existingIndex].quantity += 1;
+      } else {
+        cart.push({ ...product, quantity: 1 });
+      }
+
+      localStorage.setItem('cart', JSON.stringify(cart));
+
+      // Remove from wishlist
       await removeFromWishlist(productId);
+
+      // Trigger storage event to update header
+      window.dispatchEvent(new Event('storage'));
+
       alert('Product moved to cart!');
     } catch (error) {
       console.error('Error moving to cart:', error);
+      alert('Failed to move product to cart');
     }
   };
 

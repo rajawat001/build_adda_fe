@@ -21,11 +21,11 @@ export default function Filter({ categories, filters, onFilterChange }: FilterPr
       
       <div className="filter-group">
         <label>Category</label>
-        <select 
+        <select
           value={filters.category}
           onChange={(e) => onFilterChange('category', e.target.value)}
         >
-          <option value="">All Categories</option>
+          <option key="all-categories" value="">All Categories</option>
           {categories.map((cat) => (
             <option key={cat._id} value={cat._id}>
               {cat.name}
@@ -55,13 +55,13 @@ export default function Filter({ categories, filters, onFilterChange }: FilterPr
       
       <div className="filter-group">
         <label>Availability</label>
-        <select 
+        <select
           value={filters.availability}
           onChange={(e) => onFilterChange('availability', e.target.value)}
         >
-          <option value="all">All</option>
-          <option value="inStock">In Stock</option>
-          <option value="outOfStock">Out of Stock</option>
+          <option key="all" value="all">All</option>
+          <option key="inStock" value="inStock">In Stock</option>
+          <option key="outOfStock" value="outOfStock">Out of Stock</option>
         </select>
       </div>
     </div>

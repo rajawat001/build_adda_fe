@@ -6,6 +6,7 @@ import Footer from '../../components/Footer';
 import ProductCard from '../../components/ProductCard';
 import api from '../../services/api';
 import { Product } from '../../types';
+import styles from '../../styles/distributor-profile.module.css';
 
 interface Distributor {
   _id: string;
@@ -17,17 +18,19 @@ interface Distributor {
   city: string;
   state: string;
   pincode: string;
-  location: {
-    type: string;
-    coordinates: number[];
-  };
-  isVerified: boolean;
+  gstNumber?: string;
+  description?: string;
+  profileImage?: string;
+  rating: number;
+  reviewCount: number;
+  serviceRadius: number;
+  isApproved: boolean;
 }
 
-export default function DistributorProfile() {
+const DistributorProfile = () => {
   const router = useRouter();
   const { id } = router.query;
-  
+
   const [distributor, setDistributor] = useState<Distributor | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -40,59 +43,66 @@ export default function DistributorProfile() {
   }, [id]);
 
   const fetchDistributorData = async () => {
+    setLoading(true);
     try {
-      // Fetch distributor details
-      const distResponse = await api.get(`/distributors/${id}`);
-      setDistributor(distResponse.data.distributor);
+      // Fetch distributor profile
+      const distributorResponse = await api.get(`/users/distributors/${id}`);
+      setDistributor(distributorResponse.data.distributor);
 
       // Fetch distributor's products
       const productsResponse = await api.get(`/products/distributor/${id}`);
-      setProducts(productsResponse.data.products);
+      setProducts(productsResponse.data.products || []);
     } catch (error) {
       console.error('Error fetching distributor data:', error);
+      alert('Failed to load distributor information');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAddToCart = (product: Product) => {
-    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-    const existing = cart.find((item: any) => item._id === product._id);
-    
-    if (existing) {
-      existing.quantity += 1;
-    } else {
-      cart.push({ ...product, quantity: 1 });
+  const renderRating = (rating: number = 0, reviewCount: number = 0) => {
+    const stars = [];
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 >= 0.5;
+
+    for (let i = 0; i < 5; i++) {
+      if (i < fullStars) {
+        stars.push(<span key={i} className={`${styles.star} ${styles.filled}`}>★</span>);
+      } else if (i === fullStars && hasHalfStar) {
+        stars.push(<span key={i} className={`${styles.star} ${styles.filled}`}>★</span>);
+      } else {
+        stars.push(<span key={i} className={`${styles.star} ${styles.empty}`}>☆</span>);
+      }
     }
-    
-    localStorage.setItem('cart', JSON.stringify(cart));
-    alert('Product added to cart!');
+
+    return (
+      <div className={styles.ratingDisplay}>
+        <div className={styles.stars}>{stars}</div>
+        <span className={styles.ratingText}>
+          {rating.toFixed(1)} ({reviewCount} {reviewCount === 1 ? 'review' : 'reviews'})
+        </span>
+      </div>
+    );
   };
 
-  const handleAddToWishlist = (product: Product) => {
-    const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
-    const exists = wishlist.find((item: any) => item._id === product._id);
-    
-    if (exists) {
-      const updated = wishlist.filter((item: any) => item._id !== product._id);
-      localStorage.setItem('wishlist', JSON.stringify(updated));
-      alert('Removed from wishlist');
+  const handleContactClick = (type: 'call' | 'email') => {
+    if (!distributor) return;
+
+    if (type === 'call') {
+      window.location.href = `tel:${distributor.phone}`;
     } else {
-      wishlist.push(product);
-      localStorage.setItem('wishlist', JSON.stringify(wishlist));
-      alert('Added to wishlist');
+      window.location.href = `mailto:${distributor.email}`;
     }
   };
 
   if (loading) {
     return (
       <>
-        <SEO title="Distributor Profile" />
+        <SEO title="Loading..." description="Loading distributor profile" />
         <Header />
-        <div className="distributor-profile-page">
-          <div className="container">
-            <p>Loading...</p>
-          </div>
+        <div className={styles.loadingContainer}>
+          <div className={styles.loader}></div>
+          <p>Loading distributor information...</p>
         </div>
         <Footer />
       </>
@@ -102,15 +112,14 @@ export default function DistributorProfile() {
   if (!distributor) {
     return (
       <>
-        <SEO title="Distributor Not Found" />
+        <SEO title="Not Found" description="Distributor not found" />
         <Header />
-        <div className="distributor-profile-page">
-          <div className="container">
-            <h1>Distributor Not Found</h1>
-            <button onClick={() => router.push('/distributors')}>
-              View All Distributors
-            </button>
-          </div>
+        <div className={styles.errorContainer}>
+          <h1>Distributor Not Found</h1>
+          <p>The distributor you're looking for doesn't exist or has been removed.</p>
+          <button onClick={() => router.push('/distributors')} className={styles.btnBack}>
+            Back to Distributors
+          </button>
         </div>
         <Footer />
       </>
@@ -119,271 +128,197 @@ export default function DistributorProfile() {
 
   return (
     <>
-      <SEO 
-        title={`${distributor.businessName} - Distributor Profile`}
-        description={`View products from ${distributor.businessName}`}
+      <SEO
+        title={`${distributor.businessName} - Building Materials Distributor`}
+        description={distributor.description || `Shop building materials from ${distributor.businessName}`}
       />
       <Header />
-      
-      <div className="distributor-profile-page">
-        <div className="container">
-          {/* Distributor Header */}
-          <div className="distributor-header">
-            <div className="distributor-info">
-              <div className="business-icon">
-                {distributor.businessName.charAt(0).toUpperCase()}
+
+      <div className={styles.distributorProfilePage}>
+        {/* Profile Header */}
+        <div className={styles.profileHeader}>
+          <div className={styles.headerContent}>
+            <div className={styles.profileMain}>
+              <div className={styles.profileImage}>
+                {distributor.profileImage ? (
+                  <img src={distributor.profileImage} alt={distributor.businessName} />
+                ) : (
+                  <div className={styles.imagePlaceholder}>
+                    <span>{distributor.businessName.charAt(0)}</span>
+                  </div>
+                )}
               </div>
-              
-              <div className="business-details">
-                <h1>
-                  {distributor.businessName}
-                  {distributor.isVerified && (
-                    <span className="verified-badge">✓ Verified</span>
+
+              <div className={styles.profileInfo}>
+                <div className={styles.nameBadge}>
+                  <h1>{distributor.businessName}</h1>
+                  {distributor.isApproved && (
+                    <span className={styles.verifiedBadge}>✓ Verified</span>
                   )}
-                </h1>
-                <p className="owner-name">By {distributor.name}</p>
-                
-                <div className="contact-info">
-                  <span>📞 {distributor.phone}</span>
-                  <span>📧 {distributor.email}</span>
-                  <span>📍 {distributor.city}, {distributor.state}</span>
                 </div>
+
+                {renderRating(distributor.rating, distributor.reviewCount)}
+
+                <div className={styles.locationInfo}>
+                  <span className="icon">📍</span>
+                  <span>{distributor.city}, {distributor.state}</span>
+                </div>
+
+                {distributor.serviceRadius && (
+                  <div className={styles.serviceRadius}>
+                    <span className="icon">🚚</span>
+                    <span>Delivers within {distributor.serviceRadius} km</span>
+                  </div>
+                )}
               </div>
             </div>
-          </div>
 
-          {/* Tabs */}
-          <div className="tabs">
-            <button 
-              className={activeTab === 'products' ? 'active' : ''}
+            <div className={styles.contactActions}>
+              <button
+                className={`${styles.btnContact} ${styles.btnCall}`}
+                onClick={() => handleContactClick('call')}
+              >
+                <span className="icon">📞</span>
+                Call Now
+              </button>
+              <button
+                className={`${styles.btnContact} ${styles.btnEmail}`}
+                onClick={() => handleContactClick('email')}
+              >
+                <span className="icon">📧</span>
+                Email
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className={styles.profileTabs}>
+          <div className={styles.tabsContainer}>
+            <button
+              className={`${styles.tab} ${activeTab === 'products' ? styles.active : ''}`}
               onClick={() => setActiveTab('products')}
             >
               Products ({products.length})
             </button>
-            <button 
-              className={activeTab === 'about' ? 'active' : ''}
+            <button
+              className={`${styles.tab} ${activeTab === 'about' ? styles.active : ''}`}
               onClick={() => setActiveTab('about')}
             >
-              About
+              About Distributor
             </button>
           </div>
+        </div>
 
-          {/* Tab Content */}
+        {/* Tab Content */}
+        <div className={styles.tabContent}>
           {activeTab === 'products' ? (
-            <div className="products-section">
+            <div className={styles.productsSection}>
+              <div className={styles.sectionHeader}>
+                <h2>Available Products</h2>
+                <p>{products.length} products available</p>
+              </div>
+
               {products.length === 0 ? (
-                <div className="no-products">
-                  <p>No products available from this distributor</p>
+                <div className={styles.noProducts}>
+                  <div className={styles.noProductsIcon}>📦</div>
+                  <h3>No Products Available</h3>
+                  <p>This distributor hasn't listed any products yet.</p>
                 </div>
               ) : (
-                <div className="product-grid">
+                <div className={styles.productsGrid}>
                   {products.map((product) => (
-                    <ProductCard
-                      key={product._id}
-                      product={product}
-                      onAddToCart={handleAddToCart}
-                      onAddToWishlist={handleAddToWishlist}
-                    />
+                    <ProductCard key={product._id} product={product} />
                   ))}
                 </div>
               )}
             </div>
           ) : (
-            <div className="about-section">
-              <div className="info-card">
-                <h3>Business Information</h3>
-                <div className="info-row">
-                  <span className="label">Business Name:</span>
-                  <span className="value">{distributor.businessName}</span>
-                </div>
-                <div className="info-row">
-                  <span className="label">Owner:</span>
-                  <span className="value">{distributor.name}</span>
-                </div>
-                <div className="info-row">
-                  <span className="label">Email:</span>
-                  <span className="value">{distributor.email}</span>
-                </div>
-                <div className="info-row">
-                  <span className="label">Phone:</span>
-                  <span className="value">{distributor.phone}</span>
-                </div>
-              </div>
+            <div className={styles.aboutSection}>
+              <div className={styles.aboutContent}>
+                <div className={styles.infoCard}>
+                  <h3>Business Information</h3>
 
-              <div className="info-card">
-                <h3>Location</h3>
-                <div className="info-row">
-                  <span className="label">Address:</span>
-                  <span className="value">{distributor.address}</span>
+                  {distributor.description && (
+                    <div className={styles.infoBlock}>
+                      <h4>About</h4>
+                      <p>{distributor.description}</p>
+                    </div>
+                  )}
+
+                  <div className={styles.infoBlock}>
+                    <h4>Contact Person</h4>
+                    <p>{distributor.name}</p>
+                  </div>
+
+                  <div className={styles.infoBlock}>
+                    <h4>Email</h4>
+                    <p>{distributor.email}</p>
+                  </div>
+
+                  <div className={styles.infoBlock}>
+                    <h4>Phone</h4>
+                    <p>{distributor.phone}</p>
+                  </div>
+
+                  <div className={styles.infoBlock}>
+                    <h4>Address</h4>
+                    <p>{distributor.address}</p>
+                    <p>{distributor.city}, {distributor.state} - {distributor.pincode}</p>
+                  </div>
+
+                  {distributor.gstNumber && (
+                    <div className={styles.infoBlock}>
+                      <h4>GST Number</h4>
+                      <p>{distributor.gstNumber}</p>
+                    </div>
+                  )}
                 </div>
-                <div className="info-row">
-                  <span className="label">City:</span>
-                  <span className="value">{distributor.city}</span>
-                </div>
-                <div className="info-row">
-                  <span className="label">State:</span>
-                  <span className="value">{distributor.state}</span>
-                </div>
-                <div className="info-row">
-                  <span className="label">Pincode:</span>
-                  <span className="value">{distributor.pincode}</span>
+
+                <div className={styles.statsCard}>
+                  <h3>Distributor Stats</h3>
+
+                  <div className={styles.statItem}>
+                    <div className={styles.statIcon}>⭐</div>
+                    <div className={styles.statInfo}>
+                      <span className={styles.statValue}>{distributor.rating.toFixed(1)}</span>
+                      <span className={styles.statLabel}>Average Rating</span>
+                    </div>
+                  </div>
+
+                  <div className={styles.statItem}>
+                    <div className={styles.statIcon}>📝</div>
+                    <div className={styles.statInfo}>
+                      <span className={styles.statValue}>{distributor.reviewCount}</span>
+                      <span className={styles.statLabel}>Total Reviews</span>
+                    </div>
+                  </div>
+
+                  <div className={styles.statItem}>
+                    <div className={styles.statIcon}>📦</div>
+                    <div className={styles.statInfo}>
+                      <span className={styles.statValue}>{products.length}</span>
+                      <span className={styles.statLabel}>Products Listed</span>
+                    </div>
+                  </div>
+
+                  <div className={styles.statItem}>
+                    <div className={styles.statIcon}>🚚</div>
+                    <div className={styles.statInfo}>
+                      <span className={styles.statValue}>{distributor.serviceRadius} km</span>
+                      <span className={styles.statLabel}>Service Radius</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           )}
         </div>
       </div>
-      
+
       <Footer />
-
-      <style jsx>{`
-        .distributor-profile-page {
-          padding: 3rem 0;
-          min-height: calc(100vh - 200px);
-        }
-
-        .distributor-header {
-          background: white;
-          padding: 2rem;
-          border-radius: 10px;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-          margin-bottom: 2rem;
-        }
-
-        .distributor-info {
-          display: flex;
-          gap: 2rem;
-          align-items: center;
-        }
-
-        .business-icon {
-          width: 100px;
-          height: 100px;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 3rem;
-          color: white;
-          font-weight: bold;
-        }
-
-        .business-details h1 {
-          color: #2c3e50;
-          margin-bottom: 0.5rem;
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-        }
-
-        .verified-badge {
-          background: #4CAF50;
-          color: white;
-          padding: 0.25rem 0.75rem;
-          border-radius: 20px;
-          font-size: 0.85rem;
-        }
-
-        .owner-name {
-          color: #7f8c8d;
-          margin-bottom: 1rem;
-        }
-
-        .contact-info {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 1.5rem;
-          color: #555;
-        }
-
-        .tabs {
-          display: flex;
-          gap: 1rem;
-          margin-bottom: 2rem;
-          border-bottom: 2px solid #ecf0f1;
-        }
-
-        .tabs button {
-          background: none;
-          border: none;
-          padding: 1rem 2rem;
-          font-size: 1rem;
-          cursor: pointer;
-          color: #7f8c8d;
-          border-bottom: 3px solid transparent;
-          transition: all 0.3s;
-        }
-
-        .tabs button.active {
-          color: #3498db;
-          border-bottom-color: #3498db;
-        }
-
-        .no-products {
-          text-align: center;
-          padding: 4rem 2rem;
-          background: white;
-          border-radius: 10px;
-        }
-
-        .about-section {
-          display: grid;
-          gap: 2rem;
-        }
-
-        .info-card {
-          background: white;
-          padding: 2rem;
-          border-radius: 10px;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-
-        .info-card h3 {
-          color: #2c3e50;
-          margin-bottom: 1.5rem;
-          padding-bottom: 1rem;
-          border-bottom: 2px solid #ecf0f1;
-        }
-
-        .info-row {
-          display: flex;
-          justify-content: space-between;
-          padding: 0.75rem 0;
-          border-bottom: 1px solid #f8f9fa;
-        }
-
-        .info-row:last-child {
-          border-bottom: none;
-        }
-
-        .info-row .label {
-          font-weight: 600;
-          color: #7f8c8d;
-        }
-
-        .info-row .value {
-          color: #2c3e50;
-        }
-
-        @media (max-width: 768px) {
-          .distributor-info {
-            flex-direction: column;
-            text-align: center;
-          }
-
-          .business-icon {
-            width: 80px;
-            height: 80px;
-            font-size: 2.5rem;
-          }
-
-          .contact-info {
-            flex-direction: column;
-            gap: 0.5rem;
-          }
-        }
-      `}</style>
     </>
   );
-}
+};
+
+export default DistributorProfile;

@@ -15,6 +15,7 @@ import '../styles/legal.css';
 import '../styles/info.css';
 import '../styles/error.css';
 import '../styles/category.css';
+import '../styles/distributors.css';
 
 export default function App({ Component, pageProps }: AppProps) {
   return <Component {...pageProps} />;

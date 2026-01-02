@@ -26,7 +26,7 @@ export const getProductsByCategory = async (category: string) => {
 };
 
 export const getCategories = async () => {
-  const response = await api.get('/categories');
+  const response = await api.get('/products/categories');
   return response.data;
 };
 
@@ -47,43 +47,43 @@ export const deleteProduct = async (id: string) => {
 
 // Wishlist
 export const getWishlist = async () => {
-  const response = await api.get('/wishlist');
+  const response = await api.get('/products/wishlist');
   return response.data;
 };
 
 export const addToWishlist = async (productId: string) => {
-  const response = await api.post('/wishlist', { productId });
+  const response = await api.post('/products/wishlist', { productId });
   return response.data;
 };
 
 export const removeFromWishlist = async (productId: string) => {
-  const response = await api.delete(`/wishlist/${productId}`);
+  const response = await api.delete(`/products/wishlist/${productId}`);
   return response.data;
 };
 
 // Cart
 export const getCart = async () => {
-  const response = await api.get('/cart');
+  const response = await api.get('/products/cart');
   return response.data;
 };
 
 export const addToCart = async (productId: string, quantity: number) => {
-  const response = await api.post('/cart', { productId, quantity });
+  const response = await api.post('/products/cart', { productId, quantity });
   return response.data;
 };
 
 export const updateCartItem = async (productId: string, quantity: number) => {
-  const response = await api.put(`/cart/${productId}`, { quantity });
+  const response = await api.put(`/products/cart/${productId}`, { quantity });
   return response.data;
 };
 
 export const removeFromCart = async (productId: string) => {
-  const response = await api.delete(`/cart/${productId}`);
+  const response = await api.delete(`/products/cart/${productId}`);
   return response.data;
 };
 
 export const clearCart = async () => {
-  const response = await api.delete('/cart');
+  const response = await api.delete('/products/cart');
   return response.data;
 };
 
