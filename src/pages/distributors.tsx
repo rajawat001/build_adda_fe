@@ -46,7 +46,8 @@ const Distributors = () => {
         lng: location.longitude
       });
     } catch (error) {
-      console.error('Error getting location:', error);
+      // Location access denied or timed out - this is expected, user can search by pincode instead
+      console.log('Location not available - user can search by pincode');
     }
   };
 
