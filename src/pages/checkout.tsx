@@ -266,9 +266,14 @@ export default function Checkout() {
         setSelectedAddressId('');
         setFormData(prev => ({
           ...prev,
-          shippingAddress: '',
-          phone: '',
-          pincode: ''
+          shippingAddress: {
+            fullName: '',
+            phone: '',
+            address: '',
+            city: '',
+            state: '',
+            pincode: ''
+          }
         }));
       }
     } catch (error: any) {
@@ -348,7 +353,7 @@ export default function Checkout() {
       },
       prefill: {
         email: localStorage.getItem('userEmail'),
-        contact: formData.phone
+        contact: formData.shippingAddress.phone
       },
       theme: {
         color: '#3399cc'

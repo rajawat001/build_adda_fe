@@ -6,7 +6,7 @@ import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import ProductCard from '../../components/ProductCard';
 import productService from '../../services/product.service';
-import { Product } from '../../types/product';
+import { Product } from '../../types';
 
 export default function ProductDetail() {
   const router = useRouter();
@@ -52,7 +52,10 @@ export default function ProductDetail() {
 
       // Fetch related products (same category)
       if (productData.category) {
-        fetchRelatedProducts(productData.category._id || productData.category);
+        const categoryId = typeof productData.category === 'string'
+          ? productData.category
+          : productData.category._id;
+        fetchRelatedProducts(categoryId);
       }
     } catch (err: any) {
       console.error('Error fetching product:', err);

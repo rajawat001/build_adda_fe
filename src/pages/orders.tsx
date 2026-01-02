@@ -20,7 +20,7 @@ interface Order {
   orderNumber: string;
   items: OrderItem[];
   totalAmount: number;
-  status: string;
+  orderStatus: string;
   paymentMethod: string;
   paymentStatus: string;
   shippingAddress: {
