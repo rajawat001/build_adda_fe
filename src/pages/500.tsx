@@ -9,7 +9,7 @@ const ServerErrorPage: React.FC = () => {
   return (
     <>
       <Head>
-        <title>500 - Server Error | BuildMat</title>
+        <title>500 - Server Error | BuildAdda</title>
         <meta name="description" content="Something went wrong on our end." />
       </Head>
 

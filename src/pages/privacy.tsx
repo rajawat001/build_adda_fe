@@ -178,9 +178,9 @@ export default function PrivacyPolicy() {
                 If you have questions about this Privacy Policy, please contact us:
               </p>
               <ul>
-                <li>Email: privacy@buildadda.com</li>
-                <li>Phone: +91 1234567890</li>
-                <li>Address: [Your Business Address]</li>
+                <li>Email: info@buildadda.in</li>
+                <li>Phone: +91 6377845721</li>
+                <li>Address: plot 42,bhuvneshwari vatika vistar 3rd,vaishali west road,Jaipur , Rajasthan ,India (302034)</li>
               </ul>
             </section>
           </div>

@@ -43,7 +43,7 @@ export const getLocationDetails = async (): Promise<LocationDetails> => {
       `https://nominatim.openstreetmap.org/reverse?format=json&lat=${coords.latitude}&lon=${coords.longitude}&addressdetails=1`,
       {
         headers: {
-          'User-Agent': 'BuildMat E-Commerce App'
+          'User-Agent': 'BuildAdda E-Commerce App'
         }
       }
     );

@@ -15,8 +15,8 @@ const faqData: FAQItem[] = [
   {
     id: 1,
     category: 'General',
-    question: 'What is BuildMat?',
-    answer: 'BuildMat is an e-commerce platform specializing in construction materials and building supplies. We connect verified distributors with customers, offering a wide range of quality products at competitive prices.'
+    question: 'What is BuildAdda?',
+    answer: 'BuildAdda is an e-commerce platform specializing in construction materials and building supplies. We connect verified distributors with customers, offering a wide range of quality products at competitive prices.'
   },
   {
     id: 2,
@@ -67,7 +67,7 @@ const faqData: FAQItem[] = [
   {
     id: 9,
     category: 'Payment',
-    question: 'Is it safe to use my card on BuildMat?',
+    question: 'Is it safe to use my card on BuildAdda?',
     answer: 'Yes, absolutely. We use Razorpay\'s secure payment gateway with SSL encryption. We never store your card details on our servers.'
   },
   {
@@ -145,13 +145,13 @@ const faqData: FAQItem[] = [
   {
     id: 21,
     category: 'Distributors',
-    question: 'What are the requirements to sell on BuildMat?',
+    question: 'What are the requirements to sell on BuildAdda?',
     answer: 'You need a valid business registration, GST number, quality certifications for products, and ability to maintain inventory and timely deliveries.'
   },
   {
     id: 22,
     category: 'Distributors',
-    question: 'What commission does BuildMat charge?',
+    question: 'What commission does BuildAdda charge?',
     answer: 'Our commission structure varies by product category. Contact our distributor support team for detailed information about fees and commissions.'
   },
 
@@ -204,8 +204,8 @@ const FAQPage: React.FC = () => {
   return (
     <>
       <Head>
-        <title>Frequently Asked Questions - BuildMat</title>
-        <meta name="description" content="Find answers to common questions about BuildMat products, orders, delivery, returns, and more." />
+        <title>Frequently Asked Questions - BuildAdda</title>
+        <meta name="description" content="Find answers to common questions about BuildAdda products, orders, delivery, returns, and more." />
       </Head>
 
       <Header />
@@ -213,7 +213,7 @@ const FAQPage: React.FC = () => {
       <div className="info-page">
         <div className="faq-container">
           <h1>Frequently Asked Questions</h1>
-          <p className="subtitle">Find answers to common questions about BuildMat</p>
+          <p className="subtitle">Find answers to common questions about BuildAdda</p>
 
           <div className="faq-search">
             <input

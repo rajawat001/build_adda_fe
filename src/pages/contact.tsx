@@ -79,8 +79,8 @@ const ContactPage: React.FC = () => {
   return (
     <>
       <Head>
-        <title>Contact Us - BuildMat E-commerce</title>
-        <meta name="description" content="Get in touch with BuildMat. We're here to help with your construction material needs." />
+        <title>Contact Us - BuildAdda E-commerce</title>
+        <meta name="description" content="Get in touch with BuildAdda. We're here to help with your construction material needs." />
       </Head>
 
       <Header />
@@ -98,7 +98,7 @@ const ContactPage: React.FC = () => {
                 <div className="contact-icon">📧</div>
                 <div className="contact-details">
                   <h3>Email</h3>
-                  <p>support@buildmat.com</p>
+                  <p>contact@buildadda.in</p>
                   <p className="text-muted">We'll respond within 24 hours</p>
                 </div>
               </div>
@@ -107,7 +107,7 @@ const ContactPage: React.FC = () => {
                 <div className="contact-icon">📞</div>
                 <div className="contact-details">
                   <h3>Phone</h3>
-                  <p>+91 1800-123-4567</p>
+                  <p>+91 6377845721</p>
                   <p className="text-muted">Mon-Sat: 9:00 AM - 6:00 PM</p>
                 </div>
               </div>
@@ -116,9 +116,9 @@ const ContactPage: React.FC = () => {
                 <div className="contact-icon">📍</div>
                 <div className="contact-details">
                   <h3>Address</h3>
-                  <p>BuildMat Headquarters</p>
-                  <p>123 Construction Avenue</p>
-                  <p>Mumbai, Maharashtra 400001</p>
+                  <p>BuildAdda Headquarters</p>
+                  <p>plot-42,bhuvneshwari vatika vistar 3rd,vaishali west road</p>
+                  <p> Jaipur ,Rajasthan (302034)</p>
                   <p>India</p>
                 </div>
               </div>

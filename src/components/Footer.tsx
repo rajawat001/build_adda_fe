@@ -32,14 +32,14 @@ export default function Footer() {
           
           <div className="footer-section">
             <h4>Contact</h4>
-            <p>Email: info@buildmat.com</p>
-            <p>Phone: +91 1234567890</p>
+            <p>Email: contact@buildadda.in</p>
+            <p>Phone: +91 6377845721</p>
             <p>Address: Jaipur, Rajasthan, India</p>
           </div>
         </div>
         
         <div className="footer-bottom">
-          <p>&copy; 2024 BuildAdda. All rights reserved.</p>
+          <p>&copy; 2026 BuildAdda. All rights reserved.</p>
         </div>
       </div>
     </footer>

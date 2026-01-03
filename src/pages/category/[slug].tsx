@@ -153,7 +153,7 @@ const CategoryPage: React.FC = () => {
     return (
       <>
         <Head>
-          <title>Loading Category... - BuildMat</title>
+          <title>Loading Category... - BuildAdda</title>
         </Head>
         <Header />
         <div className="category-page">
@@ -170,7 +170,7 @@ const CategoryPage: React.FC = () => {
     return (
       <>
         <Head>
-          <title>Category Not Found - BuildMat</title>
+          <title>Category Not Found - BuildAdda</title>
         </Head>
         <Header />
         <div className="category-page">
@@ -192,8 +192,8 @@ const CategoryPage: React.FC = () => {
   return (
     <>
       <Head>
-        <title>{category.name} - BuildMat</title>
-        <meta name="description" content={category.description || `Browse ${category.name} products at BuildMat`} />
+        <title>{category.name} - BuildAdda</title>
+        <meta name="description" content={category.description || `Browse ${category.name} products at BuildAdda`} />
       </Head>
 
       <Header />

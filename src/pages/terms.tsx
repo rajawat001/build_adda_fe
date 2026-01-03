@@ -129,7 +129,7 @@ export default function TermsAndConditions() {
               </p>
               <ul>
                 <li>Email: support@buildadda.com</li>
-                <li>Phone: +91 1234567890</li>
+                <li>Phone: +91 6377845721</li>
               </ul>
             </section>
           </div>

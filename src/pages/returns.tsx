@@ -187,8 +187,8 @@ export default function ReturnsRefunds() {
                 For return-related queries:
               </p>
               <ul>
-                <li>Email: returns@buildadda.com</li>
-                <li>Phone: +91 1234567890</li>
+                <li>Email: returns@buildadda.in</li>
+                <li>Phone: +91 6377845721</li>
                 <li>Support Hours: Monday-Saturday, 9 AM - 6 PM IST</li>
               </ul>
             </section>

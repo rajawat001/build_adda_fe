@@ -9,7 +9,7 @@ const NotFoundPage: React.FC = () => {
   return (
     <>
       <Head>
-        <title>404 - Page Not Found | BuildMat</title>
+        <title>404 - Page Not Found | BuildAdda</title>
         <meta name="description" content="The page you're looking for doesn't exist." />
       </Head>
 
