@@ -14,6 +14,9 @@ export interface Product {
   stock: number;
   unit?: string;
   isActive?: boolean;
+  minQuantity?: number;
+  maxQuantity?: number;
+  acceptedPaymentMethods?: ('COD' | 'Online')[];
 }
 
 // Category interface

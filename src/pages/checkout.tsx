@@ -70,9 +70,6 @@ export default function Checkout() {
       return;
     }
 
-    console.log('Cart items:', cart);
-    console.log('First item distributor:', cart[0]?.distributor);
-
     setCartItems(cart);
 
     // Fetch user profile to get saved addresses
@@ -101,7 +98,6 @@ export default function Checkout() {
     } catch (error: any) {
       // User not authenticated, they can still checkout with manual address entry
       setIsAuthenticated(false);
-      console.log('User not authenticated, proceeding with manual address entry');
     }
   };
 
@@ -317,6 +313,25 @@ export default function Checkout() {
     return subtotal - discount;
   };
 
+  // Get available payment methods based on products in cart
+  const getAvailablePaymentMethods = () => {
+    if (cartItems.length === 0) return ['COD', 'Online'];
+
+    // Find payment methods that ALL products accept
+    const allAcceptCOD = cartItems.every(item =>
+      item.acceptedPaymentMethods?.includes('COD') ?? true
+    );
+    const allAcceptOnline = cartItems.every(item =>
+      item.acceptedPaymentMethods?.includes('Online') ?? true
+    );
+
+    const available = [];
+    if (allAcceptCOD) available.push('COD');
+    if (allAcceptOnline) available.push('Online');
+
+    return available.length > 0 ? available : ['COD', 'Online'];
+  };
+
   const applyCoupon = async () => {
     // Call API to validate coupon
     // For now, mock implementation
@@ -407,8 +422,6 @@ export default function Checkout() {
         couponCode: formData.couponCode,
         distributor: distributor
       };
-
-      console.log('Submitting order data:', orderData);
 
       const response = await createOrder(orderData);
 
@@ -699,16 +712,25 @@ export default function Checkout() {
               )}
 
               <h2>Payment Method</h2>
-              
+
               <div className="form-group">
                 <select
                   name="paymentMethod"
                   value={formData.paymentMethod}
                   onChange={handleChange}
                 >
-                  <option value="Online">Razorpay (Online Payment)</option>
-                  <option value="COD">Cash on Delivery</option>
+                  {getAvailablePaymentMethods().includes('Online') && (
+                    <option value="Online">Razorpay (Online Payment)</option>
+                  )}
+                  {getAvailablePaymentMethods().includes('COD') && (
+                    <option value="COD">Cash on Delivery</option>
+                  )}
                 </select>
+                {getAvailablePaymentMethods().length < 2 && (
+                  <small className="payment-note">
+                    Some products in your cart only accept specific payment methods
+                  </small>
+                )}
               </div>
 
               <button type="submit" className="btn-submit" disabled={loading}>
@@ -728,6 +750,34 @@ export default function Checkout() {
                 ))}
               </div>
 
+              <div className="price-breakdown">
+                <div className="summary-row">
+                  <span>Subtotal:</span>
+                  <span>₹{cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0).toLocaleString('en-IN')}</span>
+                </div>
+
+                {discount > 0 && (
+                  <div className="summary-row discount-row">
+                    <span>Discount:</span>
+                    <span className="discount">-₹{discount.toLocaleString('en-IN')}</span>
+                  </div>
+                )}
+
+                <div className="summary-row delivery-note">
+                  <span>Delivery Charge:</span>
+                  <span className="note-text">Added after approval</span>
+                </div>
+
+                <div className="summary-row total">
+                  <span>Total (excl. delivery):</span>
+                  <span>₹{getTotal().toLocaleString('en-IN')}</span>
+                </div>
+
+                <p className="info-note">
+                  * Final delivery charge will be added by the distributor after order approval
+                </p>
+              </div>
+
               <div className="coupon-section">
                 <input
                   type="text"
@@ -737,18 +787,6 @@ export default function Checkout() {
                   onChange={handleChange}
                 />
                 <button type="button" onClick={applyCoupon}>Apply</button>
-              </div>
-
-              {discount > 0 && (
-                <div className="summary-row">
-                  <span>Discount:</span>
-                  <span className="discount">-₹{discount}</span>
-                </div>
-              )}
-
-              <div className="summary-row total">
-                <span>Total:</span>
-                <span>₹{getTotal()}</span>
               </div>
             </div>
           </div>

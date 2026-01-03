@@ -19,8 +19,12 @@ interface Order {
   _id: string;
   orderNumber: string;
   items: OrderItem[];
+  subtotal: number;
+  discount: number;
+  deliveryCharge: number;
   totalAmount: number;
   orderStatus: string;
+  approvalStatus?: string;
   paymentMethod: string;
   paymentStatus: string;
   shippingAddress: {
@@ -153,6 +157,28 @@ const Orders = () => {
                     >
                       {order.orderStatus}
                     </span>
+                    {order.approvalStatus && (
+                      <span
+                        className="approval-badge"
+                        style={{
+                          backgroundColor:
+                            order.approvalStatus === 'approved'
+                              ? '#4caf50'
+                              : order.approvalStatus === 'rejected'
+                              ? '#f44336'
+                              : '#ff9800',
+                          color: 'white',
+                          padding: '4px 8px',
+                          borderRadius: '4px',
+                          fontSize: '12px',
+                          marginLeft: '8px'
+                        }}
+                      >
+                        {order.approvalStatus === 'approved' && '✓ Approved'}
+                        {order.approvalStatus === 'pending' && '⏳ Pending'}
+                        {order.approvalStatus === 'rejected' && '✗ Rejected'}
+                      </span>
+                    )}
                   </div>
                 </div>
                 
@@ -174,10 +200,34 @@ const Orders = () => {
                     <p><strong>Payment:</strong> {order.paymentMethod}</p>
                     <p><strong>Status:</strong> {order.paymentStatus}</p>
                   </div>
-                  
-                  <div className="order-total">
-                    <p className="total-label">Total Amount</p>
-                    <p className="total-amount">₹{order.totalAmount}</p>
+
+                  <div className="order-pricing">
+                    <div className="price-breakdown">
+                      <div className="price-row">
+                        <span>Subtotal:</span>
+                        <span>₹{order.subtotal.toLocaleString('en-IN')}</span>
+                      </div>
+                      {order.discount > 0 && (
+                        <div className="price-row discount">
+                          <span>Discount:</span>
+                          <span>-₹{order.discount.toLocaleString('en-IN')}</span>
+                        </div>
+                      )}
+                      <div className="price-row">
+                        <span>Delivery:</span>
+                        <span>
+                          {order.deliveryCharge > 0
+                            ? `₹${order.deliveryCharge.toLocaleString('en-IN')}`
+                            : order.approvalStatus === 'pending'
+                            ? 'Pending'
+                            : 'Free'}
+                        </span>
+                      </div>
+                      <div className="price-row total">
+                        <span>Total:</span>
+                        <span>₹{order.totalAmount.toLocaleString('en-IN')}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 

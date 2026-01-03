@@ -22,6 +22,10 @@ export default function ProductDetail() {
   const [addingToWishlist, setAddingToWishlist] = useState(false);
   const [isInWishlist, setIsInWishlist] = useState(false);
 
+  // Get min/max quantity limits
+  const minQty = product?.minQuantity || 1;
+  const maxQty = product?.maxQuantity || product?.stock || 999;
+
   useEffect(() => {
     if (id) {
       fetchProductDetails();
@@ -49,6 +53,11 @@ export default function ProductDetail() {
 
       setProduct(productData);
       setSelectedImage(productData.image);
+
+      // Set initial quantity to minQuantity if specified
+      if (productData.minQuantity && productData.minQuantity > 1) {
+        setQuantity(productData.minQuantity);
+      }
 
       // Fetch related products (same category)
       if (productData.category) {
@@ -114,6 +123,18 @@ export default function ProductDetail() {
         return;
       }
 
+      // Validate quantity before adding to cart
+      if (quantity < minQty) {
+        alert(`Minimum quantity for ${product!.name} is ${minQty}`);
+        return;
+      }
+
+      const effectiveMax = Math.min(maxQty, product!.stock);
+      if (quantity > effectiveMax) {
+        alert(`Maximum quantity for ${product!.name} is ${effectiveMax}`);
+        return;
+      }
+
       setAddingToCart(true);
 
       // Try to add to backend cart
@@ -128,7 +149,16 @@ export default function ProductDetail() {
       const existingIndex = cart.findIndex((item: any) => item._id === product!._id);
 
       if (existingIndex > -1) {
-        cart[existingIndex].quantity += quantity;
+        const newQuantity = cart[existingIndex].quantity + quantity;
+
+        // Check if new total exceeds max
+        if (newQuantity > effectiveMax) {
+          alert(`Cannot add more. Maximum quantity for ${product!.name} is ${effectiveMax}`);
+          setAddingToCart(false);
+          return;
+        }
+
+        cart[existingIndex].quantity = newQuantity;
       } else {
         cart.push({ ...product, quantity });
       }
@@ -351,8 +381,15 @@ export default function ProductDetail() {
                 <label>Quantity:</label>
                 <div className="quantity-controls">
                   <button
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    disabled={quantity <= 1}
+                    onClick={() => {
+                      const newQty = quantity - 1;
+                      if (newQty < minQty) {
+                        alert(`Minimum quantity is ${minQty}`);
+                      } else {
+                        setQuantity(newQty);
+                      }
+                    }}
+                    disabled={quantity <= minQty}
                     className="qty-btn"
                   >
                     -
@@ -361,21 +398,47 @@ export default function ProductDetail() {
                     type="number"
                     value={quantity}
                     onChange={(e) => {
-                      const val = parseInt(e.target.value) || 1;
-                      setQuantity(Math.min(product.stock, Math.max(1, val)));
+                      const val = parseInt(e.target.value) || minQty;
+                      const effectiveMax = Math.min(maxQty, product.stock);
+
+                      if (val < minQty) {
+                        alert(`Minimum quantity is ${minQty}`);
+                        setQuantity(minQty);
+                      } else if (val > effectiveMax) {
+                        alert(`Maximum quantity is ${effectiveMax}`);
+                        setQuantity(effectiveMax);
+                      } else {
+                        setQuantity(val);
+                      }
                     }}
-                    min="1"
-                    max={product.stock}
+                    min={minQty}
+                    max={Math.min(maxQty, product.stock)}
                     className="qty-input"
                   />
                   <button
-                    onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
-                    disabled={quantity >= product.stock}
+                    onClick={() => {
+                      const effectiveMax = Math.min(maxQty, product.stock);
+                      const newQty = quantity + 1;
+                      if (newQty > effectiveMax) {
+                        alert(`Maximum quantity is ${effectiveMax}`);
+                      } else {
+                        setQuantity(newQty);
+                      }
+                    }}
+                    disabled={quantity >= Math.min(maxQty, product.stock)}
                     className="qty-btn"
                   >
                     +
                   </button>
                 </div>
+                {(minQty > 1 || maxQty < product.stock) && (
+                  <p className="quantity-limits">
+                    <small>
+                      Min: {minQty}
+                      {maxQty < product.stock && ` | Max: ${maxQty}`}
+                    </small>
+                  </p>
+                )}
               </div>
             )}
 

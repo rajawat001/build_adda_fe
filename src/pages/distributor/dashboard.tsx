@@ -1,728 +1,324 @@
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
-import SEO from '../../components/SEO';
-import api  from '../../services/api';
+import DistributorLayout from '../../components/distributor/Layout';
+import api from '../../services/api';
 
 interface DashboardStats {
   totalRevenue: number;
   totalOrders: number;
   totalProducts: number;
   pendingOrders: number;
+  lowStockProducts: number;
   revenueData: { month: string; revenue: number }[];
   orderData: { status: string; count: number }[];
   stockData: { product: string; stock: number }[];
 }
 
-interface Product {
-  _id: string;
-  name: string;
-  price: number;
-  stock: number;
-  category: string;
-  image: string;
-}
-
-interface Order {
-  _id: string;
-  orderNumber: string;
-  user: { name: string; email: string };
-  totalAmount: number;
-  orderStatus: string;
-  createdAt: string;
-}
-
-interface DistributorProfile {
-  _id: string;
-  businessName: string;
-  email: string;
-  phone: string;
-  address: string;
-  pincode: string;
-  isApproved: boolean;
-  isActive: boolean;
-  createdAt: string;
-}
-
-const DistributorDashboard = () => {
-  const [activeTab, setActiveTab] = useState('dashboard');
+const Dashboard = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [profile, setProfile] = useState<DistributorProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showAddProduct, setShowAddProduct] = useState(false);
-  const [editMode, setEditMode] = useState(false);
-  const router = useRouter();
-
-  const [productForm, setProductForm] = useState({
-    name: '',
-    description: '',
-    price: '',
-    category: '',
-    stock: '',
-    image: null as File | null
-  });
-
-  const [profileForm, setProfileForm] = useState({
-    businessName: '',
-    phone: '',
-    address: '',
-    pincode: ''
-  });
 
   useEffect(() => {
-    checkAuth();
-    fetchDashboardData();
-  }, [activeTab]);
+    fetchStats();
+  }, []);
 
-  const checkAuth = () => {
-    // SECURITY FIX: Don't check localStorage for token - it's in httpOnly cookie
-    // Just check if user role is stored for UI purposes
-    const role = localStorage.getItem('role');
-
-    if (role !== 'distributor') {
-      router.push('/login');
-    }
-  };
-
-  const fetchDashboardData = async () => {
+  const fetchStats = async () => {
     try {
-      // SECURITY FIX: Don't manually add Authorization header
-      // Browser automatically sends httpOnly cookie
-
-      if (activeTab === 'dashboard') {
-        const response = await api.get('/distributor/stats');
-        setStats(response.data);
-      } else if (activeTab === 'products') {
-        const response = await api.get('/distributor/products');
-        setProducts(response.data.products);
-      } else if (activeTab === 'orders') {
-        const response = await api.get('/distributor/orders');
-        setOrders(response.data.orders);
-      } else if (activeTab === 'profile') {
-        const response = await api.get('/distributor/profile');
-        setProfile(response.data.distributor);
-        // Set profile form with current data
-        setProfileForm({
-          businessName: response.data.distributor.businessName,
-          phone: response.data.distributor.phone,
-          address: response.data.distributor.address,
-          pincode: response.data.distributor.pincode
-        });
-      }
-    } catch (error: any) {
-      console.error('Error fetching data:', error);
-      // If unauthorized, redirect to login
-      if (error.response?.status === 401) {
-        router.push('/login');
-      }
+      const response = await api.get('/distributor/stats');
+      setStats(response.data.stats || response.data);
+    } catch (error) {
+      console.error('Error fetching stats:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAddProduct = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    const formData = new FormData();
-    formData.append('name', productForm.name);
-    formData.append('description', productForm.description);
-    formData.append('price', productForm.price);
-    formData.append('category', productForm.category);
-    formData.append('stock', productForm.stock);
-    if (productForm.image) {
-      formData.append('image', productForm.image);
-    }
-
-    try {
-      // SECURITY FIX: Don't manually add Authorization header
-      // Browser automatically sends httpOnly cookie
-      await api.post('/distributor/products', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-
-      alert('Product added successfully');
-      setShowAddProduct(false);
-      setProductForm({
-        name: '',
-        description: '',
-        price: '',
-        category: '',
-        stock: '',
-        image: null
-      });
-      fetchDashboardData();
-    } catch (error: any) {
-      alert(error.response?.data?.message || 'Error adding product');
-    }
-  };
-
-  const handleDeleteProduct = async (productId: string) => {
-    if (!confirm('Are you sure you want to delete this product?')) return;
-
-    try {
-      // SECURITY FIX: Don't manually add Authorization header
-      // Browser automatically sends httpOnly cookie
-      await api.delete(`/distributor/products/${productId}`);
-      
-      alert('Product deleted successfully');
-      fetchDashboardData();
-    } catch (error) {
-      alert('Error deleting product');
-    }
-  };
-
-  const handleUpdateOrderStatus = async (orderId: string, newStatus: string) => {
-    try {
-      // SECURITY FIX: Don't manually add Authorization header
-      // Browser automatically sends httpOnly cookie
-      await api.put(`/distributor/orders/${orderId}`, { orderStatus: newStatus });
-
-      alert('Order status updated');
-      fetchDashboardData();
-    } catch (error) {
-      alert('Error updating order status');
-    }
-  };
-
-  const handleUpdateProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    try {
-      await api.put('/distributor/profile', profileForm);
-
-      alert('Profile updated successfully');
-      setEditMode(false);
-      fetchDashboardData();
-    } catch (error: any) {
-      alert(error.response?.data?.message || 'Error updating profile');
-    }
-  };
-
-  const handleCancelEdit = () => {
-    if (profile) {
-      setProfileForm({
-        businessName: profile.businessName,
-        phone: profile.phone,
-        address: profile.address,
-        pincode: profile.pincode
-      });
-    }
-    setEditMode(false);
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('role');
-    router.push('/login');
-  };
-
   if (loading) {
-    return <div className="dashboard-loading">Loading...</div>;
+    return (
+      <DistributorLayout title="Dashboard">
+        <div className="loading">Loading dashboard...</div>
+      </DistributorLayout>
+    );
+  }
+
+  if (!stats) {
+    return (
+      <DistributorLayout title="Dashboard">
+        <div className="error">Failed to load dashboard data</div>
+      </DistributorLayout>
+    );
   }
 
   return (
-    <>
-      <SEO title="Distributor Dashboard" description="Manage your products and orders" />
-      
-      <div className="distributor-dashboard">
-        <aside className="dashboard-sidebar">
-          <div className="sidebar-header">
-            <h2>Distributor Panel</h2>
+    <DistributorLayout title="Dashboard">
+      <div className="dashboard">
+        <h1>Dashboard Overview</h1>
+
+        {/* Stats Cards */}
+        <div className="stats-grid">
+          <div className="stat-card revenue">
+            <div className="stat-icon">💰</div>
+            <div className="stat-content">
+              <h3>Total Revenue</h3>
+              <p className="stat-value">₹{stats.totalRevenue.toLocaleString('en-IN')}</p>
+            </div>
           </div>
-          
-          <nav className="sidebar-nav">
-            <button 
-              className={activeTab === 'dashboard' ? 'active' : ''}
-              onClick={() => setActiveTab('dashboard')}
-            >
-              📊 Dashboard
-            </button>
-            
-            <button 
-              className={activeTab === 'products' ? 'active' : ''}
-              onClick={() => setActiveTab('products')}
-            >
-              📦 Products
-            </button>
-            
-            <button 
-              className={activeTab === 'orders' ? 'active' : ''}
-              onClick={() => setActiveTab('orders')}
-            >
-              🛒 Orders
-            </button>
-            
-            <button 
-              className={activeTab === 'profile' ? 'active' : ''}
-              onClick={() => setActiveTab('profile')}
-            >
-              👤 Profile
-            </button>
-            
-            <button onClick={handleLogout} className="btn-logout">
-              🚪 Logout
-            </button>
-          </nav>
-        </aside>
-        
-        <main className="dashboard-main">
-          {activeTab === 'dashboard' && stats && (
-            <div className="dashboard-content">
-              <h1>Dashboard Overview</h1>
-              
-              <div className="stats-grid">
-                <div className="stat-card">
-                  <div className="stat-icon">💰</div>
-                  <div className="stat-details">
-                    <p className="stat-label">Total Revenue</p>
-                    <p className="stat-value">₹{(stats.totalRevenue || 0).toLocaleString()}</p>
-                  </div>
-                </div>
 
-                <div className="stat-card">
-                  <div className="stat-icon">📦</div>
-                  <div className="stat-details">
-                    <p className="stat-label">Total Orders</p>
-                    <p className="stat-value">{stats.totalOrders || 0}</p>
-                  </div>
-                </div>
-
-                <div className="stat-card">
-                  <div className="stat-icon">🏷️</div>
-                  <div className="stat-details">
-                    <p className="stat-label">Total Products</p>
-                    <p className="stat-value">{stats.totalProducts || 0}</p>
-                  </div>
-                </div>
-
-                <div className="stat-card">
-                  <div className="stat-icon">⏳</div>
-                  <div className="stat-details">
-                    <p className="stat-label">Pending Orders</p>
-                    <p className="stat-value">{stats.pendingOrders || 0}</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="charts-section">
-                <div className="chart-card">
-                  <h3>Revenue Trend</h3>
-                  <div className="simple-chart">
-                    {(stats.revenueData || []).map((data, index) => (
-                      <div key={index} className="chart-bar">
-                        <div className="bar-label">{data.month}</div>
-                        <div 
-                          className="bar-fill"
-                          style={{ 
-                            height: `${(data.revenue / Math.max(...stats.revenueData.map(d => d.revenue))) * 100}%` 
-                          }}
-                        />
-                        <div className="bar-value">₹{data.revenue}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                
-                <div className="chart-card">
-                  <h3>Order Status Distribution</h3>
-                  <div className="status-list">
-                    {(stats.orderData || []).map((data, index) => (
-                      <div key={index} className="status-item">
-                        <span className="status-label">{data.status}</span>
-                        <span className="status-count">{data.count}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                
-                <div className="chart-card">
-                  <h3>Low Stock Alert</h3>
-                  <div className="stock-list">
-                    {(stats.stockData || []).filter(s => s.stock < 10).map((data, index) => (
-                      <div key={index} className="stock-item">
-                        <span className="stock-product">{data.product}</span>
-                        <span className={`stock-value ${data.stock < 5 ? 'critical' : 'warning'}`}>
-                          {data.stock} units
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
+          <div className="stat-card orders">
+            <div className="stat-icon">📦</div>
+            <div className="stat-content">
+              <h3>Total Orders</h3>
+              <p className="stat-value">{stats.totalOrders}</p>
             </div>
-          )}
-          
-          {activeTab === 'products' && (
-            <div className="products-content">
-              <div className="content-header">
-                <h1>Manage Products</h1>
-                <button onClick={() => setShowAddProduct(!showAddProduct)} className="btn-add">
-                  {showAddProduct ? 'Cancel' : '+ Add Product'}
-                </button>
-              </div>
-              
-              {showAddProduct && (
-                <form onSubmit={handleAddProduct} className="add-product-form">
-                  <div className="form-group">
-                    <label>Product Name</label>
-                    <input
-                      type="text"
-                      value={productForm.name}
-                      onChange={(e) => setProductForm({...productForm, name: e.target.value})}
-                      required
-                    />
-                  </div>
-                  
-                  <div className="form-group">
-                    <label>Description</label>
-                    <textarea
-                      value={productForm.description}
-                      onChange={(e) => setProductForm({...productForm, description: e.target.value})}
-                      required
-                    />
-                  </div>
-                  
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label>Price (₹)</label>
-                      <input
-                        type="number"
-                        value={productForm.price}
-                        onChange={(e) => setProductForm({...productForm, price: e.target.value})}
-                        required
-                      />
-                    </div>
-                    
-                    <div className="form-group">
-                      <label>Stock</label>
-                      <input
-                        type="number"
-                        value={productForm.stock}
-                        onChange={(e) => setProductForm({...productForm, stock: e.target.value})}
-                        required
-                      />
-                    </div>
-                    
-                    <div className="form-group">
-                      <label>Category</label>
-                      <select
-                        value={productForm.category}
-                        onChange={(e) => setProductForm({...productForm, category: e.target.value})}
-                        required
-                      >
-                        <option value="">Select Category</option>
-                        <option value="cement">Cement</option>
-                        <option value="bricks">Bricks</option>
-                        <option value="steel">Steel</option>
-                        <option value="sand">Sand</option>
-                        <option value="paint">Paint</option>
-                      </select>
-                    </div>
-                  </div>
-                  
-                  <div className="form-group">
-                    <label>Product Image</label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => setProductForm({...productForm, image: e.target.files?.[0] || null})}
-                    />
-                  </div>
-                  
-                  <button type="submit" className="btn-submit">Add Product</button>
-                </form>
-              )}
-              
-              <div className="products-grid">
-                {products.length === 0 ? (
-                  <div className="empty-state">
-                    <div className="empty-icon">📦</div>
-                    <h3>No Products Yet</h3>
-                    <p>Start adding products to your inventory</p>
-                    <button onClick={() => setShowAddProduct(true)} className="btn-add">
-                      + Add Your First Product
-                    </button>
-                  </div>
-                ) : (
-                  products.map((product) => (
-                    <div key={product._id} className="product-card">
-                      <div className="product-image-container">
-                        <img
-                          src={product.image || '/placeholder-product.jpg'}
-                          alt={product.name}
-                          className="product-image"
-                        />
-                        <span className="product-category">{product.category}</span>
-                        {product.stock < 10 && (
-                          <span className={`stock-badge ${product.stock < 5 ? 'critical' : 'warning'}`}>
-                            {product.stock < 5 ? '⚠️ Critical' : '⚡ Low Stock'}
-                          </span>
-                        )}
-                      </div>
+          </div>
 
-                      <div className="product-details">
-                        <h3 className="product-name">{product.name}</h3>
-
-                        <div className="product-info">
-                          <div className="info-item">
-                            <span className="info-label">Price</span>
-                            <span className="info-value price">₹{product.price.toLocaleString()}</span>
-                          </div>
-
-                          <div className="info-item">
-                            <span className="info-label">Stock</span>
-                            <span className={`info-value stock ${product.stock < 10 ? 'low' : ''}`}>
-                              {product.stock} units
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="product-actions">
-                          <button className="btn-edit" title="Edit Product">
-                            <span className="btn-icon">✏️</span>
-                            Edit
-                          </button>
-                          <button
-                            className="btn-delete"
-                            onClick={() => handleDeleteProduct(product._id)}
-                            title="Delete Product"
-                          >
-                            <span className="btn-icon">🗑️</span>
-                            Delete
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
+          <div className="stat-card products">
+            <div className="stat-icon">🏷️</div>
+            <div className="stat-content">
+              <h3>Total Products</h3>
+              <p className="stat-value">{stats.totalProducts}</p>
             </div>
-          )}
-          
-          {activeTab === 'orders' && (
-            <div className="orders-content">
-              <h1>Manage Orders</h1>
+          </div>
 
-              <div className="orders-table">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Order #</th>
-                      <th>Customer</th>
-                      <th>Amount</th>
-                      <th>Status</th>
-                      <th>Date</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {orders.map((order) => (
-                      <tr key={order._id}>
-                        <td>{order.orderNumber}</td>
-                        <td>{order.user.name}</td>
-                        <td>₹{order.totalAmount}</td>
-                        <td>
-                          <select
-                            value={order.orderStatus}
-                            onChange={(e) => handleUpdateOrderStatus(order._id, e.target.value)}
-                            className="status-select"
-                          >
-                            <option value="pending">Pending</option>
-                            <option value="confirmed">Confirmed</option>
-                            <option value="processing">Processing</option>
-                            <option value="shipped">Shipped</option>
-                            <option value="delivered">Delivered</option>
-                            <option value="cancelled">Cancelled</option>
-                          </select>
-                        </td>
-                        <td>{new Date(order.createdAt).toLocaleDateString()}</td>
-                        <td>
-                          <button className="btn-view">View Details</button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+          <div className="stat-card pending">
+            <div className="stat-icon">⏳</div>
+            <div className="stat-content">
+              <h3>Pending Orders</h3>
+              <p className="stat-value">{stats.pendingOrders}</p>
             </div>
-          )}
+          </div>
+        </div>
 
-          {activeTab === 'profile' && profile && (
-            <div className="profile-content">
-              <div className="content-header">
-                <h1>My Profile</h1>
-                {!editMode && (
-                  <button onClick={() => setEditMode(true)} className="btn-edit-profile">
-                    Edit Profile
-                  </button>
-                )}
-              </div>
-
-              <div className="profile-grid">
-                {/* Account Status Card */}
-                <div className="profile-card status-card">
-                  <div className="card-header">
-                    <h3>Account Status</h3>
+        {/* Charts Section */}
+        <div className="charts-grid">
+          {/* Order Status Breakdown */}
+          <div className="chart-card">
+            <h3>Order Status</h3>
+            <div className="order-status-list">
+              {stats.orderData.map((item, index) => (
+                <div key={index} className="status-item">
+                  <span className="status-label">{item.status}</span>
+                  <div className="status-bar">
+                    <div
+                      className="status-fill"
+                      style={{
+                        width: `${(item.count / stats.totalOrders) * 100}%`,
+                      }}
+                    ></div>
                   </div>
-                  <div className="card-body">
-                    <div className="status-item">
-                      <span className="status-label">Approval Status</span>
-                      <span className={`status-badge ${profile.isApproved ? 'approved' : 'pending'}`}>
-                        {profile.isApproved ? '✓ Approved' : '⏳ Pending Approval'}
-                      </span>
-                    </div>
-                    <div className="status-item">
-                      <span className="status-label">Account Status</span>
-                      <span className={`status-badge ${profile.isActive ? 'active' : 'inactive'}`}>
-                        {profile.isActive ? '✓ Active' : '✗ Inactive'}
-                      </span>
-                    </div>
-                    <div className="status-item">
-                      <span className="status-label">Member Since</span>
-                      <span className="status-value">
-                        {new Date(profile.createdAt).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
-                        })}
-                      </span>
-                    </div>
-                  </div>
+                  <span className="status-count">{item.count}</span>
                 </div>
-
-                {/* Business Information Card */}
-                <div className="profile-card info-card">
-                  <div className="card-header">
-                    <h3>Business Information</h3>
-                  </div>
-                  <div className="card-body">
-                    {editMode ? (
-                      <form onSubmit={handleUpdateProfile} className="profile-form">
-                        <div className="form-group">
-                          <label>Business Name</label>
-                          <input
-                            type="text"
-                            value={profileForm.businessName}
-                            onChange={(e) => setProfileForm({...profileForm, businessName: e.target.value})}
-                            required
-                          />
-                        </div>
-
-                        <div className="form-group">
-                          <label>Email Address</label>
-                          <input
-                            type="email"
-                            value={profile.email}
-                            disabled
-                            className="disabled-input"
-                          />
-                          <small className="input-note">Email cannot be changed</small>
-                        </div>
-
-                        <div className="form-group">
-                          <label>Phone Number</label>
-                          <input
-                            type="tel"
-                            value={profileForm.phone}
-                            onChange={(e) => setProfileForm({...profileForm, phone: e.target.value})}
-                            required
-                          />
-                        </div>
-
-                        <div className="form-group">
-                          <label>Business Address</label>
-                          <textarea
-                            value={profileForm.address}
-                            onChange={(e) => setProfileForm({...profileForm, address: e.target.value})}
-                            rows={3}
-                            required
-                          />
-                        </div>
-
-                        <div className="form-group">
-                          <label>Pincode</label>
-                          <input
-                            type="text"
-                            value={profileForm.pincode}
-                            onChange={(e) => setProfileForm({...profileForm, pincode: e.target.value})}
-                            required
-                          />
-                        </div>
-
-                        <div className="form-actions">
-                          <button type="submit" className="btn-save">
-                            Save Changes
-                          </button>
-                          <button type="button" onClick={handleCancelEdit} className="btn-cancel">
-                            Cancel
-                          </button>
-                        </div>
-                      </form>
-                    ) : (
-                      <div className="info-display">
-                        <div className="info-row">
-                          <span className="info-icon">🏢</span>
-                          <div className="info-details">
-                            <label>Business Name</label>
-                            <p>{profile.businessName}</p>
-                          </div>
-                        </div>
-
-                        <div className="info-row">
-                          <span className="info-icon">📧</span>
-                          <div className="info-details">
-                            <label>Email Address</label>
-                            <p>{profile.email}</p>
-                          </div>
-                        </div>
-
-                        <div className="info-row">
-                          <span className="info-icon">📞</span>
-                          <div className="info-details">
-                            <label>Phone Number</label>
-                            <p>{profile.phone}</p>
-                          </div>
-                        </div>
-
-                        <div className="info-row">
-                          <span className="info-icon">📍</span>
-                          <div className="info-details">
-                            <label>Business Address</label>
-                            <p>{profile.address}</p>
-                          </div>
-                        </div>
-
-                        <div className="info-row">
-                          <span className="info-icon">📮</span>
-                          <div className="info-details">
-                            <label>Pincode</label>
-                            <p>{profile.pincode}</p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {!profile.isApproved && (
-                <div className="approval-notice">
-                  <div className="notice-icon">ℹ️</div>
-                  <div className="notice-content">
-                    <h4>Approval Pending</h4>
-                    <p>Your distributor account is currently under review. You will receive an email once your account is approved by our admin team.</p>
-                  </div>
-                </div>
-              )}
+              ))}
             </div>
-          )}
-        </main>
+          </div>
+
+          {/* Low Stock Alert */}
+          <div className="chart-card">
+            <h3>Low Stock Alert</h3>
+            {stats.stockData.length > 0 ? (
+              <div className="stock-list">
+                {stats.stockData.map((item, index) => (
+                  <div key={index} className="stock-item">
+                    <span className="product-name">{item.product}</span>
+                    <span className={`stock-badge ${item.stock < 5 ? 'critical' : 'warning'}`}>
+                      {item.stock} units
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="no-data">All products are well stocked!</p>
+            )}
+          </div>
+        </div>
       </div>
-    </>
+
+      <style jsx>{`
+        .dashboard h1 {
+          font-size: 32px;
+          font-weight: 700;
+          color: #1a202c;
+          margin-bottom: 30px;
+        }
+
+        .stats-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+          gap: 24px;
+          margin-bottom: 30px;
+        }
+
+        .stat-card {
+          background: white;
+          border-radius: 12px;
+          padding: 24px;
+          display: flex;
+          align-items: center;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+          transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .stat-card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+        }
+
+        .stat-icon {
+          font-size: 48px;
+          margin-right: 20px;
+        }
+
+        .stat-content h3 {
+          font-size: 14px;
+          color: #718096;
+          margin: 0 0 8px 0;
+          font-weight: 500;
+        }
+
+        .stat-value {
+          font-size: 28px;
+          font-weight: 700;
+          color: #1a202c;
+          margin: 0;
+        }
+
+        .stat-card.revenue {
+          border-left: 4px solid #48bb78;
+        }
+
+        .stat-card.orders {
+          border-left: 4px solid #4299e1;
+        }
+
+        .stat-card.products {
+          border-left: 4px solid #ed8936;
+        }
+
+        .stat-card.pending {
+          border-left: 4px solid #ecc94b;
+        }
+
+        .charts-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+          gap: 24px;
+        }
+
+        .chart-card {
+          background: white;
+          border-radius: 12px;
+          padding: 24px;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .chart-card h3 {
+          font-size: 18px;
+          font-weight: 600;
+          color: #1a202c;
+          margin: 0 0 20px 0;
+        }
+
+        .order-status-list {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+
+        .status-item {
+          display: grid;
+          grid-template-columns: 120px 1fr 60px;
+          align-items: center;
+          gap: 12px;
+        }
+
+        .status-label {
+          font-size: 14px;
+          color: #4a5568;
+          text-transform: capitalize;
+        }
+
+        .status-bar {
+          background: #e2e8f0;
+          height: 24px;
+          border-radius: 12px;
+          overflow: hidden;
+        }
+
+        .status-fill {
+          background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+          height: 100%;
+          transition: width 0.3s ease;
+        }
+
+        .status-count {
+          font-weight: 600;
+          color: #1a202c;
+          text-align: right;
+        }
+
+        .stock-list {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        .stock-item {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 12px;
+          background: #f7fafc;
+          border-radius: 8px;
+        }
+
+        .product-name {
+          font-size: 14px;
+          color: #2d3748;
+          font-weight: 500;
+        }
+
+        .stock-badge {
+          padding: 4px 12px;
+          border-radius: 12px;
+          font-size: 13px;
+          font-weight: 600;
+        }
+
+        .stock-badge.warning {
+          background: #fef5e7;
+          color: #d97706;
+        }
+
+        .stock-badge.critical {
+          background: #fee;
+          color: #dc2626;
+        }
+
+        .no-data {
+          text-align: center;
+          color: #718096;
+          padding: 40px;
+        }
+
+        .loading,
+        .error {
+          text-align: center;
+          padding: 60px;
+          font-size: 18px;
+          color: #718096;
+        }
+
+        @media (max-width: 768px) {
+          .dashboard h1 {
+            font-size: 24px;
+          }
+
+          .charts-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+      `}</style>
+    </DistributorLayout>
   );
 };
 
-export default DistributorDashboard;
+export default Dashboard;

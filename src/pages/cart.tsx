@@ -20,7 +20,24 @@ export default function Cart() {
   const updateQuantity = (productId: string, delta: number) => {
     const updated = cartItems.map(item => {
       if (item._id === productId) {
-        const newQty = Math.max(1, item.quantity + delta);
+        const minQty = item.minQuantity || 1;
+        const maxQty = item.maxQuantity;
+        let newQty = item.quantity + delta;
+
+        // Enforce minimum quantity
+        newQty = Math.max(minQty, newQty);
+
+        // Enforce maximum quantity if set
+        if (maxQty && newQty > maxQty) {
+          alert(`Maximum quantity for ${item.name} is ${maxQty}`);
+          newQty = maxQty;
+        }
+
+        if (newQty < minQty) {
+          alert(`Minimum quantity for ${item.name} is ${minQty}`);
+          newQty = minQty;
+        }
+
         return { ...item, quantity: newQty };
       }
       return item;
@@ -71,11 +88,25 @@ export default function Cart() {
                       <h3>{item.name}</h3>
                       <p className="price">₹{item.price}</p>
                       <p className="distributor">{item.distributor?.businessName}</p>
+                      {(item.minQuantity > 1 || item.maxQuantity) && (
+                        <p className="quantity-limits">
+                          <small>
+                            Min: {item.minQuantity || 1}
+                            {item.maxQuantity && ` | Max: ${item.maxQuantity}`}
+                          </small>
+                        </p>
+                      )}
                     </div>
                     <div className="quantity-controls">
-                      <button onClick={() => updateQuantity(item._id, -1)}>-</button>
+                      <button
+                        onClick={() => updateQuantity(item._id, -1)}
+                        disabled={item.quantity <= (item.minQuantity || 1)}
+                      >-</button>
                       <span>{item.quantity}</span>
-                      <button onClick={() => updateQuantity(item._id, 1)}>+</button>
+                      <button
+                        onClick={() => updateQuantity(item._id, 1)}
+                        disabled={item.maxQuantity && item.quantity >= item.maxQuantity}
+                      >+</button>
                     </div>
                     <div className="item-total">
                       ₹{item.price * item.quantity}

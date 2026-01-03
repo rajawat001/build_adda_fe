@@ -42,14 +42,25 @@ export default function Home() {
     const cart = JSON.parse(localStorage.getItem('cart') || '[]');
     const existing = cart.find((item: any) => item._id === product._id);
 
+    const minQty = product.minQuantity || 1;
+    const maxQty = product.maxQuantity || product.stock;
+
     if (existing) {
-      existing.quantity += 1;
+      const newQuantity = existing.quantity + minQty;
+
+      // Check if adding minQty exceeds max
+      if (newQuantity > maxQty) {
+        alert(`Cannot add more. Maximum quantity for ${product.name} is ${maxQty}`);
+        return;
+      }
+
+      existing.quantity = newQuantity;
     } else {
-      cart.push({ ...product, quantity: 1 });
+      cart.push({ ...product, quantity: minQty });
     }
 
     localStorage.setItem('cart', JSON.stringify(cart));
-    alert('Product added to cart!');
+    alert(`Added ${minQty} ${product.name} to cart!`);
   };
 
   const handleAddToWishlist = (product: Product) => {

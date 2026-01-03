@@ -34,6 +34,15 @@ interface Order {
   paymentMethod: string;
   paymentStatus: string;
   orderStatus: string;
+  approvalStatus?: string;
+  approvedAt?: string;
+  rejectionReason?: string;
+  distributor?: {
+    _id: string;
+    businessName: string;
+    phone: string;
+    email: string;
+  };
   trackingNumber?: string;
   estimatedDelivery?: string;
   createdAt: string;
@@ -188,6 +197,75 @@ export default function OrderDetail() {
               </div>
             </div>
 
+            {/* Approval Status */}
+            {order.approvalStatus && (
+              <div className="info-section">
+                <h3>Order Approval</h3>
+                <div className="info-grid">
+                  <div className="info-item">
+                    <span className="label">Approval Status:</span>
+                    <span
+                      className="value approval-badge"
+                      style={{
+                        color:
+                          order.approvalStatus === 'approved'
+                            ? '#4caf50'
+                            : order.approvalStatus === 'rejected'
+                            ? '#f44336'
+                            : '#ff9800',
+                        fontWeight: 'bold'
+                      }}
+                    >
+                      {order.approvalStatus === 'approved' && '✓ APPROVED'}
+                      {order.approvalStatus === 'pending' && '⏳ PENDING APPROVAL'}
+                      {order.approvalStatus === 'rejected' && '✗ REJECTED'}
+                    </span>
+                  </div>
+                  {order.approvedAt && (
+                    <div className="info-item">
+                      <span className="label">Approved On:</span>
+                      <span className="value">{formatDate(order.approvedAt)}</span>
+                    </div>
+                  )}
+                </div>
+                {order.approvalStatus === 'pending' && (
+                  <div className="approval-note">
+                    <p>Your order is awaiting distributor approval. The distributor will review and confirm the delivery charge.</p>
+                  </div>
+                )}
+                {order.approvalStatus === 'rejected' && order.rejectionReason && (
+                  <div className="rejection-reason">
+                    <p><strong>Rejection Reason:</strong> {order.rejectionReason}</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Distributor Contact */}
+            {order.distributor && (
+              <div className="info-section">
+                <h3>Distributor Information</h3>
+                <div className="distributor-card">
+                  <h4>{order.distributor.businessName}</h4>
+                  <div className="contact-info">
+                    <div className="contact-item">
+                      <span className="icon">📞</span>
+                      <a href={`tel:${order.distributor.phone}`}>{order.distributor.phone}</a>
+                    </div>
+                    <div className="contact-item">
+                      <span className="icon">📧</span>
+                      <a href={`mailto:${order.distributor.email}`}>{order.distributor.email}</a>
+                    </div>
+                  </div>
+                  {order.approvalStatus === 'approved' && (
+                    <p className="contact-note">
+                      You can contact the distributor for any queries regarding your order.
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Payment Info */}
             <div className="info-section">
               <h3>Payment Information</h3>
@@ -279,15 +357,15 @@ export default function OrderDetail() {
                     <span>-₹{order.discount.toLocaleString('en-IN')}</span>
                   </div>
                 )}
-                {order.tax > 0 && (
-                  <div className="price-row">
-                    <span>Tax:</span>
-                    <span>₹{order.tax.toLocaleString('en-IN')}</span>
-                  </div>
-                )}
                 <div className="price-row">
                   <span>Delivery Charge:</span>
-                  <span>₹{order.deliveryCharge.toLocaleString('en-IN')}</span>
+                  <span>
+                    {order.deliveryCharge > 0
+                      ? `₹${order.deliveryCharge.toLocaleString('en-IN')}`
+                      : order.approvalStatus === 'pending'
+                      ? 'Pending approval'
+                      : 'Free'}
+                  </span>
                 </div>
                 <div className="price-row total">
                   <span>Total Amount:</span>
