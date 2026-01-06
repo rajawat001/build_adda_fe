@@ -21,7 +21,8 @@ const Products = () => {
     minPrice: '',
     maxPrice: '',
     availability: 'all',
-    sortBy: 'newest'
+    sortBy: 'newest',
+    pincode: ''
   });
 
   useEffect(() => {
@@ -119,6 +120,17 @@ const Products = () => {
       filtered = filtered.filter(product => product.stock === 0);
     }
 
+    // Pincode filter - filter by distributor's pincode
+    if (filters.pincode && filters.pincode.trim()) {
+      filtered = filtered.filter(product => {
+        const distributor = typeof product.distributor === 'object' ? product.distributor : null;
+        if (distributor && (distributor as any).pincode) {
+          return (distributor as any).pincode.includes(filters.pincode.trim());
+        }
+        return false;
+      });
+    }
+
     // Sort
     switch (filters.sortBy) {
       case 'priceLowToHigh':
@@ -154,7 +166,8 @@ const Products = () => {
       minPrice: '',
       maxPrice: '',
       availability: 'all',
-      sortBy: 'newest'
+      sortBy: 'newest',
+      pincode: ''
     });
     setSearchTerm('');
   };

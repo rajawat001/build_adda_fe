@@ -10,6 +10,7 @@ interface FilterProps {
     minPrice: string;
     maxPrice: string;
     availability: string;
+    pincode?: string;
   };
   onFilterChange: (filterName: string, value: string) => void;
 }
@@ -63,6 +64,21 @@ export default function Filter({ categories, filters, onFilterChange }: FilterPr
           <option key="inStock" value="inStock">In Stock</option>
           <option key="outOfStock" value="outOfStock">Out of Stock</option>
         </select>
+      </div>
+
+      <div className="filter-group">
+        <label>Filter by Pincode</label>
+        <input
+          type="text"
+          placeholder="Enter pincode (e.g., 400001)"
+          value={filters.pincode || ''}
+          onChange={(e) => onFilterChange('pincode', e.target.value)}
+          maxLength={6}
+          pattern="[0-9]*"
+        />
+        <small style={{ fontSize: '12px', color: '#666', marginTop: '4px', display: 'block' }}>
+          Find products from distributors in your area
+        </small>
       </div>
     </div>
   );

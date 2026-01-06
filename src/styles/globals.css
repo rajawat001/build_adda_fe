@@ -1,3 +1,8 @@
+/* Tailwind CSS Directives */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* ===================================
    MODERN BUILDING MATERIALS THEME
    Bold, Industrial, Construction-Inspired

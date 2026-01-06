@@ -1,5 +1,8 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { useTheme } from '../../contexts/ThemeContext';
+import { FiHome, FiPackage, FiShoppingCart, FiUser, FiLogOut, FiSun, FiMoon, FiBarChart2 } from 'react-icons/fi';
+import { motion } from 'framer-motion';
 
 interface SidebarProps {
   onLogout: () => void;
@@ -7,6 +10,7 @@ interface SidebarProps {
 
 const Sidebar = ({ onLogout }: SidebarProps) => {
   const router = useRouter();
+  const { theme, toggleTheme } = useTheme();
   const currentPath = router.pathname;
 
   const isActive = (path: string) => {
@@ -14,35 +18,67 @@ const Sidebar = ({ onLogout }: SidebarProps) => {
   };
 
   const menuItems = [
-    { path: '/distributor/dashboard', icon: '📊', label: 'Dashboard' },
-    { path: '/distributor/products', icon: '📦', label: 'Products' },
-    { path: '/distributor/orders', icon: '🛒', label: 'Orders' },
-    { path: '/distributor/profile', icon: '👤', label: 'Profile' },
+    { path: '/distributor/dashboard', icon: FiHome, label: 'Dashboard' },
+    { path: '/distributor/products', icon: FiPackage, label: 'Products' },
+    { path: '/distributor/orders', icon: FiShoppingCart, label: 'Orders' },
+    { path: '/distributor/analytics', icon: FiBarChart2, label: 'Analytics' },
+    { path: '/distributor/profile', icon: FiUser, label: 'Profile' },
   ];
 
   return (
     <aside className="distributor-sidebar">
       <div className="sidebar-header">
-        <h2>Distributor Panel</h2>
+        <motion.h2
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+        >
+          Distributor Panel
+        </motion.h2>
       </div>
 
       <nav className="sidebar-nav">
-        {menuItems.map((item) => (
-          <Link
-            key={item.path}
-            href={item.path}
-            className={`nav-item ${isActive(item.path) ? 'active' : ''}`}
-          >
-            <span className="nav-icon">{item.icon}</span>
-            <span className="nav-label">{item.label}</span>
-          </Link>
-        ))}
+        {menuItems.map((item, index) => {
+          const Icon = item.icon;
+          return (
+            <motion.div
+              key={item.path}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.1 }}
+            >
+              <Link
+                href={item.path}
+                className={`nav-item ${isActive(item.path) ? 'active' : ''}`}
+              >
+                <Icon className="nav-icon" />
+                <span className="nav-label">{item.label}</span>
+              </Link>
+            </motion.div>
+          );
+        })}
       </nav>
 
       <div className="sidebar-footer">
+        {/* Dark Mode Toggle */}
+        <button onClick={toggleTheme} className="btn-theme-toggle">
+          {theme === 'light' ? (
+            <>
+              <FiMoon className="icon" />
+              <span className="label">Dark Mode</span>
+            </>
+          ) : (
+            <>
+              <FiSun className="icon" />
+              <span className="label">Light Mode</span>
+            </>
+          )}
+        </button>
+
+        {/* Logout Button */}
         <button onClick={onLogout} className="btn-logout">
-          <span className="nav-icon">🚪</span>
-          <span className="nav-label">Logout</span>
+          <FiLogOut className="icon" />
+          <span className="label">Logout</span>
         </button>
       </div>
 
@@ -59,6 +95,7 @@ const Sidebar = ({ onLogout }: SidebarProps) => {
           height: 100vh;
           overflow-y: auto;
           box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+          z-index: 100;
         }
 
         .sidebar-header {
@@ -78,9 +115,10 @@ const Sidebar = ({ onLogout }: SidebarProps) => {
           padding: 20px 0;
           display: flex;
           flex-direction: column;
+          gap: 4px;
         }
 
-        .nav-item {
+        .sidebar-nav :global(.nav-item) {
           display: flex;
           align-items: center;
           padding: 14px 25px;
@@ -92,31 +130,28 @@ const Sidebar = ({ onLogout }: SidebarProps) => {
           white-space: nowrap;
         }
 
-        .nav-item:hover {
+        .sidebar-nav :global(.nav-item:hover) {
           background: rgba(255, 255, 255, 0.1);
           color: white;
           border-left-color: white;
         }
 
-        .nav-item.active {
+        .sidebar-nav :global(.nav-item.active) {
           background: rgba(255, 255, 255, 0.15);
           color: white;
           border-left-color: white;
           font-weight: 600;
         }
 
-        .nav-icon {
+        .sidebar-nav :global(.nav-icon) {
           font-size: 20px;
           margin-right: 15px;
           width: 24px;
           height: 24px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
           flex-shrink: 0;
         }
 
-        .nav-label {
+        .sidebar-nav :global(.nav-label) {
           font-size: 15px;
           line-height: 1;
         }
@@ -125,27 +160,42 @@ const Sidebar = ({ onLogout }: SidebarProps) => {
           padding: 20px;
           border-top: 1px solid rgba(255, 255, 255, 0.1);
           margin-top: auto;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
         }
 
+        .btn-theme-toggle,
         .btn-logout {
           width: 100%;
           display: flex;
           align-items: center;
           justify-content: flex-start;
-          padding: 14px 20px;
+          padding: 12px 16px;
           background: rgba(255, 255, 255, 0.1);
           color: white;
           border: none;
           border-radius: 8px;
           cursor: pointer;
           transition: all 0.3s ease;
-          font-size: 15px;
+          font-size: 14px;
+          gap: 12px;
         }
 
-        .btn-logout .nav-icon {
-          margin-right: 15px;
+        .btn-theme-toggle :global(.icon),
+        .btn-logout :global(.icon) {
+          width: 18px;
+          height: 18px;
+          flex-shrink: 0;
         }
 
+        .btn-theme-toggle :global(.label),
+        .btn-logout :global(.label) {
+          flex: 1;
+          text-align: left;
+        }
+
+        .btn-theme-toggle:hover,
         .btn-logout:hover {
           background: rgba(255, 255, 255, 0.2);
           transform: translateY(-2px);
@@ -157,33 +207,33 @@ const Sidebar = ({ onLogout }: SidebarProps) => {
           }
 
           .sidebar-header h2 {
-            font-size: 16px;
+            font-size: 12px;
             text-align: center;
+            word-break: break-word;
           }
 
-          .nav-label {
+          .sidebar-nav :global(.nav-label) {
             display: none;
           }
 
-          .nav-item {
+          .sidebar-nav :global(.nav-item) {
             justify-content: center;
             padding: 14px 10px;
           }
 
-          .nav-icon {
+          .sidebar-nav :global(.nav-icon) {
             margin-right: 0;
           }
 
-          .btn-logout .nav-label {
+          .btn-theme-toggle :global(.label),
+          .btn-logout :global(.label) {
             display: none;
           }
 
-          .btn-logout .nav-icon {
-            margin-right: 0;
-          }
-
+          .btn-theme-toggle,
           .btn-logout {
             justify-content: center;
+            padding: 12px;
           }
         }
       `}</style>

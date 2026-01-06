@@ -1,6 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import DistributorLayout from '../../components/distributor/Layout';
+import { Button, Card, Badge, Loading } from '../../components/ui';
+import { FiUpload, FiX, FiCheck, FiImage, FiArrowLeft } from 'react-icons/fi';
+import { useDropzone } from 'react-dropzone';
+import { toast } from 'react-toastify';
+import { motion } from 'framer-motion';
 import api from '../../services/api';
 
 interface ProductFormData {
@@ -36,6 +41,8 @@ const ProductForm = () => {
 
   const [existingImageUrl, setExistingImageUrl] = useState<string>('');
   const [loading, setLoading] = useState(false);
+  const [fetchingProduct, setFetchingProduct] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string>('');
   const [errors, setErrors] = useState<any>({});
 
   useEffect(() => {
@@ -46,6 +53,7 @@ const ProductForm = () => {
 
   const fetchProduct = async () => {
     try {
+      setFetchingProduct(true);
       const response = await api.get(`/distributor/products`);
       const product = response.data.products.find((p: any) => p._id === id);
 
@@ -64,10 +72,41 @@ const ProductForm = () => {
         });
         setExistingImageUrl(product.image || '');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching product:', error);
-      alert('Error loading product');
+      toast.error(error.response?.data?.message || 'Failed to load product');
+    } finally {
+      setFetchingProduct(false);
     }
+  };
+
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    const file = acceptedFiles[0];
+    if (file) {
+      // Check file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Image size must be less than 5MB');
+        return;
+      }
+
+      setFormData({ ...formData, image: file });
+      setImagePreview(URL.createObjectURL(file));
+      toast.success('Image uploaded successfully');
+    }
+  }, [formData]);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      'image/*': ['.jpeg', '.jpg', '.png', '.gif', '.webp'],
+    },
+    maxFiles: 1,
+  });
+
+  const removeImage = () => {
+    setFormData({ ...formData, image: null });
+    setImagePreview('');
+    toast.info('Image removed');
   };
 
   const validate = () => {
@@ -96,7 +135,10 @@ const ProductForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!validate()) return;
+    if (!validate()) {
+      toast.error('Please fix all validation errors');
+      return;
+    }
 
     setLoading(true);
 
@@ -121,16 +163,16 @@ const ProductForm = () => {
         await api.put(`/distributor/products/${id}`, submitData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
-        alert('Product updated successfully');
+        toast.success('Product updated successfully');
       } else {
         await api.post('/distributor/products', submitData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
-        alert('Product added successfully');
+        toast.success('Product added successfully');
       }
       router.push('/distributor/products');
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Error saving product');
+      toast.error(error.response?.data?.message || 'Failed to save product');
     } finally {
       setLoading(false);
     }
@@ -150,422 +192,303 @@ const ProductForm = () => {
     }
   };
 
+  if (fetchingProduct) {
+    return (
+      <DistributorLayout title={isEditing ? 'Edit Product' : 'Add Product'}>
+        <Loading fullScreen text="Loading product..." />
+      </DistributorLayout>
+    );
+  }
+
   return (
     <DistributorLayout title={isEditing ? 'Edit Product' : 'Add Product'}>
-      <div className="product-form-page">
-        <div className="page-header">
-          <h1>{isEditing ? 'Edit Product' : 'Add New Product'}</h1>
-          <button className="btn-back" onClick={() => router.back()}>
-            ← Back
-          </button>
+      <div className="max-w-4xl space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-[var(--text-primary)]">
+              {isEditing ? 'Edit Product' : 'Add New Product'}
+            </h1>
+            <p className="text-[var(--text-secondary)] mt-1">
+              {isEditing ? 'Update product information' : 'Fill in the details to add a new product'}
+            </p>
+          </div>
+          <Button variant="secondary" leftIcon={<FiArrowLeft />} onClick={() => router.back()}>
+            Back
+          </Button>
         </div>
 
-        <form onSubmit={handleSubmit} className="product-form">
-          <div className="form-grid">
-            {/* Product Name */}
-            <div className="form-group full-width">
-              <label>Product Name *</label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Enter product name"
-                className={errors.name ? 'error' : ''}
-              />
-              {errors.name && <span className="error-text">{errors.name}</span>}
-            </div>
+        {/* Form */}
+        <form onSubmit={handleSubmit}>
+          <Card>
+            <div className="space-y-6">
+              {/* Basic Information */}
+              <div>
+                <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4">Basic Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Product Name */}
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">
+                      Product Name <span className="text-[var(--error)]">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      placeholder="Enter product name"
+                      className={`w-full px-4 py-2 bg-[var(--bg-primary)] border ${
+                        errors.name ? 'border-[var(--error)]' : 'border-[var(--border-primary)]'
+                      } rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]`}
+                    />
+                    {errors.name && <p className="text-[var(--error)] text-sm mt-1">{errors.name}</p>}
+                  </div>
 
-            {/* Description */}
-            <div className="form-group full-width">
-              <label>Description *</label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Enter product description"
-                rows={4}
-                className={errors.description ? 'error' : ''}
-              />
-              {errors.description && <span className="error-text">{errors.description}</span>}
-            </div>
+                  {/* Description */}
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">
+                      Description <span className="text-[var(--error)]">*</span>
+                    </label>
+                    <textarea
+                      rows={4}
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      placeholder="Enter product description"
+                      className={`w-full px-4 py-2 bg-[var(--bg-primary)] border ${
+                        errors.description ? 'border-[var(--error)]' : 'border-[var(--border-primary)]'
+                      } rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]`}
+                    />
+                    {errors.description && <p className="text-[var(--error)] text-sm mt-1">{errors.description}</p>}
+                  </div>
 
-            {/* Price */}
-            <div className="form-group">
-              <label>Price (₹) *</label>
-              <input
-                type="number"
-                step="0.01"
-                value={formData.price}
-                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                placeholder="0.00"
-                className={errors.price ? 'error' : ''}
-              />
-              {errors.price && <span className="error-text">{errors.price}</span>}
-            </div>
+                  {/* Price */}
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">
+                      Price (₹) <span className="text-[var(--error)]">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={formData.price}
+                      onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                      placeholder="0.00"
+                      className={`w-full px-4 py-2 bg-[var(--bg-primary)] border ${
+                        errors.price ? 'border-[var(--error)]' : 'border-[var(--border-primary)]'
+                      } rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]`}
+                    />
+                    {errors.price && <p className="text-[var(--error)] text-sm mt-1">{errors.price}</p>}
+                  </div>
 
-            {/* Stock */}
-            <div className="form-group">
-              <label>Stock *</label>
-              <input
-                type="number"
-                value={formData.stock}
-                onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
-                placeholder="0"
-                className={errors.stock ? 'error' : ''}
-              />
-              {errors.stock && <span className="error-text">{errors.stock}</span>}
-            </div>
+                  {/* Stock */}
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">
+                      Stock <span className="text-[var(--error)]">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      value={formData.stock}
+                      onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
+                      placeholder="0"
+                      className={`w-full px-4 py-2 bg-[var(--bg-primary)] border ${
+                        errors.stock ? 'border-[var(--error)]' : 'border-[var(--border-primary)]'
+                      } rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]`}
+                    />
+                    {errors.stock && <p className="text-[var(--error)] text-sm mt-1">{errors.stock}</p>}
+                  </div>
 
-            {/* Category */}
-            <div className="form-group">
-              <label>Category *</label>
-              <select
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                className={errors.category ? 'error' : ''}
-              >
-                <option value="">Select Category</option>
-                <option value="Cement">Cement</option>
-                <option value="Steel">Steel</option>
-                <option value="Bricks">Bricks</option>
-                <option value="Sand">Sand</option>
-                <option value="Paint">Paint</option>
-                <option value="Tiles">Tiles</option>
-                <option value="Other">Other</option>
-              </select>
-              {errors.category && <span className="error-text">{errors.category}</span>}
-            </div>
+                  {/* Category */}
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">
+                      Category <span className="text-[var(--error)]">*</span>
+                    </label>
+                    <select
+                      value={formData.category}
+                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                      className={`w-full px-4 py-2 bg-[var(--bg-primary)] border ${
+                        errors.category ? 'border-[var(--error)]' : 'border-[var(--border-primary)]'
+                      } rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]`}
+                    >
+                      <option value="">Select Category</option>
+                      <option value="Cement">Cement</option>
+                      <option value="Steel">Steel</option>
+                      <option value="Bricks">Bricks</option>
+                      <option value="Sand">Sand</option>
+                      <option value="Paint">Paint</option>
+                      <option value="Tiles">Tiles</option>
+                      <option value="Other">Other</option>
+                    </select>
+                    {errors.category && <p className="text-[var(--error)] text-sm mt-1">{errors.category}</p>}
+                  </div>
 
-            {/* Unit */}
-            <div className="form-group">
-              <label>Unit</label>
-              <input
-                type="text"
-                value={formData.unit}
-                onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-                placeholder="e.g., kg, piece, bag"
-              />
-            </div>
-
-            {/* Min Quantity */}
-            <div className="form-group">
-              <label>Minimum Quantity *</label>
-              <input
-                type="number"
-                min="1"
-                value={formData.minQuantity}
-                onChange={(e) => setFormData({ ...formData, minQuantity: e.target.value })}
-                placeholder="1"
-              />
-              <small>Minimum order quantity</small>
-            </div>
-
-            {/* Max Quantity */}
-            <div className="form-group">
-              <label>Maximum Quantity</label>
-              <input
-                type="number"
-                min="1"
-                value={formData.maxQuantity}
-                onChange={(e) => setFormData({ ...formData, maxQuantity: e.target.value })}
-                placeholder="Leave empty for unlimited"
-                className={errors.maxQuantity ? 'error' : ''}
-              />
-              <small>Maximum order quantity (optional)</small>
-              {errors.maxQuantity && <span className="error-text">{errors.maxQuantity}</span>}
-            </div>
-
-            {/* Payment Methods */}
-            <div className="form-group full-width">
-              <label>Accepted Payment Methods *</label>
-              <div className="checkbox-group">
-                <label className="checkbox-label">
-                  <input
-                    type="checkbox"
-                    checked={formData.acceptedPaymentMethods.includes('COD')}
-                    onChange={() => handlePaymentMethodToggle('COD')}
-                  />
-                  <span>💵 Cash on Delivery (COD)</span>
-                </label>
-                <label className="checkbox-label">
-                  <input
-                    type="checkbox"
-                    checked={formData.acceptedPaymentMethods.includes('Online')}
-                    onChange={() => handlePaymentMethodToggle('Online')}
-                  />
-                  <span>💳 Online Payment</span>
-                </label>
+                  {/* Unit */}
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">Unit</label>
+                    <input
+                      type="text"
+                      value={formData.unit}
+                      onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
+                      placeholder="e.g., kg, piece, bag"
+                      className="w-full px-4 py-2 bg-[var(--bg-primary)] border border-[var(--border-primary)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]"
+                    />
+                  </div>
+                </div>
               </div>
-              {errors.paymentMethods && <span className="error-text">{errors.paymentMethods}</span>}
-            </div>
 
-            {/* Image Upload */}
-            <div className="form-group full-width">
-              <label>Product Image</label>
+              {/* Quantity Limits */}
+              <div>
+                <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4">Quantity Limits</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Min Quantity */}
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">
+                      Minimum Quantity <span className="text-[var(--error)]">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={formData.minQuantity}
+                      onChange={(e) => setFormData({ ...formData, minQuantity: e.target.value })}
+                      placeholder="1"
+                      className="w-full px-4 py-2 bg-[var(--bg-primary)] border border-[var(--border-primary)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]"
+                    />
+                    <p className="text-xs text-[var(--text-tertiary)] mt-1">Minimum order quantity</p>
+                  </div>
 
-              {/* Show existing image when editing */}
-              {existingImageUrl && !formData.image && (
-                <div className="image-preview">
-                  <img src={existingImageUrl} alt="Current product" />
-                  <p className="preview-label">Current Image</p>
+                  {/* Max Quantity */}
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">
+                      Maximum Quantity
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={formData.maxQuantity}
+                      onChange={(e) => setFormData({ ...formData, maxQuantity: e.target.value })}
+                      placeholder="Leave empty for unlimited"
+                      className={`w-full px-4 py-2 bg-[var(--bg-primary)] border ${
+                        errors.maxQuantity ? 'border-[var(--error)]' : 'border-[var(--border-primary)]'
+                      } rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]`}
+                    />
+                    <p className="text-xs text-[var(--text-tertiary)] mt-1">Maximum order quantity (optional)</p>
+                    {errors.maxQuantity && <p className="text-[var(--error)] text-sm mt-1">{errors.maxQuantity}</p>}
+                  </div>
                 </div>
-              )}
+              </div>
 
-              {/* Show preview of new image */}
-              {formData.image && (
-                <div className="image-preview">
-                  <img src={URL.createObjectURL(formData.image)} alt="New product preview" />
-                  <p className="preview-label new">New Image Preview</p>
+              {/* Payment Methods */}
+              <div>
+                <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4">
+                  Payment Methods <span className="text-[var(--error)]">*</span>
+                </h3>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.acceptedPaymentMethods.includes('COD')}
+                      onChange={() => handlePaymentMethodToggle('COD')}
+                      className="w-5 h-5 rounded border-[var(--border-primary)] text-[var(--primary-color)] focus:ring-[var(--primary-color)]"
+                    />
+                    <span className="text-[var(--text-primary)]">Cash on Delivery (COD)</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.acceptedPaymentMethods.includes('Online')}
+                      onChange={() => handlePaymentMethodToggle('Online')}
+                      className="w-5 h-5 rounded border-[var(--border-primary)] text-[var(--primary-color)] focus:ring-[var(--primary-color)]"
+                    />
+                    <span className="text-[var(--text-primary)]">Online Payment</span>
+                  </label>
                 </div>
-              )}
+                {errors.paymentMethods && <p className="text-[var(--error)] text-sm mt-2">{errors.paymentMethods}</p>}
+              </div>
 
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) =>
-                  setFormData({ ...formData, image: e.target.files?.[0] || null })
-                }
-                className="file-input"
-              />
-              {isEditing && (
-                <small className="help-text">Leave empty to keep current image</small>
-              )}
+              {/* Image Upload */}
+              <div>
+                <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4">Product Image</h3>
+
+                {/* Current Image (when editing and no new image) */}
+                {existingImageUrl && !imagePreview && !formData.image && (
+                  <div className="mb-4">
+                    <p className="text-sm text-[var(--text-secondary)] mb-2">Current Image:</p>
+                    <div className="relative w-64 h-64">
+                      <img
+                        src={existingImageUrl}
+                        alt="Current product"
+                        className="w-full h-full object-cover rounded-lg border-2 border-[var(--border-primary)]"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* New Image Preview */}
+                {(imagePreview || formData.image) && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="mb-4 relative"
+                  >
+                    <p className="text-sm font-medium text-[var(--success)] mb-2">New Image:</p>
+                    <div className="relative w-64 h-64 group">
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        className="w-full h-full object-cover rounded-lg border-2 border-[var(--success)]"
+                      />
+                      <button
+                        type="button"
+                        onClick={removeImage}
+                        className="absolute top-2 right-2 p-2 bg-[var(--error)] text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <FiX />
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Dropzone */}
+                <div
+                  {...getRootProps()}
+                  className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all ${
+                    isDragActive
+                      ? 'border-[var(--primary-color)] bg-[var(--info-bg)]'
+                      : 'border-[var(--border-primary)] hover:border-[var(--primary-color)]'
+                  }`}
+                >
+                  <input {...getInputProps()} />
+                  <FiUpload className="w-12 h-12 mx-auto mb-4 text-[var(--text-tertiary)]" />
+                  {isDragActive ? (
+                    <p className="text-[var(--primary-color)] font-medium">Drop the image here...</p>
+                  ) : (
+                    <>
+                      <p className="text-[var(--text-primary)] font-medium mb-2">
+                        Drag and drop an image here, or click to select
+                      </p>
+                      <p className="text-sm text-[var(--text-tertiary)]">
+                        Supports: JPG, PNG, GIF, WEBP (Max 5MB)
+                      </p>
+                    </>
+                  )}
+                </div>
+                {isEditing && !formData.image && (
+                  <p className="text-xs text-[var(--text-tertiary)] mt-2">
+                    Leave empty to keep the current image
+                  </p>
+                )}
+              </div>
             </div>
-          </div>
+          </Card>
 
           {/* Form Actions */}
-          <div className="form-actions">
-            <button type="button" className="btn-cancel" onClick={() => router.back()}>
+          <div className="flex justify-end gap-4 mt-6">
+            <Button type="button" variant="secondary" onClick={() => router.back()}>
               Cancel
-            </button>
-            <button type="submit" className="btn-submit" disabled={loading}>
-              {loading ? 'Saving...' : isEditing ? 'Update Product' : 'Add Product'}
-            </button>
+            </Button>
+            <Button type="submit" variant="primary" isLoading={loading} leftIcon={<FiCheck />}>
+              {isEditing ? 'Update Product' : 'Add Product'}
+            </Button>
           </div>
         </form>
       </div>
-
-      <style jsx>{`
-        .product-form-page {
-          max-width: 900px;
-        }
-
-        .page-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 30px;
-        }
-
-        .page-header h1 {
-          font-size: 32px;
-          font-weight: 700;
-          color: #1a202c;
-          margin: 0;
-        }
-
-        .btn-back {
-          background: #edf2f7;
-          color: #2d3748;
-          border: none;
-          padding: 10px 20px;
-          border-radius: 8px;
-          font-size: 14px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.3s ease;
-        }
-
-        .btn-back:hover {
-          background: #e2e8f0;
-        }
-
-        .product-form {
-          background: white;
-          padding: 40px;
-          border-radius: 12px;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        }
-
-        .form-grid {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 24px;
-          margin-bottom: 32px;
-        }
-
-        .form-group {
-          display: flex;
-          flex-direction: column;
-        }
-
-        .form-group.full-width {
-          grid-column: 1 / -1;
-        }
-
-        .form-group label {
-          font-size: 14px;
-          font-weight: 600;
-          color: #2d3748;
-          margin-bottom: 8px;
-        }
-
-        .form-group input,
-        .form-group textarea,
-        .form-group select {
-          padding: 12px 16px;
-          border: 2px solid #e2e8f0;
-          border-radius: 8px;
-          font-size: 15px;
-          transition: border-color 0.3s ease;
-          font-family: inherit;
-        }
-
-        .form-group input:focus,
-        .form-group textarea:focus,
-        .form-group select:focus {
-          outline: none;
-          border-color: #667eea;
-        }
-
-        .form-group input.error,
-        .form-group textarea.error,
-        .form-group select.error {
-          border-color: #fc8181;
-        }
-
-        .form-group small {
-          font-size: 12px;
-          color: #718096;
-          margin-top: 4px;
-        }
-
-        .error-text {
-          color: #e53e3e;
-          font-size: 13px;
-          margin-top: 4px;
-        }
-
-        .checkbox-group {
-          display: flex;
-          gap: 24px;
-          margin-top: 8px;
-        }
-
-        .checkbox-label {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          cursor: pointer;
-          font-size: 15px;
-          color: #2d3748;
-        }
-
-        .checkbox-label input[type='checkbox'] {
-          width: 18px;
-          height: 18px;
-          cursor: pointer;
-        }
-
-        .image-preview {
-          margin-bottom: 16px;
-          text-align: center;
-        }
-
-        .image-preview img {
-          max-width: 300px;
-          max-height: 300px;
-          border-radius: 8px;
-          border: 3px solid #e2e8f0;
-          object-fit: cover;
-        }
-
-        .preview-label {
-          font-size: 13px;
-          color: #718096;
-          margin-top: 8px;
-        }
-
-        .preview-label.new {
-          color: #38a169;
-          font-weight: 600;
-        }
-
-        .file-input {
-          padding: 12px;
-          border: 2px dashed #e2e8f0;
-          border-radius: 8px;
-          cursor: pointer;
-        }
-
-        .help-text {
-          display: block;
-          margin-top: 8px;
-          font-size: 12px;
-          color: #718096;
-        }
-
-        .form-actions {
-          display: flex;
-          justify-content: flex-end;
-          gap: 16px;
-          padding-top: 24px;
-          border-top: 2px solid #f7fafc;
-        }
-
-        .btn-cancel,
-        .btn-submit {
-          padding: 12px 32px;
-          border: none;
-          border-radius: 8px;
-          font-size: 15px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.3s ease;
-        }
-
-        .btn-cancel {
-          background: #edf2f7;
-          color: #2d3748;
-        }
-
-        .btn-cancel:hover {
-          background: #e2e8f0;
-        }
-
-        .btn-submit {
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          color: white;
-        }
-
-        .btn-submit:hover:not(:disabled) {
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-submit:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-        }
-
-        @media (max-width: 768px) {
-          .product-form {
-            padding: 24px;
-          }
-
-          .form-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .form-actions {
-            flex-direction: column-reverse;
-          }
-
-          .btn-cancel,
-          .btn-submit {
-            width: 100%;
-          }
-        }
-      `}</style>
     </DistributorLayout>
   );
 };
