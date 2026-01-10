@@ -73,9 +73,15 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
       console.log('Audio notification setup failed:', error);
     }
 
-    // Check if notifications are enabled
-    const enabled = localStorage.getItem('notificationsEnabled') === 'true';
+    // Check if notifications are enabled (default to true for sound notifications)
+    const storedPreference = localStorage.getItem('notificationsEnabled');
+    const enabled = storedPreference !== null ? storedPreference === 'true' : true;
     setIsNotificationEnabled(enabled);
+
+    // If not explicitly set, auto-enable sound notifications
+    if (storedPreference === null) {
+      localStorage.setItem('notificationsEnabled', 'true');
+    }
   }, []);
 
   // Play notification sound

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import authService from '../services/auth.service';
+import { NotificationBell } from './NotificationBell';
 
 export default function Header() {
   const router = useRouter();
@@ -135,6 +136,7 @@ export default function Header() {
                     </Link>
                     <Link href="/orders">Orders</Link>
                     <Link href="/profile">Profile</Link>
+                    <NotificationBell />
                     <button onClick={handleLogout} className="btn-logout">
                       Logout
                     </button>

@@ -29,7 +29,14 @@ export const NotificationBell: React.FC = () => {
   } = useNotifications();
 
   const [isOpen, setIsOpen] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Get user role
+  useEffect(() => {
+    const role = localStorage.getItem('role');
+    setUserRole(role);
+  }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -74,7 +81,11 @@ export const NotificationBell: React.FC = () => {
   const handleNotificationClick = (notification: any) => {
     markAsRead(notification._id);
     if (notification.orderId) {
-      router.push(`/distributor/order-details/${notification.orderId}`);
+      // Route based on user role
+      const orderDetailPath = userRole === 'distributor'
+        ? `/distributor/order-details/${notification.orderId}`
+        : `/orders`; // Users go to orders page for now
+      router.push(orderDetailPath);
       setIsOpen(false);
     }
   };
@@ -241,7 +252,10 @@ export const NotificationBell: React.FC = () => {
             <div className="px-4 py-2 bg-[var(--bg-secondary)] border-t border-[var(--border-primary)] text-center">
               <button
                 onClick={() => {
-                  router.push('/distributor/notifications');
+                  const notificationsPath = userRole === 'distributor'
+                    ? '/distributor/notifications'
+                    : '/notifications';
+                  router.push(notificationsPath);
                   setIsOpen(false);
                 }}
                 className="text-sm text-[var(--primary-color)] hover:underline font-medium"
