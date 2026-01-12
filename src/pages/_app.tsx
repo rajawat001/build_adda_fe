@@ -10,6 +10,7 @@ import '../styles/login.css';
 import '../styles/cart.css';
 import '../styles/checkout.css';
 import '../styles/dashboard.css';
+import '../styles/admin.css';
 import '../styles/products.css';
 import '../styles/profile.css';
 import '../styles/order.css';

@@ -1,576 +1,453 @@
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
-import SEO from '../../components/SEO';
-import api  from '../../services/api';
+import AdminLayout from '../../components/admin/Layout';
+import StatCard from '../../components/admin/StatCard';
+import { Line, Doughnut, Bar } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+} from 'chart.js';
+import {
+  FiDollarSign,
+  FiShoppingCart,
+  FiUsers,
+  FiTruck,
+  FiPackage,
+  FiTrendingUp,
+  FiClock,
+  FiAlertCircle,
+  FiCheckCircle
+} from 'react-icons/fi';
+import api from '../../services/api';
+import { formatDistanceToNow } from 'date-fns';
 
-interface AdminStats {
+// Register ChartJS components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+);
+
+interface DashboardStats {
   totalRevenue: number;
   totalOrders: number;
   totalUsers: number;
   totalDistributors: number;
   totalProducts: number;
+  pendingOrders: number;
+  lowStockProducts: number;
+  pendingApprovals: number;
+  trends: {
+    revenue: number;
+    orders: number;
+    users: number;
+    distributors: number;
+  };
+  revenueData?: {
+    labels: string[];
+    data: number[];
+  };
+  orderStatusData?: {
+    labels: string[];
+    data: number[];
+  };
+  categoryData?: {
+    labels: string[];
+    data: number[];
+  };
 }
 
-interface User {
+interface ActivityLog {
   _id: string;
-  name: string;
-  email: string;
-  role: string;
-  isActive: boolean;
+  adminName: string;
+  action: string;
+  entity: string;
+  description: string;
   createdAt: string;
 }
 
-interface Distributor {
-  _id: string;
-  businessName: string;
-  email: string;
-  phone: string;
-  isVerified: boolean;
-  isActive: boolean;
-}
-
-interface Coupon {
-  _id: string;
-  code: string;
-  discountType: string;
-  discountValue: number;
-  minPurchase: number;
-  maxDiscount: number;
-  expiryDate: string;
-  isActive: boolean;
-}
-
 const AdminDashboard = () => {
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [stats, setStats] = useState<AdminStats | null>(null);
-  const [users, setUsers] = useState<User[]>([]);
-  const [distributors, setDistributors] = useState<Distributor[]>([]);
-  const [coupons, setCoupons] = useState<Coupon[]>([]);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showAddCoupon, setShowAddCoupon] = useState(false);
-  const router = useRouter();
-
-  const [couponForm, setCouponForm] = useState({
-    code: '',
-    discountType: 'percentage',
-    discountValue: '',
-    minPurchase: '',
-    maxDiscount: '',
-    expiryDate: ''
-  });
 
   useEffect(() => {
-    checkAuth();
-    fetchData();
-  }, [activeTab]);
+    fetchDashboardData();
+  }, []);
 
-  const checkAuth = () => {
-    // SECURITY FIX: Don't check localStorage for token - it's in httpOnly cookie
-    // Just check if user role is stored for UI purposes
-    const role = localStorage.getItem('role');
-
-    if (role !== 'admin') {
-      router.push('/login');
-    }
-  };
-
-  const fetchData = async () => {
+  const fetchDashboardData = async () => {
     try {
-      // SECURITY FIX: Don't manually add Authorization header
-      // Browser automatically sends httpOnly cookie
+      setLoading(true);
 
-      if (activeTab === 'dashboard') {
-        const response = await api.get('/admin/stats');
-        setStats(response.data);
-      } else if (activeTab === 'users') {
-        const response = await api.get('/admin/users');
-        setUsers(response.data.users);
-      } else if (activeTab === 'distributors') {
-        const response = await api.get('/admin/distributors');
-        setDistributors(response.data.distributors);
-      } else if (activeTab === 'coupons') {
-        const response = await api.get('/admin/coupons');
-        setCoupons(response.data.coupons);
+      // Fetch all data in parallel
+      const [statsResponse, analyticsResponse, activityResponse] = await Promise.all([
+        api.get('/admin/stats'),
+        api.get('/admin/analytics/dashboard').catch((err) => {
+          console.error('Analytics API error:', err);
+          return { data: { success: false } };
+        }),
+        api.get('/admin/activity-logs?limit=10').catch(() => ({ data: { success: false, logs: [] } }))
+      ]);
+
+      console.log('Dashboard API Responses:', {
+        stats: statsResponse.data,
+        analytics: analyticsResponse.data,
+        activity: activityResponse.data
+      });
+
+      // Extract real stats from response
+      const realStats = statsResponse.data.stats || statsResponse.data;
+
+      // Use analytics data if available, otherwise use defaults
+      // Handle both response structures: analytics.analytics or analytics.stats
+      const analytics = analyticsResponse?.data?.success
+        ? (analyticsResponse.data.analytics || analyticsResponse.data.stats || {})
+        : {};
+
+      setStats({
+        ...realStats,
+        pendingOrders: analytics?.pendingOrders || 0,
+        lowStockProducts: analytics?.lowStockProducts || 0,
+        pendingApprovals: analytics?.pendingApprovals || 0,
+        trends: analytics?.trends || {
+          revenue: 0,
+          orders: 0,
+          users: 0,
+          distributors: 0
+        },
+        revenueData: analytics?.revenueData || {
+          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+          data: [0, 0, 0, 0, 0, 0]
+        },
+        orderStatusData: analytics?.orderStatusData || {
+          labels: ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'],
+          data: [0, 0, 0, 0, 0]
+        },
+        categoryData: analytics?.categoryData || {
+          labels: ['Cement', 'Steel', 'Bricks', 'Sand', 'Paint'],
+          data: [0, 0, 0, 0, 0]
+        }
+      });
+
+      // Set real activity logs
+      if (activityResponse.data.success && activityResponse.data.logs) {
+        const formattedLogs = activityResponse.data.logs.map((log: any) => ({
+          _id: log._id,
+          adminName: log.admin?.name || 'Admin',
+          action: log.action,
+          entity: log.entity,
+          description: `${log.action} ${log.entity} ${log.entityId || ''}`.trim(),
+          createdAt: log.timestamp || log.createdAt
+        }));
+        setActivityLogs(formattedLogs);
+      } else {
+        setActivityLogs([]);
       }
-    } catch (error: any) {
-      console.error('Error fetching data:', error);
-      // If unauthorized, redirect to login
-      if (error.response?.status === 401) {
-        router.push('/login');
+
+      // Fallback mock logs if API is not ready (temporary)
+      const fallbackMockActivityLogs: ActivityLog[] = [
+        {
+          _id: '1',
+          adminName: 'Admin User',
+          action: 'approve',
+          entity: 'distributor',
+          description: 'Approved distributor "ABC Materials"',
+          createdAt: new Date().toISOString()
+        },
+        {
+          _id: '2',
+          adminName: 'Admin User',
+          action: 'update',
+          entity: 'user',
+          description: 'Updated user "John Doe"',
+          createdAt: new Date(Date.now() - 3600000).toISOString()
+        },
+        {
+          _id: '3',
+          adminName: 'Admin User',
+          action: 'create',
+          entity: 'coupon',
+          description: 'Created coupon "SAVE20"',
+          createdAt: new Date(Date.now() - 7200000).toISOString()
+        }
+      ];
+
+      // Only use fallback if no real logs were fetched
+      if (activityLogs.length === 0) {
+        setActivityLogs(fallbackMockActivityLogs);
       }
+
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleToggleUserStatus = async (userId: string, currentStatus: boolean) => {
-    try {
-      const token = localStorage.getItem('token');
-      await api.put(`/admin/users/${userId}`, 
-        { isActive: !currentStatus },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      
-      alert('User status updated');
-      fetchData();
-    } catch (error) {
-      alert('Error updating user status');
+  const revenueChartData = {
+    labels: stats?.revenueData?.labels || [],
+    datasets: [
+      {
+        label: 'Revenue',
+        data: stats?.revenueData?.data || [],
+        borderColor: '#667eea',
+        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+        fill: true,
+        tension: 0.4,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        pointBackgroundColor: '#667eea',
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2
+      }
+    ]
+  };
+
+  const orderStatusChartData = {
+    labels: stats?.orderStatusData?.labels || [],
+    datasets: [
+      {
+        data: stats?.orderStatusData?.data || [],
+        backgroundColor: [
+          '#f59e0b',
+          '#3b82f6',
+          '#667eea',
+          '#10b981',
+          '#ef4444'
+        ],
+        borderWidth: 0
+      }
+    ]
+  };
+
+  const categoryChartData = {
+    labels: stats?.categoryData?.labels || [],
+    datasets: [
+      {
+        label: 'Sales by Category',
+        data: stats?.categoryData?.data || [],
+        backgroundColor: '#667eea',
+        borderRadius: 6
+      }
+    ]
+  };
+
+  const chartOptions: any = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        grid: {
+          color: 'rgba(0, 0, 0, 0.05)'
+        }
+      },
+      x: {
+        grid: {
+          display: false
+        }
+      }
     }
   };
 
-  const handleVerifyDistributor = async (distributorId: string) => {
-    try {
-      const token = localStorage.getItem('token');
-      await api.put(`/admin/distributors/${distributorId}/verify`, 
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      
-      alert('Distributor verified successfully');
-      fetchData();
-    } catch (error) {
-      alert('Error verifying distributor');
+  const doughnutOptions: any = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'right'
+      }
     }
-  };
-
-  const handleToggleDistributorStatus = async (distributorId: string, currentStatus: boolean) => {
-    try {
-      const token = localStorage.getItem('token');
-      await api.put(`/admin/distributors/${distributorId}`, 
-        { isActive: !currentStatus },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      
-      alert('Distributor status updated');
-      fetchData();
-    } catch (error) {
-      alert('Error updating distributor status');
-    }
-  };
-
-  const handleAddCoupon = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    try {
-      const token = localStorage.getItem('token');
-      await api.post('/admin/coupons', couponForm, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      alert('Coupon created successfully');
-      setShowAddCoupon(false);
-      setCouponForm({
-        code: '',
-        discountType: 'percentage',
-        discountValue: '',
-        minPurchase: '',
-        maxDiscount: '',
-        expiryDate: ''
-      });
-      fetchData();
-    } catch (error: any) {
-      alert(error.response?.data?.message || 'Error creating coupon');
-    }
-  };
-
-  const handleToggleCoupon = async (couponId: string, currentStatus: boolean) => {
-    try {
-      const token = localStorage.getItem('token');
-      await api.put(`/admin/coupons/${couponId}`, 
-        { isActive: !currentStatus },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      
-      alert('Coupon status updated');
-      fetchData();
-    } catch (error) {
-      alert('Error updating coupon');
-    }
-  };
-
-  const handleDeleteCoupon = async (couponId: string) => {
-    if (!confirm('Are you sure you want to delete this coupon?')) return;
-    
-    try {
-      const token = localStorage.getItem('token');
-      await api.delete(`/admin/coupons/${couponId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      alert('Coupon deleted successfully');
-      fetchData();
-    } catch (error) {
-      alert('Error deleting coupon');
-    }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('role');
-    router.push('/login');
   };
 
   if (loading) {
-    return <div className="dashboard-loading">Loading...</div>;
+    return (
+      <AdminLayout title="Dashboard">
+        <div className="loading-overlay">
+          <div className="loading-spinner" />
+        </div>
+      </AdminLayout>
+    );
   }
 
   return (
-    <>
-      <SEO title="Admin Dashboard" description="Manage platform" />
-      
-      <div className="admin-dashboard">
-        <aside className="dashboard-sidebar">
-          <div className="sidebar-header">
-            <h2>Admin Panel</h2>
-          </div>
-          
-          <nav className="sidebar-nav">
-            <button 
-              className={activeTab === 'dashboard' ? 'active' : ''}
-              onClick={() => setActiveTab('dashboard')}
-            >
-              📊 Dashboard
-            </button>
-            
-            <button 
-              className={activeTab === 'users' ? 'active' : ''}
-              onClick={() => setActiveTab('users')}
-            >
-              👥 Users
-            </button>
-            
-            <button 
-              className={activeTab === 'distributors' ? 'active' : ''}
-              onClick={() => setActiveTab('distributors')}
-            >
-              🏢 Distributors
-            </button>
-            
-            <button 
-              className={activeTab === 'coupons' ? 'active' : ''}
-              onClick={() => setActiveTab('coupons')}
-            >
-              🎟️ Coupons
-            </button>
-            
-            <button 
-              className={activeTab === 'reports' ? 'active' : ''}
-              onClick={() => setActiveTab('reports')}
-            >
-              📈 Reports
-            </button>
-            
-            <button onClick={handleLogout} className="btn-logout">
-              🚪 Logout
-            </button>
-          </nav>
-        </aside>
-        
-        <main className="dashboard-main">
-          {activeTab === 'dashboard' && stats && (
-            <div className="dashboard-content">
-              <h1>Platform Overview</h1>
-              
-              <div className="stats-grid">
-                <div className="stat-card">
-                  <div className="stat-icon revenue">💰</div>
-                  <div className="stat-details">
-                    <p className="stat-label">Total Revenue</p>
-                    <p className="stat-value">₹{(stats.totalRevenue || 0).toLocaleString()}</p>
-                  </div>
-                </div>
-
-                <div className="stat-card">
-                  <div className="stat-icon orders">📦</div>
-                  <div className="stat-details">
-                    <p className="stat-label">Total Orders</p>
-                    <p className="stat-value">{stats.totalOrders || 0}</p>
-                  </div>
-                </div>
-
-                <div className="stat-card">
-                  <div className="stat-icon users">👥</div>
-                  <div className="stat-details">
-                    <p className="stat-label">Total Users</p>
-                    <p className="stat-value">{stats.totalUsers || 0}</p>
-                  </div>
-                </div>
-
-                <div className="stat-card">
-                  <div className="stat-icon distributors">🏢</div>
-                  <div className="stat-details">
-                    <p className="stat-label">Total Distributors</p>
-                    <p className="stat-value">{stats.totalDistributors || 0}</p>
-                  </div>
-                </div>
-
-                <div className="stat-card">
-                  <div className="stat-icon products">🏷️</div>
-                  <div className="stat-details">
-                    <p className="stat-label">Total Products</p>
-                    <p className="stat-value">{stats.totalProducts || 0}</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="quick-actions">
-                <h2>Quick Actions</h2>
-                <div className="actions-grid">
-                  <button onClick={() => setActiveTab('users')} className="action-btn">
-                    Manage Users
-                  </button>
-                  <button onClick={() => setActiveTab('distributors')} className="action-btn">
-                    Verify Distributors
-                  </button>
-                  <button onClick={() => setActiveTab('coupons')} className="action-btn">
-                    Create Coupons
-                  </button>
-                  <button onClick={() => setActiveTab('reports')} className="action-btn">
-                    View Reports
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          {activeTab === 'users' && (
-            <div className="users-content">
-              <h1>Manage Users</h1>
-              
-              <div className="users-table">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Name</th>
-                      <th>Email</th>
-                      <th>Role</th>
-                      <th>Status</th>
-                      <th>Joined</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {users.map((user) => (
-                      <tr key={user._id}>
-                        <td>{user.name}</td>
-                        <td>{user.email}</td>
-                        <td><span className="role-badge">{user.role}</span></td>
-                        <td>
-                          <span className={`status-badge ${user.isActive ? 'active' : 'inactive'}`}>
-                            {user.isActive ? 'Active' : 'Inactive'}
-                          </span>
-                        </td>
-                        <td>{new Date(user.createdAt).toLocaleDateString()}</td>
-                        <td>
-                          <button 
-                            className={`btn-toggle ${user.isActive ? 'deactivate' : 'activate'}`}
-                            onClick={() => handleToggleUserStatus(user._id, user.isActive)}
-                          >
-                            {user.isActive ? 'Deactivate' : 'Activate'}
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-          
-          {activeTab === 'distributors' && (
-            <div className="distributors-content">
-              <h1>Manage Distributors</h1>
-              
-              <div className="distributors-table">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Business Name</th>
-                      <th>Email</th>
-                      <th>Phone</th>
-                      <th>Verified</th>
-                      <th>Status</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {distributors.map((distributor) => (
-                      <tr key={distributor._id}>
-                        <td>{distributor.businessName}</td>
-                        <td>{distributor.email}</td>
-                        <td>{distributor.phone}</td>
-                        <td>
-                          <span className={`verified-badge ${distributor.isVerified ? 'verified' : 'pending'}`}>
-                            {distributor.isVerified ? '✓ Verified' : '⏳ Pending'}
-                          </span>
-                        </td>
-                        <td>
-                          <span className={`status-badge ${distributor.isActive ? 'active' : 'inactive'}`}>
-                            {distributor.isActive ? 'Active' : 'Inactive'}
-                          </span>
-                        </td>
-                        <td>
-                          {!distributor.isVerified && (
-                            <button 
-                              className="btn-verify"
-                              onClick={() => handleVerifyDistributor(distributor._id)}
-                            >
-                              Verify
-                            </button>
-                          )}
-                          <button 
-                            className={`btn-toggle ${distributor.isActive ? 'deactivate' : 'activate'}`}
-                            onClick={() => handleToggleDistributorStatus(distributor._id, distributor.isActive)}
-                          >
-                            {distributor.isActive ? 'Deactivate' : 'Activate'}
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-          
-          {activeTab === 'coupons' && (
-            <div className="coupons-content">
-              <div className="content-header">
-                <h1>Manage Coupons</h1>
-                <button onClick={() => setShowAddCoupon(!showAddCoupon)} className="btn-add">
-                  {showAddCoupon ? 'Cancel' : '+ Create Coupon'}
-                </button>
-              </div>
-              
-              {showAddCoupon && (
-                <form onSubmit={handleAddCoupon} className="add-coupon-form">
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label>Coupon Code</label>
-                      <input
-                        type="text"
-                        value={couponForm.code}
-                        onChange={(e) => setCouponForm({...couponForm, code: e.target.value.toUpperCase()})}
-                        placeholder="e.g., SAVE20"
-                        required
-                      />
-                    </div>
-                    
-                    <div className="form-group">
-                      <label>Discount Type</label>
-                      <select
-                        value={couponForm.discountType}
-                        onChange={(e) => setCouponForm({...couponForm, discountType: e.target.value})}
-                      >
-                        <option value="percentage">Percentage</option>
-                        <option value="fixed">Fixed Amount</option>
-                      </select>
-                    </div>
-                  </div>
-                  
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label>Discount Value</label>
-                      <input
-                        type="number"
-                        value={couponForm.discountValue}
-                        onChange={(e) => setCouponForm({...couponForm, discountValue: e.target.value})}
-                        placeholder={couponForm.discountType === 'percentage' ? '20' : '500'}
-                        required
-                      />
-                    </div>
-                    
-                    <div className="form-group">
-                      <label>Minimum Purchase (₹)</label>
-                      <input
-                        type="number"
-                        value={couponForm.minPurchase}
-                        onChange={(e) => setCouponForm({...couponForm, minPurchase: e.target.value})}
-                        placeholder="1000"
-                      />
-                    </div>
-                    
-                    <div className="form-group">
-                      <label>Max Discount (₹)</label>
-                      <input
-                        type="number"
-                        value={couponForm.maxDiscount}
-                        onChange={(e) => setCouponForm({...couponForm, maxDiscount: e.target.value})}
-                        placeholder="500"
-                      />
-                    </div>
-                    
-                    <div className="form-group">
-                      <label>Expiry Date</label>
-                      <input
-                        type="date"
-                        value={couponForm.expiryDate}
-                        onChange={(e) => setCouponForm({...couponForm, expiryDate: e.target.value})}
-                        required
-                      />
-                    </div>
-                  </div>
-                  
-                  <button type="submit" className="btn-submit">Create Coupon</button>
-                </form>
-              )}
-              
-              <div className="coupons-table">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Code</th>
-                      <th>Type</th>
-                      <th>Value</th>
-                      <th>Min Purchase</th>
-                      <th>Max Discount</th>
-                      <th>Expiry</th>
-                      <th>Status</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {coupons.map((coupon) => (
-                      <tr key={coupon._id}>
-                        <td><code>{coupon.code}</code></td>
-                        <td>{coupon.discountType}</td>
-                        <td>
-                          {coupon.discountType === 'percentage' 
-                            ? `${coupon.discountValue}%` 
-                            : `₹${coupon.discountValue}`}
-                        </td>
-                        <td>₹{coupon.minPurchase}</td>
-                        <td>₹{coupon.maxDiscount}</td>
-                        <td>{new Date(coupon.expiryDate).toLocaleDateString()}</td>
-                        <td>
-                          <span className={`status-badge ${coupon.isActive ? 'active' : 'inactive'}`}>
-                            {coupon.isActive ? 'Active' : 'Inactive'}
-                          </span>
-                        </td>
-                        <td>
-                          <button 
-                            className="btn-toggle"
-                            onClick={() => handleToggleCoupon(coupon._id, coupon.isActive)}
-                          >
-                            {coupon.isActive ? 'Deactivate' : 'Activate'}
-                          </button>
-                          <button 
-                            className="btn-delete"
-                            onClick={() => handleDeleteCoupon(coupon._id)}
-                          >
-                            Delete
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-        </main>
+    <AdminLayout title="Dashboard">
+      {/* KPI Stat Cards */}
+      <div className="stat-cards-grid">
+        <StatCard
+          title="Total Revenue"
+          value={`₹${stats?.totalRevenue?.toLocaleString('en-IN') || 0}`}
+          icon={FiDollarSign}
+          trend={{ value: stats?.trends.revenue || 0, isPositive: true }}
+          subtitle="vs last month"
+          variant="revenue"
+        />
+        <StatCard
+          title="Total Orders"
+          value={stats?.totalOrders || 0}
+          icon={FiShoppingCart}
+          trend={{ value: stats?.trends.orders || 0, isPositive: true }}
+          subtitle="vs last month"
+          variant="orders"
+        />
+        <StatCard
+          title="Total Users"
+          value={stats?.totalUsers || 0}
+          icon={FiUsers}
+          trend={{ value: stats?.trends.users || 0, isPositive: true }}
+          subtitle="vs last month"
+          variant="users"
+        />
+        <StatCard
+          title="Active Distributors"
+          value={stats?.totalDistributors || 0}
+          icon={FiTruck}
+          trend={{ value: stats?.trends.distributors || 0, isPositive: true }}
+          subtitle={`${stats?.pendingApprovals || 0} pending approval`}
+          variant="distributors"
+        />
       </div>
-    </>
+
+      {/* Quick Stats Row */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+        <div className="stat-card products">
+          <div className="stat-card-header">
+            <div className="stat-card-icon products">
+              <FiPackage />
+            </div>
+          </div>
+          <div className="stat-card-title">Total Products</div>
+          <div className="stat-card-value">{stats?.totalProducts || 0}</div>
+          <div className="stat-card-footer">
+            <span className="stat-subtitle">{stats?.lowStockProducts || 0} low stock items</span>
+          </div>
+        </div>
+
+        <div className="stat-card orders">
+          <div className="stat-card-header">
+            <div className="stat-card-icon orders">
+              <FiClock />
+            </div>
+          </div>
+          <div className="stat-card-title">Pending Orders</div>
+          <div className="stat-card-value">{stats?.pendingOrders || 0}</div>
+          <div className="stat-card-footer">
+            <span className="stat-subtitle">Requires attention</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Charts Grid */}
+      <div className="charts-grid">
+        {/* Revenue Trend Chart */}
+        <div className="chart-card">
+          <div className="chart-header">
+            <div>
+              <h3 className="chart-title">Revenue Trend</h3>
+              <p className="chart-subtitle">Last 6 months performance</p>
+            </div>
+          </div>
+          <div className="chart-container">
+            <Line data={revenueChartData} options={chartOptions} />
+          </div>
+        </div>
+
+        {/* Order Status Distribution */}
+        <div className="chart-card">
+          <div className="chart-header">
+            <div>
+              <h3 className="chart-title">Order Status</h3>
+              <p className="chart-subtitle">Current order distribution</p>
+            </div>
+          </div>
+          <div className="chart-container">
+            <Doughnut data={orderStatusChartData} options={doughnutOptions} />
+          </div>
+        </div>
+      </div>
+
+      {/* Category Performance */}
+      <div className="chart-card" style={{ marginBottom: '2rem' }}>
+        <div className="chart-header">
+          <div>
+            <h3 className="chart-title">Category Performance</h3>
+            <p className="chart-subtitle">Sales by product category</p>
+          </div>
+        </div>
+        <div className="chart-container">
+          <Bar data={categoryChartData} options={chartOptions} />
+        </div>
+      </div>
+
+      {/* Recent Activity */}
+      <div className="data-table-wrapper">
+        <div className="table-header">
+          <h3 className="table-title">Recent Activity</h3>
+        </div>
+        <div style={{ padding: '1.5rem' }}>
+          {activityLogs.map((log) => (
+            <div
+              key={log._id}
+              style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '1rem',
+                padding: '1rem',
+                borderBottom: '1px solid var(--admin-border-primary)',
+                transition: 'background 0.2s'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'var(--admin-bg-hover)'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+            >
+              <div style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                background: 'var(--admin-gradient)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
+                flexShrink: 0
+              }}>
+                {log.action === 'approve' && <FiCheckCircle />}
+                {log.action === 'update' && <FiTrendingUp />}
+                {log.action === 'create' && <FiPackage />}
+                {!['approve', 'update', 'create'].includes(log.action) && <FiAlertCircle />}
+              </div>
+              <div style={{ flex: 1 }}>
+                <p style={{ margin: 0, fontWeight: 500, color: 'var(--admin-text-primary)' }}>
+                  {log.description}
+                </p>
+                <p style={{ margin: '0.25rem 0 0', fontSize: '0.875rem', color: 'var(--admin-text-secondary)' }}>
+                  by {log.adminName} • {formatDistanceToNow(new Date(log.createdAt), { addSuffix: true })}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </AdminLayout>
   );
 };
 
