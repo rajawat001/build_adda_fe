@@ -29,15 +29,18 @@ export default function ProductCard({ product, onAddToCart, onAddToWishlist }: P
     ? product.category 
     : product.category?.name || 'Unknown';
 
+  // Default placeholder image (simple gray building materials icon)
+  const defaultImage = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iI2Y1ZjVmNSIvPjxwYXRoIGQ9Ik0xNTAgMTAwaDEwMHYyMDBoLTEwMHoiIGZpbGw9IiNkOTc3MDYiLz48cGF0aCBkPSJNMTgwIDEzMGg0MHY0MGgtNDB6TTEwMCAyMDBoMjAwdjIwaC0yMDB6IiBmaWxsPSIjYjQ1MzA5Ii8+PHRleHQgeD0iNTAlIiB5PSI1NSUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+QnVpbGRpbmcgTWF0ZXJpYWw8L3RleHQ+PC9zdmc+';
+
   return (
     <div className="product-card">
       <Link href={`/products/${product._id}`} className="product-image-link">
         <div className="product-image">
           <img
-            src={product.image || '/placeholder.jpg'}
+            src={product.image || defaultImage}
             alt={product.name}
             onError={(e) => {
-              (e.target as HTMLImageElement).src = '/placeholder.jpg';
+              (e.target as HTMLImageElement).src = defaultImage;
             }}
           />
           {onAddToWishlist && (

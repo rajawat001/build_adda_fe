@@ -290,8 +290,21 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     }
   }, []);
 
+  // Check if user is authenticated
+  const isAuthenticated = () => {
+    if (typeof window === 'undefined') return false;
+    const user = localStorage.getItem('user');
+    const role = localStorage.getItem('role');
+    return !!(user && role);
+  };
+
   // Start polling for notifications
   useEffect(() => {
+    // Only fetch notifications if user is authenticated
+    if (!isAuthenticated()) {
+      return;
+    }
+
     // Fetch immediately
     fetchNotifications();
 

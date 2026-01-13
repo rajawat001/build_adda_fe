@@ -140,18 +140,13 @@ const DistributorsManagement: React.FC = () => {
       onConfirm: async () => {
         try {
           setActionLoading(true);
-          const response = await fetch('/api/admin/distributors/bulk-approve', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ distributorIds: selectedDistributors })
+          await api.post('/admin/distributors/bulk-approve', {
+            distributorIds: selectedDistributors
           });
 
-          if (response.ok) {
-            await fetchDistributors();
-            await fetchStats();
-            setSelectedDistributors([]);
-          }
+          await fetchDistributors();
+          await fetchStats();
+          setSelectedDistributors([]);
         } catch (error) {
           console.error('Bulk approve failed:', error);
         } finally {
@@ -171,18 +166,13 @@ const DistributorsManagement: React.FC = () => {
       onConfirm: async () => {
         try {
           setActionLoading(true);
-          const response = await fetch('/api/admin/distributors/bulk-reject', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ distributorIds: selectedDistributors })
+          await api.post('/admin/distributors/bulk-reject', {
+            distributorIds: selectedDistributors
           });
 
-          if (response.ok) {
-            await fetchDistributors();
-            await fetchStats();
-            setSelectedDistributors([]);
-          }
+          await fetchDistributors();
+          await fetchStats();
+          setSelectedDistributors([]);
         } catch (error) {
           console.error('Bulk reject failed:', error);
         } finally {
@@ -202,18 +192,13 @@ const DistributorsManagement: React.FC = () => {
       onConfirm: async () => {
         try {
           setActionLoading(true);
-          const response = await fetch('/api/admin/distributors/bulk-delete', {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ distributorIds: selectedDistributors })
+          await api.delete('/admin/distributors/bulk-delete', {
+            data: { distributorIds: selectedDistributors }
           });
 
-          if (response.ok) {
-            await fetchDistributors();
-            await fetchStats();
-            setSelectedDistributors([]);
-          }
+          await fetchDistributors();
+          await fetchStats();
+          setSelectedDistributors([]);
         } catch (error) {
           console.error('Bulk delete failed:', error);
         } finally {
@@ -437,15 +422,10 @@ const DistributorsManagement: React.FC = () => {
       onConfirm: async () => {
         try {
           setActionLoading(true);
-          const response = await fetch(`/api/admin/distributors/${distributorId}/approve`, {
-            method: 'PUT',
-            credentials: 'include'
-          });
+          await api.put(`/admin/distributors/${distributorId}/approve`);
 
-          if (response.ok) {
-            await fetchDistributors();
-            await fetchStats();
-          }
+          await fetchDistributors();
+          await fetchStats();
         } catch (error) {
           console.error('Approve failed:', error);
         } finally {
@@ -465,15 +445,10 @@ const DistributorsManagement: React.FC = () => {
       onConfirm: async () => {
         try {
           setActionLoading(true);
-          const response = await fetch(`/api/admin/distributors/${distributorId}/reject`, {
-            method: 'PUT',
-            credentials: 'include'
-          });
+          await api.put(`/admin/distributors/${distributorId}/reject`);
 
-          if (response.ok) {
-            await fetchDistributors();
-            await fetchStats();
-          }
+          await fetchDistributors();
+          await fetchStats();
         } catch (error) {
           console.error('Reject failed:', error);
         } finally {
