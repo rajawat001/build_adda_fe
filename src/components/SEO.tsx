@@ -37,7 +37,7 @@ export default function SEO({
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={image} />
       
-      <link rel="icon" href="/favicon.ico" />
+      <link rel="icon" href="/buildadda3.ico" />
     </Head>
   );
 }
