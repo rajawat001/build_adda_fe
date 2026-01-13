@@ -3,6 +3,8 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import SEO from '../components/SEO';
 import { login } from '../services/auth.service';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 
 export default function Login() {
   const router = useRouter();
@@ -125,6 +127,7 @@ export default function Login() {
   return (
     <>
       <SEO title="Login" />
+      <Header />
 
       <div className="login-page">
         <div className="login-container">
@@ -177,6 +180,7 @@ export default function Login() {
           </p>
         </div>
       </div>
+      <Footer />
     </>
   );
 }

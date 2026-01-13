@@ -4,6 +4,8 @@ import Link from 'next/link';
 import SEO from '../components/SEO';
 import { register } from '../services/auth.service';
 import { getLocationDetails } from '../utils/location';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 
 interface ValidationErrors {
   name?: string;
@@ -207,6 +209,7 @@ export default function Register() {
   return (
     <>
       <SEO title="Register" />
+      <Header />
 
       <div className="login-page">
         <div className="login-container">
@@ -369,6 +372,7 @@ export default function Register() {
           </p>
         </div>
       </div>
+      <Footer />
     </>
   );
 }
