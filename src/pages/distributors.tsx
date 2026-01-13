@@ -5,6 +5,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import api from '../services/api';
 import { getCurrentLocation } from '../utils/location';
+import { FiFilter, FiX, FiMapPin } from 'react-icons/fi';
 
 interface Distributor {
   _id: string;
@@ -34,12 +35,26 @@ const Distributors = () => {
   const [searchPincode, setSearchPincode] = useState('');
   const [maxDistance, setMaxDistance] = useState(50);
   const [userLocation, setUserLocation] = useState<{lat: number; lng: number} | null>(null);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     fetchAllDistributors(1, true);
     detectUserLocation();
   }, []);
+
+  // Lock body scroll when mobile filters are open
+  useEffect(() => {
+    if (showMobileFilters) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showMobileFilters]);
 
 
   const detectUserLocation = async () => {
@@ -178,9 +193,24 @@ const Distributors = () => {
       <Header />
       
       <div className="distributors-page">
+        {/* Mobile Filter Button */}
+        <div className="mobile-filter-bar">
+          <button
+            className="mobile-filter-btn"
+            onClick={() => setShowMobileFilters(true)}
+          >
+            <FiMapPin size={20} />
+            <span>Search Location</span>
+          </button>
+
+          <p className="mobile-results-count">
+            {distributors.length} distributors
+          </p>
+        </div>
+
         <div className="search-section">
           <h1>Find Distributors Near You</h1>
-          
+
           <div className="search-options">
             <div className="search-by-pincode">
               <h3>Search by Pincode</h3>
@@ -192,8 +222,8 @@ const Distributors = () => {
                   onChange={(e) => setSearchPincode(e.target.value)}
                   maxLength={6}
                 />
-                
-                <select 
+
+                <select
                   value={maxDistance}
                   onChange={(e) => setMaxDistance(Number(e.target.value))}
                 >
@@ -202,15 +232,15 @@ const Distributors = () => {
                   <option value={50}>Within 50 km</option>
                   <option value={100}>Within 100 km</option>
                 </select>
-                
+
                 <button onClick={searchByPincode} className="btn-search">
                   Search
                 </button>
               </div>
             </div>
-            
+
             <div className="divider">OR</div>
-            
+
             <div className="search-by-location">
               <h3>Use Current Location</h3>
               <button onClick={searchByCurrentLocation} className="btn-location">
@@ -312,6 +342,84 @@ const Distributors = () => {
             </div>
           )}
         </div>
+
+        {/* Mobile Filter Drawer */}
+        {showMobileFilters && (
+          <div
+            className="mobile-filter-overlay"
+            onClick={() => setShowMobileFilters(false)}
+          >
+            <div
+              className="mobile-filter-drawer"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mobile-filter-header">
+                <h3>Search by Location</h3>
+                <button
+                  className="close-filters-btn"
+                  onClick={() => setShowMobileFilters(false)}
+                >
+                  <FiX size={24} />
+                </button>
+              </div>
+
+              <div className="mobile-filter-content">
+                <div className="mobile-search-options">
+                  <div className="search-by-pincode">
+                    <h4>Search by Pincode</h4>
+                    <div className="search-inputs-mobile">
+                      <input
+                        type="text"
+                        placeholder="Enter pincode"
+                        value={searchPincode}
+                        onChange={(e) => setSearchPincode(e.target.value)}
+                        maxLength={6}
+                      />
+
+                      <select
+                        value={maxDistance}
+                        onChange={(e) => setMaxDistance(Number(e.target.value))}
+                      >
+                        <option value={10}>Within 10 km</option>
+                        <option value={25}>Within 25 km</option>
+                        <option value={50}>Within 50 km</option>
+                        <option value={100}>Within 100 km</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="divider-mobile">OR</div>
+
+                  <div className="search-by-location-mobile">
+                    <h4>Use Current Location</h4>
+                    <button
+                      onClick={() => {
+                        searchByCurrentLocation();
+                        setShowMobileFilters(false);
+                      }}
+                      className="btn-location-mobile"
+                    >
+                      <FiMapPin size={20} />
+                      Detect My Location
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mobile-filter-footer">
+                <button
+                  className="btn-apply-filters"
+                  onClick={() => {
+                    searchByPincode();
+                    setShowMobileFilters(false);
+                  }}
+                >
+                  Search Distributors
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <Footer />

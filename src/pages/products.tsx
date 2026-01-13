@@ -7,6 +7,7 @@ import ProductCard from '../components/ProductCard';
 import Filter from '../components/Filter';
 import productService from '../services/product.service';
 import { Product, Category } from '../types';
+import { FiFilter, FiX } from 'react-icons/fi';
 
 const Products = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -16,6 +17,7 @@ const Products = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
   const router = useRouter();
 
   const [filters, setFilters] = useState({
@@ -61,7 +63,7 @@ const Products = () => {
       if (filters.maxPrice) params.maxPrice = filters.maxPrice;
       if (searchTerm) params.search = searchTerm;
 
-      const response = await productService.getAllProducts();
+      const response = await productService.getAllProducts(params);
 
       // Handle different response structures
       let productsList: Product[] = [];
@@ -164,6 +166,28 @@ const Products = () => {
     setSearchTerm('');
   };
 
+  // Lock body scroll when mobile filters are open
+  useEffect(() => {
+    if (showMobileFilters) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showMobileFilters]);
+
+  // Count active filters
+  const activeFiltersCount = [
+    filters.category,
+    filters.minPrice,
+    filters.maxPrice,
+    filters.pincode,
+    filters.availability !== 'all' ? filters.availability : ''
+  ].filter(Boolean).length;
+
   const handleAddToCart = (product: Product) => {
     try {
       const cartData = localStorage.getItem('cart');
@@ -248,20 +272,52 @@ const Products = () => {
           </div>
         </div>
         
+        {/* Mobile Filter Button */}
+        <div className="mobile-filter-bar">
+          <button
+            className="mobile-filter-btn"
+            onClick={() => setShowMobileFilters(true)}
+          >
+            <FiFilter size={20} />
+            <span>Filters</span>
+            {activeFiltersCount > 0 && (
+              <span className="filter-badge">{activeFiltersCount}</span>
+            )}
+          </button>
+
+          <div className="mobile-sort">
+            <select
+              value={filters.sortBy}
+              onChange={(e) => handleFilterChange('sortBy', e.target.value)}
+            >
+              <option value="newest">Newest</option>
+              <option value="priceLowToHigh">Price: Low to High</option>
+              <option value="priceHighToLow">Price: High to Low</option>
+              <option value="nameAZ">Name: A-Z</option>
+              <option value="nameZA">Name: Z-A</option>
+            </select>
+          </div>
+
+          <p className="mobile-results-count">
+            {products.length} products
+          </p>
+        </div>
+
         <div className="products-main">
+          {/* Desktop Filters Sidebar */}
           <aside className="filters-sidebar">
             <div className="filter-header">
               <h3>Filters</h3>
               <button onClick={resetFilters} className="reset-btn">Reset All</button>
             </div>
-            
+
             <Filter
               categories={categories}
               filters={filters}
               onFilterChange={handleFilterChange}
             />
           </aside>
-          
+
           <div className="products-content">
             <div className="products-toolbar">
               <p className="results-count">
@@ -331,8 +387,57 @@ const Products = () => {
             )}
           </div>
         </div>
+
+        {/* Mobile Filter Drawer */}
+        {showMobileFilters && (
+          <div
+            className="mobile-filter-overlay"
+            onClick={() => setShowMobileFilters(false)}
+          >
+            <div
+              className="mobile-filter-drawer"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mobile-filter-header">
+                <h3>Filters</h3>
+                <button
+                  className="close-filters-btn"
+                  onClick={() => setShowMobileFilters(false)}
+                >
+                  <FiX size={24} />
+                </button>
+              </div>
+
+              <div className="mobile-filter-content">
+                <Filter
+                  categories={categories}
+                  filters={filters}
+                  onFilterChange={handleFilterChange}
+                />
+              </div>
+
+              <div className="mobile-filter-footer">
+                <button
+                  className="btn-reset-filters"
+                  onClick={() => {
+                    resetFilters();
+                    setShowMobileFilters(false);
+                  }}
+                >
+                  Reset All
+                </button>
+                <button
+                  className="btn-apply-filters"
+                  onClick={() => setShowMobileFilters(false)}
+                >
+                  Show {products.length} Products
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
-      
+
       <Footer />
     </>
   );

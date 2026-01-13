@@ -30,6 +30,7 @@ import '../styles/modern-components.css';
 import '../styles/modern-home.css';
 import '../styles/modern-footer.css';
 import '../styles/mobile-enhancements.css';
+import '../styles/mobile-filters.css';
 
 export default function App({ Component, pageProps }: AppProps) {
   return (
