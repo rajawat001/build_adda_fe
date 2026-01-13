@@ -1,0 +1,382 @@
+/* ====================================
+   MOBILE ENHANCEMENTS & OPTIMIZATIONS
+   ==================================== */
+
+/* Ensure proper mobile rendering */
+* {
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  -webkit-touch-callout: none;
+}
+
+/* Smooth scrolling for mobile */
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+/* Prevent text size adjustment on orientation change */
+html, body {
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+}
+
+/* Better mobile container */
+.container {
+  width: 100%;
+  padding-left: 16px;
+  padding-right: 16px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (min-width: 640px) {
+  .container {
+    max-width: 640px;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+}
+
+@media (min-width: 768px) {
+  .container {
+    max-width: 768px;
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    max-width: 1024px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .container {
+    max-width: 1280px;
+  }
+}
+
+/* Touch-friendly buttons and links */
+@media (max-width: 768px) {
+  button,
+  a,
+  input[type="button"],
+  input[type="submit"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Larger click areas for mobile */
+  .header-action-btn,
+  .nav-link,
+  .category-menu-item,
+  .mobile-menu-toggle {
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+  }
+
+  /* Better input fields on mobile */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  input[type="tel"],
+  input[type="number"],
+  textarea,
+  select {
+    font-size: 16px; /* Prevents zoom on iOS */
+    min-height: 44px;
+    padding: 12px 16px;
+  }
+}
+
+/* Mobile menu overlay fix */
+@media (max-width: 768px) {
+  .mobile-menu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 9998;
+    display: none;
+  }
+
+  .mobile-menu.active {
+    display: block;
+  }
+
+  .mobile-menu-content {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 85%;
+    max-width: 320px;
+    background: white;
+    padding: 20px;
+    overflow-y: auto;
+    z-index: 9999;
+    box-shadow: -4px 0 16px rgba(0, 0, 0, 0.2);
+  }
+
+  /* Prevent body scroll when menu is open */
+  body.mobile-menu-open {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+  }
+}
+
+/* Category cards touch optimization */
+@media (max-width: 768px) {
+  .category-card {
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+
+  .category-card:active {
+    transform: scale(0.98);
+  }
+
+  .distributor-card-modern:active,
+  .feature-card:active {
+    transform: scale(0.98);
+  }
+}
+
+/* Better image loading on mobile */
+@media (max-width: 768px) {
+  img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .category-image img,
+  .product-image img {
+    object-fit: cover;
+    width: 100%;
+    height: 100%;
+  }
+}
+
+/* Mobile horizontal scrolling prevention */
+@media (max-width: 768px) {
+  body {
+    overflow-x: hidden;
+  }
+
+  * {
+    max-width: 100%;
+  }
+}
+
+/* Better modal/dropdown positioning on mobile */
+@media (max-width: 768px) {
+  .dropdown-menu {
+    position: fixed;
+    top: auto;
+    right: 10px;
+    left: 10px;
+    max-width: calc(100vw - 20px);
+  }
+}
+
+/* Better grid responsiveness for very small screens */
+@media (max-width: 480px) {
+  .product-grid-modern {
+    grid-template-columns: 1fr;
+  }
+
+  .categories-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .features-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* iPhone SE and similar small devices */
+@media (max-width: 375px) {
+  .container {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  /* Stack categories on very small screens */
+  .categories-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Smaller text for very small screens */
+  .hero-title {
+    font-size: 22px !important;
+  }
+
+  .section-title {
+    font-size: 18px !important;
+  }
+
+  button,
+  .btn-primary,
+  .btn-secondary {
+    font-size: 13px;
+    padding: 10px 16px;
+  }
+}
+
+/* Landscape mode optimizations for phones */
+@media (max-height: 500px) and (orientation: landscape) {
+  .hero-banner {
+    padding: 30px 0 40px;
+  }
+
+  .hero-title {
+    font-size: 28px;
+  }
+
+  .hero-subtitle {
+    font-size: 14px;
+    margin-bottom: 20px;
+  }
+
+  .section-title {
+    font-size: 24px;
+  }
+
+  .mobile-menu-content {
+    padding: 16px;
+  }
+}
+
+/* Fix for notch displays (iPhone X and newer) */
+@supports (padding-top: env(safe-area-inset-top)) {
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .modern-header {
+    top: env(safe-area-inset-top);
+  }
+
+  .mobile-menu-content {
+    padding-top: calc(20px + env(safe-area-inset-top));
+    padding-bottom: calc(20px + env(safe-area-inset-bottom));
+  }
+}
+
+/* Performance optimization for mobile scrolling */
+@media (max-width: 768px) {
+  .category-card,
+  .distributor-card-modern,
+  .feature-card,
+  .product-card {
+    will-change: transform;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+  }
+}
+
+/* Better touch feedback */
+@media (max-width: 768px) {
+  button:active,
+  a:active {
+    opacity: 0.7;
+    transition: opacity 0.1s;
+  }
+
+  .btn-primary-large:active,
+  .btn-secondary-large:active,
+  .btn-cta:active,
+  .btn-view-all:active {
+    transform: scale(0.98);
+  }
+}
+
+/* Accessibility improvements for mobile */
+@media (max-width: 768px) {
+  /* Skip to main content link */
+  .skip-to-main {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: #d97706;
+    color: white;
+    padding: 8px 16px;
+    text-decoration: none;
+    z-index: 100;
+  }
+
+  .skip-to-main:focus {
+    top: 0;
+  }
+
+  /* Better focus indicators */
+  button:focus,
+  a:focus,
+  input:focus,
+  select:focus,
+  textarea:focus {
+    outline: 3px solid #d97706;
+    outline-offset: 2px;
+  }
+}
+
+/* Loading states for mobile */
+@media (max-width: 768px) {
+  .loading-state,
+  .empty-state {
+    padding: 40px 20px;
+    font-size: 16px;
+  }
+
+  .loading-spinner {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+/* Better spacing for mobile content */
+@media (max-width: 480px) {
+  section {
+    margin-bottom: 40px;
+  }
+
+  .section-header {
+    margin-bottom: 24px;
+  }
+
+  .section-footer {
+    margin-top: 24px;
+  }
+}
+
+/* Safe area for mobile keyboards */
+@media (max-width: 768px) {
+  .mobile-safe-bottom {
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
+  }
+}
+
+/* Optimize font rendering on mobile */
+@media (max-width: 768px) {
+  body {
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Prevent text inflation on small screens */
+  p, li, td, th {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+}

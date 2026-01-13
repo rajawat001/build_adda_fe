@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import SEO from '../components/SEO';
 import Header from '../components/Header';
@@ -28,15 +28,19 @@ interface Distributor {
 const Distributors = () => {
   const [distributors, setDistributors] = useState<Distributor[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const [searchPincode, setSearchPincode] = useState('');
   const [maxDistance, setMaxDistance] = useState(50);
   const [userLocation, setUserLocation] = useState<{lat: number; lng: number} | null>(null);
   const router = useRouter();
 
   useEffect(() => {
-    fetchAllDistributors();
+    fetchAllDistributors(1, true);
     detectUserLocation();
   }, []);
+
 
   const detectUserLocation = async () => {
     try {
@@ -51,16 +55,41 @@ const Distributors = () => {
     }
   };
 
-  const fetchAllDistributors = async () => {
+  const fetchAllDistributors = async (pageNum: number = 1, reset: boolean = false) => {
     try {
-      const response = await api.get('/users/distributors');
-      setDistributors(response.data.distributors || []);
+      if (reset) {
+        setLoading(true);
+      } else {
+        setLoadingMore(true);
+      }
+
+      const response = await api.get(`/users/distributors?page=${pageNum}&limit=20`);
+      const newDistributors = response.data.distributors || [];
+
+      if (reset) {
+        setDistributors(newDistributors);
+      } else {
+        setDistributors(prev => [...prev, ...newDistributors]);
+      }
+
+      setHasMore(newDistributors.length === 20);
     } catch (error) {
       console.error('Error fetching distributors:', error);
+      if (reset) {
+        setDistributors([]);
+      }
+      setHasMore(false);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
+
+  const loadMoreDistributors = useCallback(() => {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchAllDistributors(nextPage, false);
+  }, [page]);
 
   const searchByPincode = async () => {
     if (!searchPincode) {
@@ -255,9 +284,36 @@ const Distributors = () => {
               ))}
             </div>
           )}
+
+          {/* Load More Button */}
+          {hasMore && !loading && (
+            <div style={{ textAlign: 'center', padding: '2rem 0' }}>
+              <button
+                onClick={loadMoreDistributors}
+                disabled={loadingMore}
+                className="btn-primary"
+                style={{
+                  padding: '12px 32px',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  borderRadius: '8px',
+                  cursor: loadingMore ? 'not-allowed' : 'pointer',
+                  opacity: loadingMore ? 0.7 : 1
+                }}
+              >
+                {loadingMore ? 'Loading...' : 'Load More Distributors'}
+              </button>
+            </div>
+          )}
+
+          {!hasMore && distributors.length > 0 && (
+            <div style={{ textAlign: 'center', padding: '20px', color: '#666' }}>
+              <p>No more distributors to load</p>
+            </div>
+          )}
         </div>
       </div>
-      
+
       <Footer />
     </>
   );

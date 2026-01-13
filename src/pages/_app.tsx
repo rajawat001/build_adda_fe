@@ -26,6 +26,10 @@ import '../styles/distributors.css';
 import '../styles/toast.css';
 import '../styles/forms.css';
 import '../styles/loading.css';
+import '../styles/modern-components.css';
+import '../styles/modern-home.css';
+import '../styles/modern-footer.css';
+import '../styles/mobile-enhancements.css';
 
 export default function App({ Component, pageProps }: AppProps) {
   return (

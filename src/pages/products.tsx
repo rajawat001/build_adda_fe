@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import SEO from '../components/SEO';
 import Header from '../components/Header';
@@ -10,10 +10,12 @@ import { Product, Category } from '../types';
 
 const Products = () => {
   const [products, setProducts] = useState<Product[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const router = useRouter();
 
   const [filters, setFilters] = useState({
@@ -25,39 +27,101 @@ const Products = () => {
     pincode: ''
   });
 
+  // Fetch categories once
   useEffect(() => {
-    fetchProducts();
     fetchCategories();
   }, []);
 
+  // Fetch products when filters change
   useEffect(() => {
-    applyFilters();
-  }, [products, filters, searchTerm]);
+    setProducts([]);
+    setPage(1);
+    setHasMore(true);
+    fetchProducts(1, true);
+  }, [filters, searchTerm]);
 
-  const fetchProducts = async () => {
+
+  const fetchProducts = async (pageNum: number = 1, reset: boolean = false) => {
     try {
+      if (reset) {
+        setLoading(true);
+      } else {
+        setLoadingMore(true);
+      }
+
+      // Build query parameters
+      const params: any = {
+        page: pageNum,
+        limit: 24,
+        sortBy: filters.sortBy
+      };
+
+      if (filters.category) params.category = filters.category;
+      if (filters.minPrice) params.minPrice = filters.minPrice;
+      if (filters.maxPrice) params.maxPrice = filters.maxPrice;
+      if (searchTerm) params.search = searchTerm;
+
       const response = await productService.getAllProducts();
-      
+
       // Handle different response structures
       let productsList: Product[] = [];
+      let totalCount = 0;
+
       if (response.products) {
         productsList = response.products;
+        totalCount = response.total || response.products.length;
       } else if (Array.isArray(response)) {
         productsList = response;
+        totalCount = response.length;
       } else if (response.data?.products) {
         productsList = response.data.products;
+        totalCount = response.data.total || response.data.products.length;
       }
-      
-      setProducts(productsList);
-      setFilteredProducts(productsList);
+
+      // Filter by availability and pincode on client side
+      let filtered = productsList;
+      if (filters.availability === 'inStock') {
+        filtered = filtered.filter(p => p.stock > 0);
+      } else if (filters.availability === 'outOfStock') {
+        filtered = filtered.filter(p => p.stock === 0);
+      }
+
+      if (filters.pincode && filters.pincode.trim()) {
+        filtered = filtered.filter(product => {
+          const distributor = typeof product.distributor === 'object' ? product.distributor : null;
+          if (distributor && (distributor as any).pincode) {
+            return (distributor as any).pincode.includes(filters.pincode.trim());
+          }
+          return false;
+        });
+      }
+
+      if (reset) {
+        setProducts(filtered);
+      } else {
+        setProducts(prev => [...prev, ...filtered]);
+      }
+
+      // Check if there are more products to load
+      setHasMore(filtered.length === 24);
+
     } catch (error) {
       console.error('Error fetching products:', error);
-      setProducts([]);
-      setFilteredProducts([]);
+      if (reset) {
+        setProducts([]);
+      }
+      setHasMore(false);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
+
+  const loadMoreProducts = useCallback(() => {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchProducts(nextPage, false);
+  }, [page, filters, searchTerm]);
 
   const fetchCategories = async () => {
     try {
@@ -80,78 +144,6 @@ const Products = () => {
     }
   };
 
-  const applyFilters = () => {
-    let filtered = [...products];
-
-    // Search filter
-    if (searchTerm) {
-      filtered = filtered.filter(product =>
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.description.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    // Category filter
-    if (filters.category) {
-      filtered = filtered.filter(product => {
-        const categoryId = typeof product.category === 'string' 
-          ? product.category 
-          : product.category._id;
-        return categoryId === filters.category;
-      });
-    }
-
-    // Price filter
-    if (filters.minPrice) {
-      filtered = filtered.filter(product => 
-        product.price >= parseFloat(filters.minPrice)
-      );
-    }
-    if (filters.maxPrice) {
-      filtered = filtered.filter(product => 
-        product.price <= parseFloat(filters.maxPrice)
-      );
-    }
-
-    // Availability filter
-    if (filters.availability === 'inStock') {
-      filtered = filtered.filter(product => product.stock > 0);
-    } else if (filters.availability === 'outOfStock') {
-      filtered = filtered.filter(product => product.stock === 0);
-    }
-
-    // Pincode filter - filter by distributor's pincode
-    if (filters.pincode && filters.pincode.trim()) {
-      filtered = filtered.filter(product => {
-        const distributor = typeof product.distributor === 'object' ? product.distributor : null;
-        if (distributor && (distributor as any).pincode) {
-          return (distributor as any).pincode.includes(filters.pincode.trim());
-        }
-        return false;
-      });
-    }
-
-    // Sort
-    switch (filters.sortBy) {
-      case 'priceLowToHigh':
-        filtered.sort((a, b) => a.price - b.price);
-        break;
-      case 'priceHighToLow':
-        filtered.sort((a, b) => b.price - a.price);
-        break;
-      case 'nameAZ':
-        filtered.sort((a, b) => a.name.localeCompare(b.name));
-        break;
-      case 'nameZA':
-        filtered.sort((a, b) => b.name.localeCompare(a.name));
-        break;
-      default:
-        // newest - assuming products come sorted by creation date
-        break;
-    }
-
-    setFilteredProducts(filtered);
-  };
 
   const handleFilterChange = (filterName: string, value: string) => {
     setFilters({
@@ -273,9 +265,9 @@ const Products = () => {
           <div className="products-content">
             <div className="products-toolbar">
               <p className="results-count">
-                {filteredProducts.length} products found
+                {products.length} products {loadingMore ? '(loading more...)' : ''}
               </p>
-              
+
               <div className="sort-dropdown">
                 <label>Sort by:</label>
                 <select
@@ -290,23 +282,52 @@ const Products = () => {
                 </select>
               </div>
             </div>
-            
-            {filteredProducts.length === 0 ? (
+
+            {products.length === 0 && !loading ? (
               <div className="no-products">
                 <p>No products found matching your criteria</p>
                 <button onClick={resetFilters}>Clear Filters</button>
               </div>
             ) : (
-              <div className="products-grid">
-                {filteredProducts.map((product) => (
-                  <ProductCard 
-                    key={product._id} 
-                    product={product}
-                    onAddToCart={handleAddToCart}
-                    onAddToWishlist={handleAddToWishlist}
-                  />
-                ))}
-              </div>
+              <>
+                <div className="products-grid">
+                  {products.map((product) => (
+                    <ProductCard
+                      key={product._id}
+                      product={product}
+                      onAddToCart={handleAddToCart}
+                      onAddToWishlist={handleAddToWishlist}
+                    />
+                  ))}
+                </div>
+
+                {/* Load More Button */}
+                {hasMore && !loading && (
+                  <div style={{ textAlign: 'center', padding: '2rem 0' }}>
+                    <button
+                      onClick={loadMoreProducts}
+                      disabled={loadingMore}
+                      className="btn-primary"
+                      style={{
+                        padding: '12px 32px',
+                        fontSize: '16px',
+                        fontWeight: '600',
+                        borderRadius: '8px',
+                        cursor: loadingMore ? 'not-allowed' : 'pointer',
+                        opacity: loadingMore ? 0.7 : 1
+                      }}
+                    >
+                      {loadingMore ? 'Loading...' : 'Load More Products'}
+                    </button>
+                  </div>
+                )}
+
+                {!hasMore && products.length > 0 && (
+                  <div style={{ textAlign: 'center', padding: '20px', color: '#666' }}>
+                    <p>No more products to load</p>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
