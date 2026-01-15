@@ -207,11 +207,12 @@ export default function Home() {
             position: 'relative'
           }}
         >
-          <div className="hero-content" style={{ position: 'absolute', top: 300, left: 0, right: 900, bottom: 0 }}>
+          <div className="hero-content" style={{ position: 'absolute', top: 200, left: 0, right: 900, bottom: 0 }}>
             <div className="container">
               <div className="hero-text">
                 <h1 className="hero-title">
-                  Quality Building Materials <br />
+                  Quality <br />
+                  Building Materials <br />
                   <span className="highlight">at Your Doorstep</span>
                 </h1>
                 <p className="hero-subtitle">
