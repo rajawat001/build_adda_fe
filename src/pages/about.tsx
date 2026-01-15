@@ -21,7 +21,7 @@ const AboutPage: React.FC = () => {
           <div className="info-content">
             <section className="intro-section">
               <div className="intro-image">
-                <img src="/images/about-hero.jpg" alt="BuildAdda Construction Materials" />
+                <img src="/Banner/Build_Adda_banner.png" alt="BuildAdda Construction Materials" />
               </div>
               <div className="intro-text">
                 <h2>Who We Are</h2>
