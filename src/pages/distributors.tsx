@@ -212,16 +212,16 @@ const Distributors = () => {
     "itemListElement": distributors.slice(0, 10).map((distributor, index) => ({
       "@type": "LocalBusiness",
       "position": index + 1,
-      "name": distributor.businessName || distributor.name,
-      "description": `Verified building materials distributor in ${distributor.address?.city || 'Jaipur'}`,
+      "name": distributor.businessName,
+      "description": `Verified building materials distributor in ${distributor.city || 'Jaipur'}`,
       "address": {
         "@type": "PostalAddress",
-        "addressLocality": distributor.address?.city || "Jaipur",
-        "addressRegion": distributor.address?.state || "Rajasthan",
-        "postalCode": distributor.address?.pincode || "",
+        "addressLocality": distributor.city || "Jaipur",
+        "addressRegion": distributor.state || "Rajasthan",
+        "postalCode": distributor.pincode || "",
         "addressCountry": "IN"
       },
-      "telephone": distributor.phone || distributor.mobile,
+      "telephone": distributor.phone,
       "aggregateRating": distributor.rating ? {
         "@type": "AggregateRating",
         "ratingValue": distributor.rating,
