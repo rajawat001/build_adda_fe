@@ -249,11 +249,61 @@ const Products = () => {
     );
   }
 
+  // JSON-LD Structured Data for Products Page
+  const productsStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Building Materials Products",
+    "description": "Browse our comprehensive collection of building materials including cement, steel, bricks, sand, paint, and tiles",
+    "url": "https://www.buildadda.in/products",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://www.buildadda.in"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Products",
+          "item": "https://www.buildadda.in/products"
+        }
+      ]
+    },
+    "mainEntity": {
+      "@type": "OfferCatalog",
+      "name": "Building Materials Catalog",
+      "itemListElement": products.slice(0, 12).map((product, index) => ({
+        "@type": "Offer",
+        "position": index + 1,
+        "itemOffered": {
+          "@type": "Product",
+          "name": product.name,
+          "description": product.description || `High quality ${product.name} available for purchase`,
+          "image": product.images && product.images.length > 0 ? product.images[0] : '/buildAddaBrandImage.png',
+          "offers": {
+            "@type": "Offer",
+            "price": product.price,
+            "priceCurrency": "INR",
+            "availability": product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
+          }
+        }
+      }))
+    }
+  };
+
   return (
     <>
-      <SEO 
-        title="Products - Building Materials" 
-        description="Browse our wide range of quality building materials"
+      <SEO
+        title="Building Materials Products - Buy Cement, Steel, Bricks, Sand, Paint, Tiles Online"
+        description="Browse 1000+ building materials products from verified distributors in Jaipur. Shop cement, steel, bricks, sand, paint, tiles, and construction supplies at wholesale prices. Free delivery on orders above ₹50,000. Quality assured, best deals guaranteed."
+        keywords="building materials products, buy cement online, steel products, bricks for sale, sand suppliers, paint online India, tiles shop, construction materials catalog, wholesale building supplies, cement price list, steel rate, building materials Jaipur, construction products India"
+        canonicalUrl="https://www.buildadda.in/products"
+        ogImage="https://www.buildadda.in/buildAddaBrandImage.png"
+        jsonLd={productsStructuredData}
       />
       <Header />
       

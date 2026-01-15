@@ -1,0 +1,53 @@
+# BuildAdda - Robots.txt
+# https://www.buildadda.in/robots.txt
+
+# Allow all bots to crawl the site
+User-agent: *
+Allow: /
+
+# Disallow admin and user dashboard pages
+Disallow: /admin/
+Disallow: /user/
+Disallow: /distributor/
+Disallow: /api/
+
+# Disallow cart and checkout (no need to index)
+Disallow: /cart
+Disallow: /checkout
+
+# Allow products and distributors
+Allow: /products
+Allow: /distributors
+
+# Crawl delay for polite bots (optional)
+Crawl-delay: 1
+
+# Sitemap location
+Sitemap: https://www.buildadda.in/sitemap.xml
+
+# Google-specific rules
+User-agent: Googlebot
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Crawl-delay: 0
+
+# Bing-specific rules
+User-agent: Bingbot
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Crawl-delay: 1
+
+# Yandex-specific rules
+User-agent: Yandex
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+
+# Block bad bots (optional - add as needed)
+User-agent: AhrefsBot
+Crawl-delay: 10
+
+User-agent: SemrushBot
+Crawl-delay: 10

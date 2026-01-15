@@ -182,11 +182,105 @@ export default function Home() {
     }
   ];
 
+  // JSON-LD Structured Data for Homepage
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://www.buildadda.in/#organization",
+        "name": "BuildAdda",
+        "url": "https://www.buildadda.in",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://www.buildadda.in/buildAddaBrandImage.png",
+          "width": 250,
+          "height": 60
+        },
+        "description": "India's Premier Building Materials Marketplace connecting buyers with verified distributors",
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Jaipur",
+          "addressRegion": "Rajasthan",
+          "addressCountry": "India"
+        },
+        "contactPoint": {
+          "@type": "ContactPoint",
+          "telephone": "+91-6377845721",
+          "contactType": "Customer Service",
+          "email": "contact@buildadda.in",
+          "areaServed": "IN",
+          "availableLanguage": ["English", "Hindi"]
+        },
+        "sameAs": [
+          "https://www.facebook.com/buildadda",
+          "https://twitter.com/buildadda",
+          "https://www.instagram.com/buildadda",
+          "https://www.linkedin.com/company/buildadda",
+          "https://www.youtube.com/buildadda"
+        ]
+      },
+      {
+        "@type": "LocalBusiness",
+        "@id": "https://www.buildadda.in/#localbusiness",
+        "name": "BuildAdda",
+        "image": "https://www.buildadda.in/buildAddaBrandImage.png",
+        "priceRange": "₹₹",
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Jaipur",
+          "addressRegion": "RJ",
+          "postalCode": "302001",
+          "addressCountry": "IN"
+        },
+        "geo": {
+          "@type": "GeoCoordinates",
+          "latitude": 26.9124,
+          "longitude": 75.7873
+        },
+        "telephone": "+91-6377845721",
+        "openingHoursSpecification": {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday"
+          ],
+          "opens": "09:00",
+          "closes": "18:00"
+        }
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://www.buildadda.in/#website",
+        "url": "https://www.buildadda.in",
+        "name": "BuildAdda",
+        "description": "Buy building materials online from verified distributors",
+        "publisher": {
+          "@id": "https://www.buildadda.in/#organization"
+        },
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": "https://www.buildadda.in/products?search={search_term_string}",
+          "query-input": "required name=search_term_string"
+        }
+      }
+    ]
+  };
+
   return (
     <>
       <SEO
-        title="BuildAdda - Quality Building Materials Online"
-        description="Buy quality building materials from trusted distributors near you. Cement, Steel, Bricks, Sand and more at best prices."
+        title="BuildAdda - Buy Building Materials Online | Cement, Steel, Bricks, Sand, Paint, Tiles"
+        description="BuildAdda is India's premier building materials marketplace in Jaipur, Rajasthan. Buy cement, steel, bricks, sand, paint, tiles & construction supplies from verified distributors. Best prices, quality assured, free delivery on orders above ₹50,000. Shop now!"
+        keywords="buy building materials online India, cement suppliers Jaipur, steel distributors Rajasthan, bricks online India, sand suppliers near me, paint dealers Jaipur, tiles shop online, construction materials marketplace, wholesale building supplies, verified distributors Jaipur, building materials Rajasthan, construction supplies India, cement price Jaipur, steel price India, bricks dealers, building materials e-commerce"
+        canonicalUrl="https://www.buildadda.in"
+        ogType="website"
+        ogImage="https://www.buildadda.in/buildAddaBrandImage.png"
+        jsonLd={structuredData}
       />
 
       <Header />

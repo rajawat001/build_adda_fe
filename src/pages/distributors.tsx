@@ -184,11 +184,62 @@ const Distributors = () => {
     );
   }
 
+  // JSON-LD Structured Data for Distributors Page
+  const distributorsStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": "Verified Building Materials Distributors",
+    "description": "Find verified and trusted building materials distributors in Jaipur and across Rajasthan",
+    "url": "https://www.buildadda.in/distributors",
+    "numberOfItems": distributors.length,
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://www.buildadda.in"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Distributors",
+          "item": "https://www.buildadda.in/distributors"
+        }
+      ]
+    },
+    "itemListElement": distributors.slice(0, 10).map((distributor, index) => ({
+      "@type": "LocalBusiness",
+      "position": index + 1,
+      "name": distributor.businessName || distributor.name,
+      "description": `Verified building materials distributor in ${distributor.address?.city || 'Jaipur'}`,
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": distributor.address?.city || "Jaipur",
+        "addressRegion": distributor.address?.state || "Rajasthan",
+        "postalCode": distributor.address?.pincode || "",
+        "addressCountry": "IN"
+      },
+      "telephone": distributor.phone || distributor.mobile,
+      "aggregateRating": distributor.rating ? {
+        "@type": "AggregateRating",
+        "ratingValue": distributor.rating,
+        "bestRating": "5",
+        "worstRating": "1"
+      } : undefined
+    }))
+  };
+
   return (
     <>
-      <SEO 
-        title="Find Distributors" 
-        description="Find verified building material distributors near you"
+      <SEO
+        title="Find Verified Building Materials Distributors Near You in Jaipur, Rajasthan"
+        description="Connect with 500+ verified building materials distributors in Jaipur, Rajasthan. Find trusted cement suppliers, steel distributors, bricks dealers, sand suppliers, paint sellers, and tiles shops near you. Compare prices, check ratings, and get best deals on construction materials. Search by location and pincode."
+        keywords="building materials distributors Jaipur, cement suppliers near me, steel distributors Rajasthan, verified distributors India, bricks dealers Jaipur, sand suppliers Rajasthan, paint distributors, tiles dealers, construction materials suppliers, wholesale distributors Jaipur, building supplies near me, distributors by pincode, local building materials sellers"
+        canonicalUrl="https://www.buildadda.in/distributors"
+        ogImage="https://www.buildadda.in/buildAddaBrandImage.png"
+        jsonLd={distributorsStructuredData}
       />
       <Header />
       
