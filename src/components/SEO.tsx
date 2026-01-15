@@ -20,7 +20,7 @@ export default function SEO({
   title,
   description = 'BuildAdda - India\'s Premier Building Materials Marketplace. Buy cement, steel, bricks, sand, paint, tiles & more from verified distributors in Jaipur. Best prices, quality assured, fast delivery.',
   keywords = 'building materials India, construction supplies, cement suppliers Jaipur, steel distributors, bricks online, sand suppliers, paint dealers, tiles shop, building materials marketplace, construction materials Rajasthan, verified distributors, wholesale building materials',
-  ogImage = '/Banner_salman.png',
+  ogImage = '/Banner/Banner_salman.png',
   ogType = 'website',
   canonicalUrl,
   jsonLd,
