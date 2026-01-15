@@ -117,7 +117,7 @@ const ContactPage: React.FC = () => {
                 <div className="contact-details">
                   <h3>Address</h3>
                   <p>BuildAdda Headquarters</p>
-                  <p>plot-42,bhuvneshwari vatika vistar 3rd,vaishali west road</p>
+                  <p>Bhuvneshwari vatika vistar 3rd,vaishali west road</p>
                   <p> Jaipur ,Rajasthan (302034)</p>
                   <p>India</p>
                 </div>
@@ -136,10 +136,10 @@ const ContactPage: React.FC = () => {
               <div className="social-links">
                 <h3>Follow Us</h3>
                 <div className="social-icons">
-                  <a href="#" aria-label="Facebook">📘</a>
-                  <a href="#" aria-label="Twitter">🐦</a>
-                  <a href="#" aria-label="Instagram">📷</a>
-                  <a href="#" aria-label="LinkedIn">💼</a>
+                  <a href="https://www.facebook.com/himmat.s.rajput.1" aria-label="Facebook">📘</a>
+                  <a href="https://x.com/himmat_singh_14" aria-label="Twitter">🐦</a>
+                  <a href="https://www.instagram.com/h.s.rajawat/" aria-label="Instagram">📷</a>
+                  <a href="https://www.linkedin.com/in/himmat-singh-rajawat" aria-label="LinkedIn">💼</a>
                 </div>
               </div>
             </div>

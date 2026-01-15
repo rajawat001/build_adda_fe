@@ -31,6 +31,7 @@ import '../styles/modern-home.css';
 import '../styles/modern-footer.css';
 import '../styles/mobile-enhancements.css';
 import '../styles/mobile-filters.css';
+import '../styles/mobile-overflow-fix.css';
 
 export default function App({ Component, pageProps }: AppProps) {
   return (

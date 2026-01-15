@@ -24,10 +24,13 @@ html, body {
 /* Better mobile container */
 .container {
   width: 100%;
+  max-width: 100%;
   padding-left: 16px;
   padding-right: 16px;
   margin-left: auto;
   margin-right: auto;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 @media (min-width: 640px) {
@@ -55,6 +58,14 @@ html, body {
 @media (min-width: 1280px) {
   .container {
     max-width: 1280px;
+  }
+}
+
+/* OnePlus Nord specific container */
+@media (min-width: 400px) and (max-width: 428px) {
+  .container {
+    padding-left: 18px;
+    padding-right: 18px;
   }
 }
 
@@ -168,12 +179,32 @@ html, body {
 
 /* Mobile horizontal scrolling prevention */
 @media (max-width: 768px) {
-  body {
+  html, body {
     overflow-x: hidden;
+    width: 100%;
+    max-width: 100%;
+    position: relative;
   }
 
   * {
     max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Ensure all major containers don't overflow */
+  .container,
+  .footer-grid,
+  .footer-column,
+  .footer-main,
+  .modern-footer {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  /* Prevent text overflow */
+  p, h1, h2, h3, h4, h5, h6, a, span, div {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
   }
 }
 
