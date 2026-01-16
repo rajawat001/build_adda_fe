@@ -210,12 +210,47 @@ html, body {
 
 /* Better modal/dropdown positioning on mobile */
 @media (max-width: 768px) {
-  .dropdown-menu {
+  /* Profile dropdown menu - positioned below header */
+  .profile-dropdown .dropdown-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    left: auto;
+    min-width: 200px;
+    max-width: 280px;
+    z-index: 9999;
+  }
+
+  /* Ensure header stays fixed on scroll for mobile */
+  .modern-header {
     position: fixed;
-    top: auto;
-    right: 10px;
-    left: 10px;
-    max-width: calc(100vw - 20px);
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    overflow: visible;
+  }
+
+  /* Allow dropdown overflow in header container on mobile */
+  .modern-header .container,
+  .modern-header .header-top,
+  .modern-header .header-top-content,
+  .modern-header .header-actions,
+  .modern-header .profile-dropdown,
+  .modern-header .header-nav,
+  .modern-header .main-nav,
+  .modern-header .categories-dropdown {
+    overflow: visible !important;
+  }
+
+  /* Add padding to body to account for fixed header */
+  body {
+    padding-top: 70px;
+  }
+
+  /* Ensure categories dropdown is visible on mobile */
+  .categories-menu {
+    z-index: 9999;
   }
 }
 
@@ -289,11 +324,6 @@ html, body {
 
 /* Fix for notch displays (iPhone X and newer) */
 @supports (padding-top: env(safe-area-inset-top)) {
-  body {
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
-  }
-
   .modern-header {
     top: env(safe-area-inset-top);
   }
@@ -301,6 +331,15 @@ html, body {
   .mobile-menu-content {
     padding-top: calc(20px + env(safe-area-inset-top));
     padding-bottom: calc(20px + env(safe-area-inset-bottom));
+  }
+}
+
+/* Mobile fixed header body padding with safe area support */
+@media (max-width: 768px) {
+  @supports (padding-top: env(safe-area-inset-top)) {
+    body {
+      padding-top: calc(70px + env(safe-area-inset-top));
+    }
   }
 }
 

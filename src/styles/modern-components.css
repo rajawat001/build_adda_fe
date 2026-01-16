@@ -61,11 +61,18 @@
   position: sticky;
   top: 0;
   z-index: 1000;
+  overflow: visible;
+}
+
+/* Allow dropdown overflow in header container */
+.modern-header .container {
+  overflow: visible;
 }
 
 .header-top {
   padding: 16px 0;
   border-bottom: 1px solid #f3f4f6;
+  overflow: visible;
 }
 
 .header-top-content {
@@ -73,6 +80,7 @@
   grid-template-columns: auto 1fr auto auto;
   gap: 24px;
   align-items: center;
+  overflow: visible;
 }
 
 .brand-logo img {
@@ -136,6 +144,7 @@
   display: flex;
   gap: 12px;
   align-items: center;
+  overflow: visible;
 }
 
 .header-action-btn {
@@ -202,6 +211,7 @@
 
 .profile-dropdown {
   position: relative;
+  overflow: visible;
 }
 
 .dropdown-menu {
@@ -210,10 +220,10 @@
   right: 0;
   background: white;
   border-radius: 12px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
   padding: 8px;
   min-width: 200px;
-  z-index: 100;
+  z-index: 9999;
   animation: slideDown 0.2s ease-out;
 }
 
@@ -270,16 +280,19 @@
 .header-nav {
   background: #f9fafb;
   border-top: 1px solid #e5e7eb;
+  overflow: visible;
 }
 
 .main-nav {
   display: flex;
   gap: 8px;
   padding: 0;
+  overflow: visible;
 }
 
 .categories-dropdown {
   position: relative;
+  overflow: visible;
 }
 
 .categories-btn {
@@ -306,10 +319,10 @@
   left: 0;
   background: white;
   border-radius: 0 0 12px 12px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
   padding: 12px;
   min-width: 250px;
-  z-index: 100;
+  z-index: 9999;
   animation: slideDown 0.2s ease-out;
 }
 
