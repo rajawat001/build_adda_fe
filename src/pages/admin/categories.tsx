@@ -273,181 +273,6 @@ const CategoriesManagement: React.FC = () => {
     ));
   };
 
-  const CategoryFormModal = () => (
-    <AnimatePresence>
-      {showModal && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <motion.div
-            className="modal"
-            onClick={(e) => e.stopPropagation()}
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            style={{ maxWidth: '600px' }}
-          >
-            <div className="modal-header">
-              <h2 className="modal-title">
-                {editingCategory ? 'Edit Category' : 'Create New Category'}
-              </h2>
-              <button className="modal-close" onClick={() => setShowModal(false)}>
-                <FiX size={20} />
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit}>
-              <div className="modal-body" style={{ padding: '1.5rem' }}>
-                <div className="form-group">
-                  <label className="form-label">Category Name *</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    required
-                    placeholder="Enter category name"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Description</label>
-                  <textarea
-                    className="form-input"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    rows={3}
-                    placeholder="Enter category description"
-                  />
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
-                  <div className="form-group">
-                    <label className="form-label">Icon (Emoji)</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      value={formData.icon}
-                      onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
-                      placeholder="e.g., 🏗️"
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Order</label>
-                    <input
-                      type="number"
-                      className="form-input"
-                      value={formData.order}
-                      onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) })}
-                      min="0"
-                    />
-                  </div>
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Parent Category</label>
-                  <select
-                    className="form-select"
-                    value={formData.parent}
-                    onChange={(e) => setFormData({ ...formData, parent: e.target.value })}
-                  >
-                    <option value="">None (Root Category)</option>
-                    {/* Flatten categories for parent selection */}
-                    {categories.map(cat => (
-                      <React.Fragment key={cat._id}>
-                        <option value={cat._id} disabled={editingCategory?._id === cat._id}>
-                          {cat.name}
-                        </option>
-                        {cat.children?.map(child => (
-                          <option key={child._id} value={child._id} disabled={editingCategory?._id === child._id}>
-                            → {child.name}
-                          </option>
-                        ))}
-                      </React.Fragment>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Image URL</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={formData.image}
-                    onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                    placeholder="Enter image URL"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Meta Title (SEO)</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={formData.metaTitle}
-                    onChange={(e) => setFormData({ ...formData, metaTitle: e.target.value })}
-                    placeholder="SEO meta title"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Meta Description (SEO)</label>
-                  <textarea
-                    className="form-input"
-                    value={formData.metaDescription}
-                    onChange={(e) => setFormData({ ...formData, metaDescription: e.target.value })}
-                    rows={2}
-                    placeholder="SEO meta description"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                    <input
-                      type="checkbox"
-                      checked={formData.isActive}
-                      onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                      style={{ width: '18px', height: '18px' }}
-                    />
-                    <span className="form-label" style={{ margin: 0 }}>Active</span>
-                  </label>
-                </div>
-              </div>
-
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => setShowModal(false)}
-                  disabled={actionLoading}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="btn btn-primary"
-                  disabled={actionLoading}
-                >
-                  {actionLoading ? (
-                    <>
-                      <div className="loading-spinner" style={{ width: '16px', height: '16px', borderWidth: '2px' }} />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <FiCheck size={16} />
-                      {editingCategory ? 'Update' : 'Create'} Category
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-          </motion.div>
-        </div>
-      )}
-    </AnimatePresence>
-  );
-
   return (
     <AdminLayout title="Categories Management">
       <div className="admin-content">
@@ -553,7 +378,177 @@ const CategoriesManagement: React.FC = () => {
         </motion.div>
 
         {/* Category Form Modal */}
-        <CategoryFormModal />
+        <AnimatePresence>
+          {showModal && (
+            <div className="modal-overlay" onClick={() => setShowModal(false)}>
+              <motion.div
+                className="modal"
+                onClick={(e) => e.stopPropagation()}
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                style={{ maxWidth: '600px' }}
+              >
+                <div className="modal-header">
+                  <h2 className="modal-title">
+                    {editingCategory ? 'Edit Category' : 'Create New Category'}
+                  </h2>
+                  <button className="modal-close" onClick={() => setShowModal(false)}>
+                    <FiX size={20} />
+                  </button>
+                </div>
+
+                <form onSubmit={handleSubmit}>
+                  <div className="modal-body" style={{ padding: '1.5rem' }}>
+                    <div className="form-group">
+                      <label className="form-label">Category Name *</label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        required
+                        placeholder="Enter category name"
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">Description</label>
+                      <textarea
+                        className="form-input"
+                        value={formData.description}
+                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        rows={3}
+                        placeholder="Enter category description"
+                      />
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+                      <div className="form-group">
+                        <label className="form-label">Icon (Emoji)</label>
+                        <input
+                          type="text"
+                          className="form-input"
+                          value={formData.icon}
+                          onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
+                          placeholder="e.g., 🏗️"
+                        />
+                      </div>
+
+                      <div className="form-group">
+                        <label className="form-label">Order</label>
+                        <input
+                          type="number"
+                          className="form-input"
+                          value={formData.order}
+                          onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) })}
+                          min="0"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">Parent Category</label>
+                      <select
+                        className="form-select"
+                        value={formData.parent}
+                        onChange={(e) => setFormData({ ...formData, parent: e.target.value })}
+                      >
+                        <option value="">None (Root Category)</option>
+                        {categories.map(cat => (
+                          <React.Fragment key={cat._id}>
+                            <option value={cat._id} disabled={editingCategory?._id === cat._id}>
+                              {cat.name}
+                            </option>
+                            {cat.children?.map(child => (
+                              <option key={child._id} value={child._id} disabled={editingCategory?._id === child._id}>
+                                → {child.name}
+                              </option>
+                            ))}
+                          </React.Fragment>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">Image URL</label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={formData.image}
+                        onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                        placeholder="Enter image URL"
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">Meta Title (SEO)</label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={formData.metaTitle}
+                        onChange={(e) => setFormData({ ...formData, metaTitle: e.target.value })}
+                        placeholder="SEO meta title"
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">Meta Description (SEO)</label>
+                      <textarea
+                        className="form-input"
+                        value={formData.metaDescription}
+                        onChange={(e) => setFormData({ ...formData, metaDescription: e.target.value })}
+                        rows={2}
+                        placeholder="SEO meta description"
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                        <input
+                          type="checkbox"
+                          checked={formData.isActive}
+                          onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                          style={{ width: '18px', height: '18px' }}
+                        />
+                        <span className="form-label" style={{ margin: 0 }}>Active</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="modal-footer">
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={() => setShowModal(false)}
+                      disabled={actionLoading}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="btn btn-primary"
+                      disabled={actionLoading}
+                    >
+                      {actionLoading ? (
+                        <>
+                          <div className="loading-spinner" style={{ width: '16px', height: '16px', borderWidth: '2px' }} />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <FiCheck size={16} />
+                          {editingCategory ? 'Update' : 'Create'} Category
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
 
         {/* Confirm Dialog */}
         <ConfirmDialog

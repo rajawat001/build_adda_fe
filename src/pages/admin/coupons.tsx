@@ -394,231 +394,6 @@ const CouponsManagement: React.FC = () => {
     }
   ];
 
-  const CouponFormModal = () => (
-    <AnimatePresence>
-      {showModal && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <motion.div
-            className="modal"
-            onClick={(e) => e.stopPropagation()}
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            style={{ maxWidth: '600px' }}
-          >
-            <div className="modal-header">
-              <h2 className="modal-title">
-                {editingCoupon ? 'Edit Coupon' : 'Create New Coupon'}
-              </h2>
-              <button className="modal-close" onClick={() => setShowModal(false)}>
-                <FiX size={20} />
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit}>
-              <div className="modal-body" style={{ padding: '1.5rem' }}>
-                <div className="form-group">
-                  <label className="form-label">Coupon Code *</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={formData.code}
-                    onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
-                    required
-                    placeholder="e.g., SAVE20"
-                    style={{ fontFamily: 'monospace', textTransform: 'uppercase' }}
-                    disabled={!!editingCoupon}
-                  />
-                  <small style={{ color: 'var(--admin-text-secondary)', fontSize: '0.75rem' }}>
-                    Code will be automatically converted to uppercase
-                  </small>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
-                  <div className="form-group">
-                    <label className="form-label">Discount Type *</label>
-                    <select
-                      className="form-select"
-                      value={formData.discountType}
-                      onChange={(e) => setFormData({ ...formData, discountType: e.target.value as 'percentage' | 'fixed' })}
-                      required
-                    >
-                      <option value="percentage">Percentage (%)</option>
-                      <option value="fixed">Fixed Amount (₹)</option>
-                    </select>
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Discount Value *</label>
-                    <input
-                      type="number"
-                      className="form-input"
-                      value={formData.discountValue}
-                      onChange={(e) => setFormData({ ...formData, discountValue: parseFloat(e.target.value) })}
-                      required
-                      min="0"
-                      max={formData.discountType === 'percentage' ? 100 : undefined}
-                      step="0.01"
-                      placeholder={formData.discountType === 'percentage' ? '0-100' : 'Amount'}
-                    />
-                  </div>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
-                  <div className="form-group">
-                    <label className="form-label">Minimum Purchase</label>
-                    <input
-                      type="number"
-                      className="form-input"
-                      value={formData.minPurchase}
-                      onChange={(e) => setFormData({ ...formData, minPurchase: parseFloat(e.target.value) })}
-                      min="0"
-                      step="0.01"
-                      placeholder="0 = No minimum"
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Maximum Discount</label>
-                    <input
-                      type="number"
-                      className="form-input"
-                      value={formData.maxDiscount}
-                      onChange={(e) => setFormData({ ...formData, maxDiscount: parseFloat(e.target.value) })}
-                      min="0"
-                      step="0.01"
-                      placeholder="0 = No limit"
-                      disabled={formData.discountType === 'fixed'}
-                    />
-                  </div>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
-                  <div className="form-group">
-                    <label className="form-label">Expiry Date</label>
-                    <input
-                      type="date"
-                      className="form-input"
-                      value={formData.expiryDate}
-                      onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value })}
-                      min={new Date().toISOString().split('T')[0]}
-                    />
-                    <small style={{ color: 'var(--admin-text-secondary)', fontSize: '0.75rem' }}>
-                      Leave blank for no expiry
-                    </small>
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Usage Limit</label>
-                    <input
-                      type="number"
-                      className="form-input"
-                      value={formData.usageLimit}
-                      onChange={(e) => setFormData({ ...formData, usageLimit: parseInt(e.target.value) })}
-                      min="0"
-                      placeholder="0 = Unlimited"
-                    />
-                  </div>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
-                  <div className="form-group">
-                    <label className="form-label">Applicable For *</label>
-                    <select
-                      className="form-select"
-                      value={formData.applicableFor}
-                      onChange={(e) => setFormData({ ...formData, applicableFor: e.target.value as 'products' | 'subscription' | 'both' })}
-                      required
-                    >
-                      <option value="products">Products Only</option>
-                      <option value="subscription">Subscription Only</option>
-                      <option value="both">Both Products & Subscription</option>
-                    </select>
-                    <small style={{ color: 'var(--admin-text-secondary)', fontSize: '0.75rem' }}>
-                      Choose where this coupon can be used
-                    </small>
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Free Months (Subscription)</label>
-                    <input
-                      type="number"
-                      className="form-input"
-                      value={formData.freeMonths}
-                      onChange={(e) => setFormData({ ...formData, freeMonths: parseInt(e.target.value) || 0 })}
-                      min="0"
-                      max="12"
-                      placeholder="0"
-                      disabled={formData.applicableFor === 'products'}
-                    />
-                    <small style={{ color: 'var(--admin-text-secondary)', fontSize: '0.75rem' }}>
-                      {formData.applicableFor === 'products'
-                        ? 'Only for subscription coupons'
-                        : 'Grant free months instead of discount'}
-                    </small>
-                  </div>
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Description</label>
-                  <textarea
-                    className="form-input"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Internal notes or description for this coupon"
-                    rows={2}
-                    style={{ resize: 'vertical' }}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                    <input
-                      type="checkbox"
-                      checked={formData.isActive}
-                      onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                      style={{ width: '18px', height: '18px' }}
-                    />
-                    <span className="form-label" style={{ margin: 0 }}>Active</span>
-                  </label>
-                </div>
-              </div>
-
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => setShowModal(false)}
-                  disabled={actionLoading}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="btn btn-primary"
-                  disabled={actionLoading}
-                >
-                  {actionLoading ? (
-                    <>
-                      <div className="loading-spinner" style={{ width: '16px', height: '16px', borderWidth: '2px' }} />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <FiCheck size={16} />
-                      {editingCoupon ? 'Update' : 'Create'} Coupon
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-          </motion.div>
-        </div>
-      )}
-    </AnimatePresence>
-  );
-
   return (
     <AdminLayout title="Coupons Management">
       <div className="admin-content">
@@ -716,7 +491,228 @@ const CouponsManagement: React.FC = () => {
         </motion.div>
 
         {/* Coupon Form Modal */}
-        <CouponFormModal />
+        <AnimatePresence>
+          {showModal && (
+            <div className="modal-overlay" onClick={() => setShowModal(false)}>
+              <motion.div
+                className="modal"
+                onClick={(e) => e.stopPropagation()}
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                style={{ maxWidth: '600px' }}
+              >
+                <div className="modal-header">
+                  <h2 className="modal-title">
+                    {editingCoupon ? 'Edit Coupon' : 'Create New Coupon'}
+                  </h2>
+                  <button className="modal-close" onClick={() => setShowModal(false)}>
+                    <FiX size={20} />
+                  </button>
+                </div>
+
+                <form onSubmit={handleSubmit}>
+                  <div className="modal-body" style={{ padding: '1.5rem' }}>
+                    <div className="form-group">
+                      <label className="form-label">Coupon Code *</label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={formData.code}
+                        onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
+                        required
+                        placeholder="e.g., SAVE20"
+                        style={{ fontFamily: 'monospace', textTransform: 'uppercase' }}
+                        disabled={!!editingCoupon}
+                      />
+                      <small style={{ color: 'var(--admin-text-secondary)', fontSize: '0.75rem' }}>
+                        Code will be automatically converted to uppercase
+                      </small>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+                      <div className="form-group">
+                        <label className="form-label">Discount Type *</label>
+                        <select
+                          className="form-select"
+                          value={formData.discountType}
+                          onChange={(e) => setFormData({ ...formData, discountType: e.target.value as 'percentage' | 'fixed' })}
+                          required
+                        >
+                          <option value="percentage">Percentage (%)</option>
+                          <option value="fixed">Fixed Amount (₹)</option>
+                        </select>
+                      </div>
+
+                      <div className="form-group">
+                        <label className="form-label">Discount Value *</label>
+                        <input
+                          type="number"
+                          className="form-input"
+                          value={formData.discountValue}
+                          onChange={(e) => setFormData({ ...formData, discountValue: parseFloat(e.target.value) })}
+                          required
+                          min="0"
+                          max={formData.discountType === 'percentage' ? 100 : undefined}
+                          step="0.01"
+                          placeholder={formData.discountType === 'percentage' ? '0-100' : 'Amount'}
+                        />
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+                      <div className="form-group">
+                        <label className="form-label">Minimum Purchase</label>
+                        <input
+                          type="number"
+                          className="form-input"
+                          value={formData.minPurchase}
+                          onChange={(e) => setFormData({ ...formData, minPurchase: parseFloat(e.target.value) })}
+                          min="0"
+                          step="0.01"
+                          placeholder="0 = No minimum"
+                        />
+                      </div>
+
+                      <div className="form-group">
+                        <label className="form-label">Maximum Discount</label>
+                        <input
+                          type="number"
+                          className="form-input"
+                          value={formData.maxDiscount}
+                          onChange={(e) => setFormData({ ...formData, maxDiscount: parseFloat(e.target.value) })}
+                          min="0"
+                          step="0.01"
+                          placeholder="0 = No limit"
+                          disabled={formData.discountType === 'fixed'}
+                        />
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+                      <div className="form-group">
+                        <label className="form-label">Expiry Date</label>
+                        <input
+                          type="date"
+                          className="form-input"
+                          value={formData.expiryDate}
+                          onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value })}
+                          min={new Date().toISOString().split('T')[0]}
+                        />
+                        <small style={{ color: 'var(--admin-text-secondary)', fontSize: '0.75rem' }}>
+                          Leave blank for no expiry
+                        </small>
+                      </div>
+
+                      <div className="form-group">
+                        <label className="form-label">Usage Limit</label>
+                        <input
+                          type="number"
+                          className="form-input"
+                          value={formData.usageLimit}
+                          onChange={(e) => setFormData({ ...formData, usageLimit: parseInt(e.target.value) })}
+                          min="0"
+                          placeholder="0 = Unlimited"
+                        />
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+                      <div className="form-group">
+                        <label className="form-label">Applicable For *</label>
+                        <select
+                          className="form-select"
+                          value={formData.applicableFor}
+                          onChange={(e) => setFormData({ ...formData, applicableFor: e.target.value as 'products' | 'subscription' | 'both' })}
+                          required
+                        >
+                          <option value="products">Products Only</option>
+                          <option value="subscription">Subscription Only</option>
+                          <option value="both">Both Products & Subscription</option>
+                        </select>
+                        <small style={{ color: 'var(--admin-text-secondary)', fontSize: '0.75rem' }}>
+                          Choose where this coupon can be used
+                        </small>
+                      </div>
+
+                      <div className="form-group">
+                        <label className="form-label">Free Months (Subscription)</label>
+                        <input
+                          type="number"
+                          className="form-input"
+                          value={formData.freeMonths}
+                          onChange={(e) => setFormData({ ...formData, freeMonths: parseInt(e.target.value) || 0 })}
+                          min="0"
+                          max="12"
+                          placeholder="0"
+                          disabled={formData.applicableFor === 'products'}
+                        />
+                        <small style={{ color: 'var(--admin-text-secondary)', fontSize: '0.75rem' }}>
+                          {formData.applicableFor === 'products'
+                            ? 'Only for subscription coupons'
+                            : 'Grant free months instead of discount'}
+                        </small>
+                      </div>
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">Description</label>
+                      <textarea
+                        className="form-input"
+                        value={formData.description}
+                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        placeholder="Internal notes or description for this coupon"
+                        rows={2}
+                        style={{ resize: 'vertical' }}
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                        <input
+                          type="checkbox"
+                          checked={formData.isActive}
+                          onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                          style={{ width: '18px', height: '18px' }}
+                        />
+                        <span className="form-label" style={{ margin: 0 }}>Active</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="modal-footer">
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={() => setShowModal(false)}
+                      disabled={actionLoading}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="btn btn-primary"
+                      disabled={actionLoading}
+                    >
+                      {actionLoading ? (
+                        <>
+                          <div className="loading-spinner" style={{ width: '16px', height: '16px', borderWidth: '2px' }} />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <FiCheck size={16} />
+                          {editingCoupon ? 'Update' : 'Create'} Coupon
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
 
         {/* Confirm Dialog */}
         <ConfirmDialog

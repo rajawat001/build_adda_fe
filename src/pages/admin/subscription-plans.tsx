@@ -464,246 +464,6 @@ const SubscriptionPlansManagement: React.FC = () => {
     }
   ];
 
-  const PlanFormModal = () => (
-    <AnimatePresence>
-      {showModal && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <motion.div
-            className="modal"
-            onClick={(e) => e.stopPropagation()}
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            style={{ maxWidth: '600px' }}
-          >
-            <div className="modal-header">
-              <h2 className="modal-title">
-                {editingPlan ? 'Edit Plan' : 'Create New Plan'}
-              </h2>
-              <button className="modal-close" onClick={() => setShowModal(false)}>
-                <FiX size={20} />
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit}>
-              <div className="modal-body" style={{ padding: '1.5rem' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
-                  <div className="form-group">
-                    <label className="form-label">Plan Name *</label>
-                    <select
-                      className="form-select"
-                      value={formData.name}
-                      onChange={(e) => {
-                        const name = e.target.value as 'Monthly' | 'Yearly';
-                        setFormData({
-                          ...formData,
-                          name,
-                          duration: name === 'Monthly' ? 'monthly' : 'yearly',
-                          durationInDays: name === 'Monthly' ? 30 : 365
-                        });
-                      }}
-                      required
-                      disabled={!!editingPlan}
-                    >
-                      <option value="Monthly">Monthly</option>
-                      <option value="Yearly">Yearly</option>
-                    </select>
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Duration (Days) *</label>
-                    <input
-                      type="number"
-                      className="form-input"
-                      value={formData.durationInDays}
-                      onChange={(e) => setFormData({ ...formData, durationInDays: parseInt(e.target.value) || 0 })}
-                      required
-                      min="1"
-                    />
-                  </div>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
-                  <div className="form-group">
-                    <label className="form-label">Real Price (₹) *</label>
-                    <input
-                      type="number"
-                      className="form-input"
-                      value={formData.realPrice}
-                      onChange={(e) => setFormData({ ...formData, realPrice: parseFloat(e.target.value) || 0 })}
-                      required
-                      min="0"
-                      step="0.01"
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Offer Price (₹) *</label>
-                    <input
-                      type="number"
-                      className="form-input"
-                      value={formData.offerPrice}
-                      onChange={(e) => setFormData({ ...formData, offerPrice: parseFloat(e.target.value) || 0 })}
-                      required
-                      min="0"
-                      step="0.01"
-                    />
-                    {formData.realPrice > 0 && formData.offerPrice < formData.realPrice && (
-                      <small style={{ color: 'var(--admin-success)', fontSize: '0.75rem' }}>
-                        {Math.round(((formData.realPrice - formData.offerPrice) / formData.realPrice) * 100)}% discount
-                      </small>
-                    )}
-                  </div>
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Description</label>
-                  <textarea
-                    className="form-input"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    rows={2}
-                    placeholder="Brief description of the plan"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                    <label className="form-label" style={{ margin: 0 }}>Features</label>
-                    <button
-                      type="button"
-                      onClick={addFeature}
-                      style={{ background: 'none', border: 'none', color: 'var(--admin-primary)', cursor: 'pointer', fontSize: '0.875rem' }}
-                    >
-                      + Add Feature
-                    </button>
-                  </div>
-                  {formData.features.map((feature, index) => (
-                    <div key={index} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                      <input
-                        type="text"
-                        className="form-input"
-                        value={feature}
-                        onChange={(e) => updateFeature(index, e.target.value)}
-                        placeholder={`Feature ${index + 1}`}
-                      />
-                      {formData.features.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeFeature(index)}
-                          style={{ background: 'none', border: 'none', color: 'var(--admin-error)', cursor: 'pointer', padding: '0.5rem' }}
-                        >
-                          <FiX size={18} />
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-
-                <div className="form-group">
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                    <input
-                      type="checkbox"
-                      checked={formData.isActive}
-                      onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                      style={{ width: '18px', height: '18px' }}
-                    />
-                    <span className="form-label" style={{ margin: 0 }}>Active</span>
-                  </label>
-                </div>
-              </div>
-
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => setShowModal(false)}
-                  disabled={actionLoading}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="btn btn-primary"
-                  disabled={actionLoading}
-                >
-                  {actionLoading ? (
-                    <>
-                      <div className="loading-spinner" style={{ width: '16px', height: '16px', borderWidth: '2px' }} />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <FiCheck size={16} />
-                      {editingPlan ? 'Update' : 'Create'} Plan
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-          </motion.div>
-        </div>
-      )}
-    </AnimatePresence>
-  );
-
-  const ExtendModal = () => (
-    <AnimatePresence>
-      {showExtendModal && selectedSubscription && (
-        <div className="modal-overlay" onClick={() => setShowExtendModal(false)}>
-          <motion.div
-            className="modal"
-            onClick={(e) => e.stopPropagation()}
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            style={{ maxWidth: '400px' }}
-          >
-            <div className="modal-header">
-              <h2 className="modal-title">Extend Subscription</h2>
-              <button className="modal-close" onClick={() => setShowExtendModal(false)}>
-                <FiX size={20} />
-              </button>
-            </div>
-
-            <div className="modal-body" style={{ padding: '1.5rem' }}>
-              <p style={{ marginBottom: '1rem', color: 'var(--admin-text-secondary)' }}>
-                Extend subscription for <strong>{selectedSubscription.distributor?.businessName}</strong>
-              </p>
-              <div className="form-group">
-                <label className="form-label">Days to Extend</label>
-                <input
-                  type="number"
-                  className="form-input"
-                  value={extendDays}
-                  onChange={(e) => setExtendDays(parseInt(e.target.value) || 0)}
-                  min="1"
-                />
-              </div>
-            </div>
-
-            <div className="modal-footer">
-              <button
-                className="btn btn-secondary"
-                onClick={() => setShowExtendModal(false)}
-              >
-                Cancel
-              </button>
-              <button
-                className="btn btn-primary"
-                onClick={handleExtendSubscription}
-                disabled={actionLoading || extendDays <= 0}
-              >
-                {actionLoading ? 'Extending...' : `Extend ${extendDays} Days`}
-              </button>
-            </div>
-          </motion.div>
-        </div>
-      )}
-    </AnimatePresence>
-  );
-
   return (
     <AdminLayout title="Subscription Plans">
       <div className="admin-content">
@@ -806,9 +566,243 @@ const SubscriptionPlansManagement: React.FC = () => {
           )}
         </motion.div>
 
-        {/* Modals */}
-        <PlanFormModal />
-        <ExtendModal />
+        {/* Plan Form Modal */}
+        <AnimatePresence>
+          {showModal && (
+            <div className="modal-overlay" onClick={() => setShowModal(false)}>
+              <motion.div
+                className="modal"
+                onClick={(e) => e.stopPropagation()}
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                style={{ maxWidth: '600px' }}
+              >
+                <div className="modal-header">
+                  <h2 className="modal-title">
+                    {editingPlan ? 'Edit Plan' : 'Create New Plan'}
+                  </h2>
+                  <button className="modal-close" onClick={() => setShowModal(false)}>
+                    <FiX size={20} />
+                  </button>
+                </div>
+
+                <form onSubmit={handleSubmit}>
+                  <div className="modal-body" style={{ padding: '1.5rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+                      <div className="form-group">
+                        <label className="form-label">Plan Name *</label>
+                        <select
+                          className="form-select"
+                          value={formData.name}
+                          onChange={(e) => {
+                            const name = e.target.value as 'Monthly' | 'Yearly';
+                            setFormData({
+                              ...formData,
+                              name,
+                              duration: name === 'Monthly' ? 'monthly' : 'yearly',
+                              durationInDays: name === 'Monthly' ? 30 : 365
+                            });
+                          }}
+                          required
+                          disabled={!!editingPlan}
+                        >
+                          <option value="Monthly">Monthly</option>
+                          <option value="Yearly">Yearly</option>
+                        </select>
+                      </div>
+
+                      <div className="form-group">
+                        <label className="form-label">Duration (Days) *</label>
+                        <input
+                          type="number"
+                          className="form-input"
+                          value={formData.durationInDays}
+                          onChange={(e) => setFormData({ ...formData, durationInDays: parseInt(e.target.value) || 0 })}
+                          required
+                          min="1"
+                        />
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+                      <div className="form-group">
+                        <label className="form-label">Real Price (₹) *</label>
+                        <input
+                          type="number"
+                          className="form-input"
+                          value={formData.realPrice}
+                          onChange={(e) => setFormData({ ...formData, realPrice: parseFloat(e.target.value) || 0 })}
+                          required
+                          min="0"
+                          step="0.01"
+                        />
+                      </div>
+
+                      <div className="form-group">
+                        <label className="form-label">Offer Price (₹) *</label>
+                        <input
+                          type="number"
+                          className="form-input"
+                          value={formData.offerPrice}
+                          onChange={(e) => setFormData({ ...formData, offerPrice: parseFloat(e.target.value) || 0 })}
+                          required
+                          min="0"
+                          step="0.01"
+                        />
+                        {formData.realPrice > 0 && formData.offerPrice < formData.realPrice && (
+                          <small style={{ color: 'var(--admin-success)', fontSize: '0.75rem' }}>
+                            {Math.round(((formData.realPrice - formData.offerPrice) / formData.realPrice) * 100)}% discount
+                          </small>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">Description</label>
+                      <textarea
+                        className="form-input"
+                        value={formData.description}
+                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        rows={2}
+                        placeholder="Brief description of the plan"
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                        <label className="form-label" style={{ margin: 0 }}>Features</label>
+                        <button
+                          type="button"
+                          onClick={addFeature}
+                          style={{ background: 'none', border: 'none', color: 'var(--admin-primary)', cursor: 'pointer', fontSize: '0.875rem' }}
+                        >
+                          + Add Feature
+                        </button>
+                      </div>
+                      {formData.features.map((feature, index) => (
+                        <div key={index} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                          <input
+                            type="text"
+                            className="form-input"
+                            value={feature}
+                            onChange={(e) => updateFeature(index, e.target.value)}
+                            placeholder={`Feature ${index + 1}`}
+                          />
+                          {formData.features.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => removeFeature(index)}
+                              style={{ background: 'none', border: 'none', color: 'var(--admin-error)', cursor: 'pointer', padding: '0.5rem' }}
+                            >
+                              <FiX size={18} />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="form-group">
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                        <input
+                          type="checkbox"
+                          checked={formData.isActive}
+                          onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                          style={{ width: '18px', height: '18px' }}
+                        />
+                        <span className="form-label" style={{ margin: 0 }}>Active</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="modal-footer">
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={() => setShowModal(false)}
+                      disabled={actionLoading}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="btn btn-primary"
+                      disabled={actionLoading}
+                    >
+                      {actionLoading ? (
+                        <>
+                          <div className="loading-spinner" style={{ width: '16px', height: '16px', borderWidth: '2px' }} />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <FiCheck size={16} />
+                          {editingPlan ? 'Update' : 'Create'} Plan
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* Extend Subscription Modal */}
+        <AnimatePresence>
+          {showExtendModal && selectedSubscription && (
+            <div className="modal-overlay" onClick={() => setShowExtendModal(false)}>
+              <motion.div
+                className="modal"
+                onClick={(e) => e.stopPropagation()}
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                style={{ maxWidth: '400px' }}
+              >
+                <div className="modal-header">
+                  <h2 className="modal-title">Extend Subscription</h2>
+                  <button className="modal-close" onClick={() => setShowExtendModal(false)}>
+                    <FiX size={20} />
+                  </button>
+                </div>
+
+                <div className="modal-body" style={{ padding: '1.5rem' }}>
+                  <p style={{ marginBottom: '1rem', color: 'var(--admin-text-secondary)' }}>
+                    Extend subscription for <strong>{selectedSubscription.distributor?.businessName}</strong>
+                  </p>
+                  <div className="form-group">
+                    <label className="form-label">Days to Extend</label>
+                    <input
+                      type="number"
+                      className="form-input"
+                      value={extendDays}
+                      onChange={(e) => setExtendDays(parseInt(e.target.value) || 0)}
+                      min="1"
+                    />
+                  </div>
+                </div>
+
+                <div className="modal-footer">
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => setShowExtendModal(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="btn btn-primary"
+                    onClick={handleExtendSubscription}
+                    disabled={actionLoading || extendDays <= 0}
+                  >
+                    {actionLoading ? 'Extending...' : `Extend ${extendDays} Days`}
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
         <ConfirmDialog
           isOpen={confirmDialog.isOpen}
           title={confirmDialog.title}
