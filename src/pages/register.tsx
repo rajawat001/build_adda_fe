@@ -15,7 +15,46 @@ interface ValidationErrors {
   pincode?: string;
   address?: string;
   businessName?: string;
+  city?: string;
+  state?: string;
 }
+
+// Indian states and their cities
+const indianStatesAndCities: Record<string, string[]> = {
+  'Andhra Pradesh': ['Visakhapatnam', 'Vijayawada', 'Guntur', 'Nellore', 'Kurnool', 'Tirupati', 'Kakinada', 'Rajahmundry', 'Anantapur', 'Eluru'],
+  'Arunachal Pradesh': ['Itanagar', 'Naharlagun', 'Pasighat', 'Tawang', 'Ziro', 'Bomdila', 'Along', 'Tezu', 'Roing', 'Daporijo'],
+  'Assam': ['Guwahati', 'Silchar', 'Dibrugarh', 'Jorhat', 'Nagaon', 'Tinsukia', 'Tezpur', 'Bongaigaon', 'Karimganj', 'Goalpara'],
+  'Bihar': ['Patna', 'Gaya', 'Bhagalpur', 'Muzaffarpur', 'Darbhanga', 'Purnia', 'Arrah', 'Begusarai', 'Katihar', 'Munger'],
+  'Chhattisgarh': ['Raipur', 'Bhilai', 'Bilaspur', 'Korba', 'Durg', 'Rajnandgaon', 'Raigarh', 'Jagdalpur', 'Ambikapur', 'Dhamtari'],
+  'Goa': ['Panaji', 'Margao', 'Vasco da Gama', 'Mapusa', 'Ponda', 'Bicholim', 'Curchorem', 'Canacona', 'Sanquelim', 'Cuncolim'],
+  'Gujarat': ['Ahmedabad', 'Surat', 'Vadodara', 'Rajkot', 'Bhavnagar', 'Jamnagar', 'Junagadh', 'Gandhinagar', 'Anand', 'Nadiad'],
+  'Haryana': ['Faridabad', 'Gurugram', 'Panipat', 'Ambala', 'Yamunanagar', 'Rohtak', 'Hisar', 'Karnal', 'Sonipat', 'Panchkula'],
+  'Himachal Pradesh': ['Shimla', 'Mandi', 'Solan', 'Dharamshala', 'Palampur', 'Kullu', 'Manali', 'Hamirpur', 'Una', 'Bilaspur'],
+  'Jharkhand': ['Ranchi', 'Jamshedpur', 'Dhanbad', 'Bokaro', 'Deoghar', 'Hazaribagh', 'Giridih', 'Ramgarh', 'Phusro', 'Medininagar'],
+  'Karnataka': ['Bengaluru', 'Mysuru', 'Mangaluru', 'Hubballi', 'Belagavi', 'Kalaburagi', 'Davangere', 'Bellary', 'Vijayapura', 'Tumkur'],
+  'Kerala': ['Thiruvananthapuram', 'Kochi', 'Kozhikode', 'Thrissur', 'Kollam', 'Alappuzha', 'Palakkad', 'Malappuram', 'Kannur', 'Kottayam'],
+  'Madhya Pradesh': ['Bhopal', 'Indore', 'Jabalpur', 'Gwalior', 'Ujjain', 'Sagar', 'Dewas', 'Satna', 'Ratlam', 'Rewa'],
+  'Maharashtra': ['Mumbai', 'Pune', 'Nagpur', 'Thane', 'Nashik', 'Aurangabad', 'Solapur', 'Kolhapur', 'Amravati', 'Navi Mumbai'],
+  'Manipur': ['Imphal', 'Thoubal', 'Kakching', 'Bishnupur', 'Churachandpur', 'Senapati', 'Ukhrul', 'Chandel', 'Tamenglong', 'Jiribam'],
+  'Meghalaya': ['Shillong', 'Tura', 'Jowai', 'Nongstoin', 'Williamnagar', 'Baghmara', 'Resubelpara', 'Mairang', 'Nongpoh', 'Cherrapunji'],
+  'Mizoram': ['Aizawl', 'Lunglei', 'Champhai', 'Serchhip', 'Kolasib', 'Lawngtlai', 'Saiha', 'Mamit', 'Hnahthial', 'Khawzawl'],
+  'Nagaland': ['Kohima', 'Dimapur', 'Mokokchung', 'Tuensang', 'Wokha', 'Zunheboto', 'Mon', 'Phek', 'Kiphire', 'Longleng'],
+  'Odisha': ['Bhubaneswar', 'Cuttack', 'Rourkela', 'Brahmapur', 'Sambalpur', 'Puri', 'Balasore', 'Bhadrak', 'Baripada', 'Jharsuguda'],
+  'Punjab': ['Ludhiana', 'Amritsar', 'Jalandhar', 'Patiala', 'Bathinda', 'Mohali', 'Hoshiarpur', 'Pathankot', 'Moga', 'Batala'],
+  'Rajasthan': ['Jaipur', 'Jodhpur', 'Kota', 'Bikaner', 'Ajmer', 'Udaipur', 'Bhilwara', 'Alwar', 'Sikar', 'Sri Ganganagar'],
+  'Sikkim': ['Gangtok', 'Namchi', 'Gyalshing', 'Mangan', 'Rangpo', 'Singtam', 'Jorethang', 'Nayabazar', 'Ravangla', 'Pelling'],
+  'Tamil Nadu': ['Chennai', 'Coimbatore', 'Madurai', 'Tiruchirappalli', 'Salem', 'Tirunelveli', 'Tiruppur', 'Erode', 'Vellore', 'Thoothukudi'],
+  'Telangana': ['Hyderabad', 'Warangal', 'Nizamabad', 'Karimnagar', 'Khammam', 'Ramagundam', 'Mahbubnagar', 'Nalgonda', 'Adilabad', 'Siddipet'],
+  'Tripura': ['Agartala', 'Udaipur', 'Dharmanagar', 'Kailashahar', 'Belonia', 'Ambassa', 'Khowai', 'Teliamura', 'Sabroom', 'Sonamura'],
+  'Uttar Pradesh': ['Lucknow', 'Kanpur', 'Agra', 'Varanasi', 'Meerut', 'Prayagraj', 'Ghaziabad', 'Noida', 'Bareilly', 'Aligarh'],
+  'Uttarakhand': ['Dehradun', 'Haridwar', 'Roorkee', 'Haldwani', 'Rudrapur', 'Kashipur', 'Rishikesh', 'Pithoragarh', 'Ramnagar', 'Mussoorie'],
+  'West Bengal': ['Kolkata', 'Howrah', 'Asansol', 'Siliguri', 'Durgapur', 'Bardhaman', 'Malda', 'Baharampur', 'Habra', 'Kharagpur'],
+  'Delhi': ['New Delhi', 'Central Delhi', 'South Delhi', 'North Delhi', 'East Delhi', 'West Delhi', 'Dwarka', 'Rohini', 'Shahdara', 'Najafgarh'],
+  'Chandigarh': ['Chandigarh'],
+  'Puducherry': ['Puducherry', 'Karaikal', 'Mahe', 'Yanam'],
+};
+
+const indianStates = Object.keys(indianStatesAndCities).sort();
 
 export default function Register() {
   const router = useRouter();
@@ -28,11 +67,14 @@ export default function Register() {
     businessName: '',
     pincode: '',
     address: '',
+    city: '',
+    state: '',
     location: { type: 'Point', coordinates: [0, 0] }
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
+  const [availableCities, setAvailableCities] = useState<string[]>([]);
 
   const validateName = (name: string): string | null => {
     if (!name || !name.trim()) return 'Name is required';
@@ -78,6 +120,16 @@ export default function Register() {
     return null;
   };
 
+  const validateCity = (city: string): string | null => {
+    if (!city || !city.trim()) return 'City is required';
+    return null;
+  };
+
+  const validateState = (state: string): string | null => {
+    if (!state || !state.trim()) return 'State is required';
+    return null;
+  };
+
   const validateForm = (): boolean => {
     const errors: ValidationErrors = {};
 
@@ -95,14 +147,35 @@ export default function Register() {
     if (pincodeError) errors.pincode = pincodeError;
     if (addressError) errors.address = addressError;
 
-    // Validate business name for distributors
+    // Validate business name, city, and state for distributors only
     if (formData.role === 'distributor') {
       const businessNameError = validateName(formData.businessName);
       if (businessNameError) errors.businessName = 'Business name is required';
+
+      const cityError = validateCity(formData.city);
+      if (cityError) errors.city = cityError;
+
+      const stateError = validateState(formData.state);
+      if (stateError) errors.state = stateError;
     }
 
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
+  };
+
+  const handleStateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedState = e.target.value;
+    setFormData({
+      ...formData,
+      state: selectedState,
+      city: '' // Reset city when state changes
+    });
+    setAvailableCities(selectedState ? indianStatesAndCities[selectedState] || [] : []);
+
+    // Clear validation errors
+    if (validationErrors.state) {
+      setValidationErrors({ ...validationErrors, state: undefined, city: undefined });
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -126,6 +199,20 @@ export default function Register() {
       setLoading(true);
       const locationDetails = await getLocationDetails();
 
+      // Try to match the state from location with our dropdown options
+      const matchedState = indianStates.find(
+        s => s.toLowerCase() === locationDetails.state.toLowerCase()
+      ) || '';
+
+      // Get cities for the matched state
+      const cities = matchedState ? indianStatesAndCities[matchedState] || [] : [];
+      setAvailableCities(cities);
+
+      // Try to match the city from location with the available cities
+      const matchedCity = cities.find(
+        c => c.toLowerCase() === locationDetails.city.toLowerCase()
+      ) || '';
+
       setFormData({
         ...formData,
         location: {
@@ -133,10 +220,16 @@ export default function Register() {
           coordinates: [locationDetails.coordinates.longitude, locationDetails.coordinates.latitude]
         },
         pincode: locationDetails.pincode,
-        address: locationDetails.address
+        address: locationDetails.address,
+        city: matchedCity,
+        state: matchedState
       });
 
-      alert(`Location captured successfully!\nPincode: ${locationDetails.pincode}\nCity: ${locationDetails.city}, ${locationDetails.state}`);
+      if (matchedState && matchedCity) {
+        alert(`Location captured successfully!\nPincode: ${locationDetails.pincode}\nCity: ${matchedCity}, ${matchedState}`);
+      } else {
+        alert(`Location captured!\nPincode: ${locationDetails.pincode}\nPlease select your state and city from the dropdowns.`);
+      }
     } catch (error: any) {
       console.error('Location error:', error);
       alert('Unable to get location. Please enable location services and try again.');
@@ -359,6 +452,58 @@ export default function Register() {
                 <span className="validation-error">{validationErrors.address}</span>
               )}
             </div>
+
+            {formData.role === 'distributor' && (
+              <>
+                <div className="form-group">
+                  <label htmlFor="state">State</label>
+                  <select
+                    id="state"
+                    name="state"
+                    value={formData.state}
+                    onChange={handleStateChange}
+                    className={validationErrors.state ? 'input-error' : ''}
+                    required
+                  >
+                    <option value="">Select State</option>
+                    {indianStates.map((state) => (
+                      <option key={state} value={state}>
+                        {state}
+                      </option>
+                    ))}
+                  </select>
+                  {validationErrors.state && (
+                    <span className="validation-error">{validationErrors.state}</span>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="city">City</label>
+                  <select
+                    id="city"
+                    name="city"
+                    value={formData.city}
+                    onChange={handleChange}
+                    className={validationErrors.city ? 'input-error' : ''}
+                    disabled={!formData.state}
+                    required
+                  >
+                    <option value="">Select City</option>
+                    {availableCities.map((city) => (
+                      <option key={city} value={city}>
+                        {city}
+                      </option>
+                    ))}
+                  </select>
+                  {validationErrors.city && (
+                    <span className="validation-error">{validationErrors.city}</span>
+                  )}
+                  {!formData.state && (
+                    <small className="field-hint">Please select a state first</small>
+                  )}
+                </div>
+              </>
+            )}
 
             <button type="button" className="btn-location" onClick={handleGetLocation}>
               📍 Capture Current Location
