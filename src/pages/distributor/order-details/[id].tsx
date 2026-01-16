@@ -13,10 +13,11 @@ import {
   FiSave,
 } from 'react-icons/fi';
 
+// Update the OrderDetails interface
 interface OrderDetails {
   _id: string;
   orderNumber: string;
-  user: { name: string; email: string; phone: string };
+  user: { name: string; email: string; phone: string } | null; // Make nullable
   items: Array<{
     product: { _id: string; name: string; image: string };
     quantity: number;
@@ -305,12 +306,12 @@ const OrderDetailsPage = () => {
 
   // Shipping can be edited for any non-completed order
   const canEditShipping = order.orderStatus !== 'delivered' &&
-                          order.orderStatus !== 'cancelled';
+    order.orderStatus !== 'cancelled';
 
   // Status can be edited for approved orders only
   const canEditStatus = order.approvalStatus === 'approved' &&
-                        order.orderStatus !== 'delivered' &&
-                        order.orderStatus !== 'cancelled';
+    order.orderStatus !== 'delivered' &&
+    order.orderStatus !== 'cancelled';
 
   return (
     <DistributorLayout title={`Order #${order.orderNumber}`}>
@@ -374,11 +375,11 @@ const OrderDetailsPage = () => {
                         <p className="input-hint">
                           {approvalShipping && parseFloat(approvalShipping) >= 0
                             ? `New Total: ₹${(
-                                order.subtotal -
-                                order.discount +
-                                order.tax +
-                                parseFloat(approvalShipping || '0')
-                              ).toLocaleString('en-IN')}`
+                              order.subtotal -
+                              order.discount +
+                              order.tax +
+                              parseFloat(approvalShipping || '0')
+                            ).toLocaleString('en-IN')}`
                             : 'Required field - Enter 0 for free shipping'}
                         </p>
                       </div>
@@ -479,15 +480,23 @@ const OrderDetailsPage = () => {
             <div className="info-section">
               <h3>Customer Information</h3>
               <div className="distributor-card">
-                <h4>{order.user.name}</h4>
+                <h4>{order.user?.name || 'Unknown User'}</h4>
                 <div className="contact-info">
                   <div className="contact-item">
                     <span className="icon">📞</span>
-                    <a href={`tel:${order.user.phone}`}>{order.user.phone}</a>
+                    {order.user?.phone ? (
+                      <a href={`tel:${order.user.phone}`}>{order.user.phone}</a>
+                    ) : (
+                      <span>N/A</span>
+                    )}
                   </div>
                   <div className="contact-item">
                     <span className="icon">📧</span>
-                    <a href={`mailto:${order.user.email}`}>{order.user.email}</a>
+                    {order.user?.email ? (
+                      <a href={`mailto:${order.user.email}`}>{order.user.email}</a>
+                    ) : (
+                      <span>N/A</span>
+                    )}
                   </div>
                 </div>
               </div>

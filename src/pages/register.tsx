@@ -177,7 +177,9 @@ export default function Register() {
         if (response.user.role === 'admin') {
           router.push('/admin/dashboard');
         } else if (response.user.role === 'distributor') {
-          router.push('/distributor/dashboard');
+          // Redirect new distributors to subscription page
+          // They must subscribe before accessing the platform
+          router.push('/distributor/subscription');
         } else {
           router.push('/');
         }

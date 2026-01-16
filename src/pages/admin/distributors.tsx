@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FiTruck, FiCheck, FiX, FiPackage, FiShoppingCart, FiMapPin, FiPhone, FiMail, FiDollarSign, FiTrendingUp } from 'react-icons/fi';
+import { FiTruck, FiCheck, FiX, FiPackage, FiShoppingCart, FiMapPin, FiPhone, FiMail, FiDollarSign, FiTrendingUp, FiEye, FiEdit, FiCalendar, FiStar, FiFileText } from 'react-icons/fi';
 import AdminLayout from '../../components/admin/Layout';
 import StatCard from '../../components/admin/StatCard';
 import DataTable, { Column } from '../../components/admin/DataTable';
@@ -7,7 +7,7 @@ import FilterPanel, { FilterOption } from '../../components/admin/FilterPanel';
 import BulkActionBar, { BulkAction } from '../../components/admin/BulkActionBar';
 import ExportButton from '../../components/admin/ExportButton';
 import ConfirmDialog from '../../components/admin/ConfirmDialog';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../services/api';
 
 interface Distributor {
@@ -67,6 +67,22 @@ const DistributorsManagement: React.FC = () => {
     onConfirm: () => {}
   });
   const [actionLoading, setActionLoading] = useState(false);
+
+  // View & Edit Modal States
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedDistributor, setSelectedDistributor] = useState<Distributor | null>(null);
+  const [editFormData, setEditFormData] = useState({
+    businessName: '',
+    ownerName: '',
+    email: '',
+    phone: '',
+    city: '',
+    state: '',
+    address: '',
+    gstNumber: '',
+    isActive: true
+  });
 
   useEffect(() => {
     fetchDistributors();
@@ -323,6 +339,20 @@ const DistributorsManagement: React.FC = () => {
       label: 'Actions',
       render: (_, row: Distributor) => (
         <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button
+            className="btn-icon"
+            title="View Details"
+            onClick={() => handleViewDistributor(row._id)}
+          >
+            <FiEye size={16} />
+          </button>
+          <button
+            className="btn-icon"
+            title="Edit Distributor"
+            onClick={() => handleEditDistributor(row._id)}
+          >
+            <FiEdit size={16} />
+          </button>
           {!row.isApproved && (
             <button
               className="btn-icon success"
@@ -341,20 +371,6 @@ const DistributorsManagement: React.FC = () => {
               <FiX size={16} />
             </button>
           )}
-          <button
-            className="btn-icon"
-            title="View Products"
-            onClick={() => handleViewProducts(row._id)}
-          >
-            <FiPackage size={16} />
-          </button>
-          <button
-            className="btn-icon"
-            title="View Orders"
-            onClick={() => handleViewOrders(row._id)}
-          >
-            <FiShoppingCart size={16} />
-          </button>
         </div>
       )
     }
@@ -465,6 +481,68 @@ const DistributorsManagement: React.FC = () => {
 
   const handleViewOrders = (distributorId: string) => {
     window.open(`/admin/orders?distributor=${distributorId}`, '_blank');
+  };
+
+  const handleViewDistributor = (distributorId: string) => {
+    const distributor = distributors.find(d => d._id === distributorId);
+    if (distributor) {
+      setSelectedDistributor(distributor);
+      setShowViewModal(true);
+    }
+  };
+
+  const handleEditDistributor = (distributorId: string) => {
+    const distributor = distributors.find(d => d._id === distributorId);
+    if (distributor) {
+      setSelectedDistributor(distributor);
+      setEditFormData({
+        businessName: distributor.businessName || '',
+        ownerName: distributor.ownerName || '',
+        email: distributor.email || '',
+        phone: distributor.phone || '',
+        city: distributor.city || '',
+        state: distributor.state || '',
+        address: distributor.address || '',
+        gstNumber: distributor.gstNumber || '',
+        isActive: distributor.isActive ?? true
+      });
+      setShowEditModal(true);
+    }
+  };
+
+  const handleUpdateDistributor = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedDistributor) return;
+
+    try {
+      setActionLoading(true);
+      await api.put(`/admin/distributors/${selectedDistributor._id}`, editFormData);
+      await fetchDistributors();
+      await fetchStats();
+      setShowEditModal(false);
+      setSelectedDistributor(null);
+    } catch (error: any) {
+      console.error('Update distributor failed:', error);
+      alert(error.response?.data?.message || 'Failed to update distributor');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleToggleDistributorStatus = async (distributorId: string, currentStatus: boolean) => {
+    try {
+      setActionLoading(true);
+      await api.put(`/admin/distributors/${distributorId}`, { isActive: !currentStatus });
+      await fetchDistributors();
+      await fetchStats();
+      if (selectedDistributor && selectedDistributor._id === distributorId) {
+        setSelectedDistributor({ ...selectedDistributor, isActive: !currentStatus });
+      }
+    } catch (error) {
+      console.error('Toggle status failed:', error);
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   return (
@@ -578,6 +656,343 @@ const DistributorsManagement: React.FC = () => {
           actions={bulkActions}
           onClear={() => setSelectedDistributors([])}
         />
+
+        {/* View Distributor Modal */}
+        <AnimatePresence>
+          {showViewModal && selectedDistributor && (
+            <div className="modal-overlay" onClick={() => setShowViewModal(false)}>
+              <motion.div
+                className="modal"
+                onClick={(e) => e.stopPropagation()}
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                style={{ maxWidth: '700px', maxHeight: '90vh', overflow: 'auto' }}
+              >
+                <div className="modal-header">
+                  <h2 className="modal-title">Distributor Details</h2>
+                  <button className="modal-close" onClick={() => setShowViewModal(false)}>
+                    <FiX size={20} />
+                  </button>
+                </div>
+
+                <div className="modal-body" style={{ padding: '1.5rem' }}>
+                  {/* Business Header */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+                    <div style={{
+                      width: '64px',
+                      height: '64px',
+                      borderRadius: '12px',
+                      background: 'var(--admin-gradient)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'white',
+                      fontWeight: 600,
+                      fontSize: '1.5rem'
+                    }}>
+                      {selectedDistributor.businessName?.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--admin-text-primary)', marginBottom: '0.25rem' }}>
+                        {selectedDistributor.businessName}
+                      </h3>
+                      <div style={{ fontSize: '0.875rem', color: 'var(--admin-text-secondary)', marginBottom: '0.5rem' }}>
+                        Owner: {selectedDistributor.ownerName}
+                      </div>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <span className={`badge ${selectedDistributor.isApproved ? 'green' : 'orange'}`}>
+                          {selectedDistributor.isApproved ? 'Approved' : 'Pending'}
+                        </span>
+                        <span className={`badge ${selectedDistributor.isActive ? 'blue' : 'red'}`}>
+                          {selectedDistributor.isActive ? 'Active' : 'Inactive'}
+                        </span>
+                        {selectedDistributor.rating && (
+                          <span className="badge" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                            <FiStar size={12} style={{ color: '#f59e0b' }} />
+                            {selectedDistributor.rating.toFixed(1)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Contact Info */}
+                  <div style={{ background: 'var(--admin-bg-secondary)', borderRadius: '8px', padding: '1rem', marginBottom: '1rem' }}>
+                    <h4 style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--admin-text-secondary)', marginBottom: '0.75rem' }}>
+                      Contact Information
+                    </h4>
+                    <div style={{ display: 'grid', gap: '0.5rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <FiMail size={16} style={{ color: 'var(--admin-text-tertiary)' }} />
+                        <span style={{ color: 'var(--admin-text-primary)' }}>{selectedDistributor.email}</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <FiPhone size={16} style={{ color: 'var(--admin-text-tertiary)' }} />
+                        <span style={{ color: 'var(--admin-text-primary)' }}>{selectedDistributor.phone}</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
+                        <FiMapPin size={16} style={{ color: 'var(--admin-text-tertiary)', marginTop: '2px' }} />
+                        <span style={{ color: 'var(--admin-text-primary)' }}>
+                          {selectedDistributor.address}, {selectedDistributor.city}, {selectedDistributor.state}
+                        </span>
+                      </div>
+                      {selectedDistributor.gstNumber && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <FiFileText size={16} style={{ color: 'var(--admin-text-tertiary)' }} />
+                          <span style={{ color: 'var(--admin-text-primary)' }}>GST: {selectedDistributor.gstNumber}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Stats */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '1rem' }}>
+                    <div style={{ background: 'var(--admin-bg-secondary)', borderRadius: '8px', padding: '1rem', textAlign: 'center' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                        <FiPackage size={16} style={{ color: 'var(--admin-primary)' }} />
+                      </div>
+                      <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--admin-text-primary)' }}>
+                        {selectedDistributor.productCount || 0}
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--admin-text-secondary)' }}>Products</div>
+                    </div>
+                    <div style={{ background: 'var(--admin-bg-secondary)', borderRadius: '8px', padding: '1rem', textAlign: 'center' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                        <FiShoppingCart size={16} style={{ color: 'var(--admin-info)' }} />
+                      </div>
+                      <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--admin-text-primary)' }}>
+                        {selectedDistributor.orderCount || 0}
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--admin-text-secondary)' }}>Orders</div>
+                    </div>
+                    <div style={{ background: 'var(--admin-bg-secondary)', borderRadius: '8px', padding: '1rem', textAlign: 'center' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                        <FiDollarSign size={16} style={{ color: 'var(--admin-success)' }} />
+                      </div>
+                      <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--admin-success)' }}>
+                        ₹{(selectedDistributor.totalRevenue || 0).toLocaleString('en-IN')}
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--admin-text-secondary)' }}>Revenue</div>
+                    </div>
+                  </div>
+
+                  {/* Dates */}
+                  <div style={{ background: 'var(--admin-bg-secondary)', borderRadius: '8px', padding: '1rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <FiCalendar size={16} style={{ color: 'var(--admin-text-tertiary)' }} />
+                      <span style={{ fontSize: '0.875rem', color: 'var(--admin-text-secondary)' }}>Registered:</span>
+                      <span style={{ color: 'var(--admin-text-primary)', fontWeight: 500 }}>
+                        {new Date(selectedDistributor.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="modal-footer">
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button
+                      className="btn btn-secondary"
+                      onClick={() => handleViewProducts(selectedDistributor._id)}
+                    >
+                      <FiPackage size={16} />
+                      View Products
+                    </button>
+                    <button
+                      className="btn btn-secondary"
+                      onClick={() => handleViewOrders(selectedDistributor._id)}
+                    >
+                      <FiShoppingCart size={16} />
+                      View Orders
+                    </button>
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button
+                      className={`btn ${selectedDistributor.isActive ? 'btn-warning' : 'btn-success'}`}
+                      onClick={() => handleToggleDistributorStatus(selectedDistributor._id, selectedDistributor.isActive)}
+                      disabled={actionLoading}
+                    >
+                      {selectedDistributor.isActive ? 'Deactivate' : 'Activate'}
+                    </button>
+                    <button
+                      className="btn btn-primary"
+                      onClick={() => {
+                        setShowViewModal(false);
+                        handleEditDistributor(selectedDistributor._id);
+                      }}
+                    >
+                      <FiEdit size={16} />
+                      Edit
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* Edit Distributor Modal */}
+        <AnimatePresence>
+          {showEditModal && selectedDistributor && (
+            <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
+              <motion.div
+                className="modal"
+                onClick={(e) => e.stopPropagation()}
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                style={{ maxWidth: '600px', maxHeight: '90vh', overflow: 'auto' }}
+              >
+                <div className="modal-header">
+                  <h2 className="modal-title">Edit Distributor</h2>
+                  <button className="modal-close" onClick={() => setShowEditModal(false)}>
+                    <FiX size={20} />
+                  </button>
+                </div>
+
+                <form onSubmit={handleUpdateDistributor}>
+                  <div className="modal-body" style={{ padding: '1.5rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+                      <div className="form-group">
+                        <label className="form-label">Business Name *</label>
+                        <input
+                          type="text"
+                          className="form-input"
+                          value={editFormData.businessName}
+                          onChange={(e) => setEditFormData({ ...editFormData, businessName: e.target.value })}
+                          required
+                        />
+                      </div>
+
+                      <div className="form-group">
+                        <label className="form-label">Owner Name *</label>
+                        <input
+                          type="text"
+                          className="form-input"
+                          value={editFormData.ownerName}
+                          onChange={(e) => setEditFormData({ ...editFormData, ownerName: e.target.value })}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+                      <div className="form-group">
+                        <label className="form-label">Email *</label>
+                        <input
+                          type="email"
+                          className="form-input"
+                          value={editFormData.email}
+                          onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
+                          required
+                        />
+                      </div>
+
+                      <div className="form-group">
+                        <label className="form-label">Phone *</label>
+                        <input
+                          type="tel"
+                          className="form-input"
+                          value={editFormData.phone}
+                          onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">Address *</label>
+                      <textarea
+                        className="form-input"
+                        rows={2}
+                        value={editFormData.address}
+                        onChange={(e) => setEditFormData({ ...editFormData, address: e.target.value })}
+                        required
+                      />
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+                      <div className="form-group">
+                        <label className="form-label">City *</label>
+                        <input
+                          type="text"
+                          className="form-input"
+                          value={editFormData.city}
+                          onChange={(e) => setEditFormData({ ...editFormData, city: e.target.value })}
+                          required
+                        />
+                      </div>
+
+                      <div className="form-group">
+                        <label className="form-label">State *</label>
+                        <input
+                          type="text"
+                          className="form-input"
+                          value={editFormData.state}
+                          onChange={(e) => setEditFormData({ ...editFormData, state: e.target.value })}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">GST Number</label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={editFormData.gstNumber}
+                        onChange={(e) => setEditFormData({ ...editFormData, gstNumber: e.target.value })}
+                        placeholder="Enter GST number (optional)"
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                        <input
+                          type="checkbox"
+                          checked={editFormData.isActive}
+                          onChange={(e) => setEditFormData({ ...editFormData, isActive: e.target.checked })}
+                          style={{ width: '18px', height: '18px' }}
+                        />
+                        <span className="form-label" style={{ margin: 0 }}>Active (can operate on the platform)</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="modal-footer">
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={() => setShowEditModal(false)}
+                      disabled={actionLoading}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="btn btn-primary"
+                      disabled={actionLoading}
+                    >
+                      {actionLoading ? (
+                        <>
+                          <div className="loading-spinner" style={{ width: '16px', height: '16px', borderWidth: '2px' }} />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <FiCheck size={16} />
+                          Save Changes
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
 
         {/* Confirm Dialog */}
         <ConfirmDialog

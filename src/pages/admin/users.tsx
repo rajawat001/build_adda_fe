@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FiUsers, FiMail, FiPhone, FiCalendar, FiEdit, FiTrash2, FiEye, FiCheck, FiX, FiUserCheck, FiUserX } from 'react-icons/fi';
+import { FiUsers, FiMail, FiPhone, FiCalendar, FiEdit, FiTrash2, FiEye, FiCheck, FiX, FiUserCheck, FiUserX, FiShoppingCart, FiDollarSign, FiMapPin } from 'react-icons/fi';
 import AdminLayout from '../../components/admin/Layout';
 import StatCard from '../../components/admin/StatCard';
 import DataTable, { Column } from '../../components/admin/DataTable';
@@ -7,7 +7,7 @@ import FilterPanel, { FilterOption } from '../../components/admin/FilterPanel';
 import BulkActionBar, { BulkAction } from '../../components/admin/BulkActionBar';
 import ExportButton from '../../components/admin/ExportButton';
 import ConfirmDialog from '../../components/admin/ConfirmDialog';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../services/api';
 
 interface User {
@@ -22,6 +22,12 @@ interface User {
   lastLogin?: string;
   orderCount?: number;
   totalSpent?: number;
+  address?: {
+    street?: string;
+    city?: string;
+    state?: string;
+    pincode?: string;
+  };
 }
 
 interface UserStats {
@@ -63,6 +69,19 @@ const UsersManagement: React.FC = () => {
     onConfirm: () => {}
   });
   const [actionLoading, setActionLoading] = useState(false);
+
+  // View & Edit Modal States
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [editFormData, setEditFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    role: 'user',
+    isActive: true,
+    isVerified: false
+  });
 
   useEffect(() => {
     fetchUsers();
@@ -395,13 +414,62 @@ const UsersManagement: React.FC = () => {
   ];
 
   const handleViewUser = (userId: string) => {
-    // TODO: Open user details modal
-    console.log('View user:', userId);
+    const user = users.find(u => u._id === userId);
+    if (user) {
+      setSelectedUser(user);
+      setShowViewModal(true);
+    }
   };
 
   const handleEditUser = (userId: string) => {
-    // TODO: Open edit user modal
-    console.log('Edit user:', userId);
+    const user = users.find(u => u._id === userId);
+    if (user) {
+      setSelectedUser(user);
+      setEditFormData({
+        name: user.name || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        role: user.role || 'user',
+        isActive: user.isActive ?? true,
+        isVerified: user.isVerified ?? false
+      });
+      setShowEditModal(true);
+    }
+  };
+
+  const handleUpdateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedUser) return;
+
+    try {
+      setActionLoading(true);
+      await api.put(`/admin/users/${selectedUser._id}`, editFormData);
+      await fetchUsers();
+      await fetchStats();
+      setShowEditModal(false);
+      setSelectedUser(null);
+    } catch (error: any) {
+      console.error('Update user failed:', error);
+      alert(error.response?.data?.message || 'Failed to update user');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleToggleUserStatus = async (userId: string, currentStatus: boolean) => {
+    try {
+      setActionLoading(true);
+      await api.put(`/admin/users/${userId}`, { isActive: !currentStatus });
+      await fetchUsers();
+      await fetchStats();
+      if (selectedUser && selectedUser._id === userId) {
+        setSelectedUser({ ...selectedUser, isActive: !currentStatus });
+      }
+    } catch (error) {
+      console.error('Toggle status failed:', error);
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const handleDeleteUser = (userId: string) => {
@@ -506,6 +574,284 @@ const UsersManagement: React.FC = () => {
           actions={bulkActions}
           onClear={() => setSelectedUsers([])}
         />
+
+        {/* View User Modal */}
+        <AnimatePresence>
+          {showViewModal && selectedUser && (
+            <div className="modal-overlay" onClick={() => setShowViewModal(false)}>
+              <motion.div
+                className="modal"
+                onClick={(e) => e.stopPropagation()}
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                style={{ maxWidth: '600px', maxHeight: '90vh', overflow: 'auto' }}
+              >
+                <div className="modal-header">
+                  <h2 className="modal-title">User Details</h2>
+                  <button className="modal-close" onClick={() => setShowViewModal(false)}>
+                    <FiX size={20} />
+                  </button>
+                </div>
+
+                <div className="modal-body" style={{ padding: '1.5rem' }}>
+                  {/* User Avatar & Name */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+                    <div style={{
+                      width: '64px',
+                      height: '64px',
+                      borderRadius: '50%',
+                      background: 'var(--admin-gradient)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'white',
+                      fontWeight: 600,
+                      fontSize: '1.5rem'
+                    }}>
+                      {selectedUser.name?.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--admin-text-primary)', marginBottom: '0.25rem' }}>
+                        {selectedUser.name}
+                      </h3>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <span className={`badge ${selectedUser.isActive ? 'green' : 'red'}`}>
+                          {selectedUser.isActive ? 'Active' : 'Inactive'}
+                        </span>
+                        <span className="badge purple" style={{ textTransform: 'capitalize' }}>
+                          {selectedUser.role}
+                        </span>
+                        {selectedUser.isVerified && (
+                          <span className="badge blue">Verified</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Contact Info */}
+                  <div style={{ background: 'var(--admin-bg-secondary)', borderRadius: '8px', padding: '1rem', marginBottom: '1rem' }}>
+                    <h4 style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--admin-text-secondary)', marginBottom: '0.75rem' }}>
+                      Contact Information
+                    </h4>
+                    <div style={{ display: 'grid', gap: '0.5rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <FiMail size={16} style={{ color: 'var(--admin-text-tertiary)' }} />
+                        <span style={{ color: 'var(--admin-text-primary)' }}>{selectedUser.email}</span>
+                      </div>
+                      {selectedUser.phone && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <FiPhone size={16} style={{ color: 'var(--admin-text-tertiary)' }} />
+                          <span style={{ color: 'var(--admin-text-primary)' }}>{selectedUser.phone}</span>
+                        </div>
+                      )}
+                      {selectedUser.address && (
+                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
+                          <FiMapPin size={16} style={{ color: 'var(--admin-text-tertiary)', marginTop: '2px' }} />
+                          <span style={{ color: 'var(--admin-text-primary)' }}>
+                            {[selectedUser.address.street, selectedUser.address.city, selectedUser.address.state, selectedUser.address.pincode].filter(Boolean).join(', ')}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Stats */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', marginBottom: '1rem' }}>
+                    <div style={{ background: 'var(--admin-bg-secondary)', borderRadius: '8px', padding: '1rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                        <FiShoppingCart size={16} style={{ color: 'var(--admin-primary)' }} />
+                        <span style={{ fontSize: '0.75rem', color: 'var(--admin-text-secondary)' }}>Total Orders</span>
+                      </div>
+                      <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--admin-text-primary)' }}>
+                        {selectedUser.orderCount || 0}
+                      </div>
+                    </div>
+                    <div style={{ background: 'var(--admin-bg-secondary)', borderRadius: '8px', padding: '1rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                        <FiDollarSign size={16} style={{ color: 'var(--admin-success)' }} />
+                        <span style={{ fontSize: '0.75rem', color: 'var(--admin-text-secondary)' }}>Total Spent</span>
+                      </div>
+                      <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--admin-success)' }}>
+                        ₹{(selectedUser.totalSpent || 0).toLocaleString('en-IN')}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Dates */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+                    <div style={{ background: 'var(--admin-bg-secondary)', borderRadius: '8px', padding: '1rem' }}>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--admin-text-secondary)', marginBottom: '0.25rem' }}>Joined</div>
+                      <div style={{ color: 'var(--admin-text-primary)', fontWeight: 500 }}>
+                        {new Date(selectedUser.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+                      </div>
+                    </div>
+                    <div style={{ background: 'var(--admin-bg-secondary)', borderRadius: '8px', padding: '1rem' }}>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--admin-text-secondary)', marginBottom: '0.25rem' }}>Last Login</div>
+                      <div style={{ color: 'var(--admin-text-primary)', fontWeight: 500 }}>
+                        {selectedUser.lastLogin
+                          ? new Date(selectedUser.lastLogin).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
+                          : 'Never'
+                        }
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="modal-footer">
+                  <button
+                    className={`btn ${selectedUser.isActive ? 'btn-warning' : 'btn-success'}`}
+                    onClick={() => handleToggleUserStatus(selectedUser._id, selectedUser.isActive)}
+                    disabled={actionLoading}
+                  >
+                    {selectedUser.isActive ? <FiUserX size={16} /> : <FiUserCheck size={16} />}
+                    {selectedUser.isActive ? 'Deactivate' : 'Activate'}
+                  </button>
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => {
+                      setShowViewModal(false);
+                      handleEditUser(selectedUser._id);
+                    }}
+                  >
+                    <FiEdit size={16} />
+                    Edit User
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* Edit User Modal */}
+        <AnimatePresence>
+          {showEditModal && selectedUser && (
+            <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
+              <motion.div
+                className="modal"
+                onClick={(e) => e.stopPropagation()}
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                style={{ maxWidth: '500px' }}
+              >
+                <div className="modal-header">
+                  <h2 className="modal-title">Edit User</h2>
+                  <button className="modal-close" onClick={() => setShowEditModal(false)}>
+                    <FiX size={20} />
+                  </button>
+                </div>
+
+                <form onSubmit={handleUpdateUser}>
+                  <div className="modal-body" style={{ padding: '1.5rem' }}>
+                    <div className="form-group">
+                      <label className="form-label">Name *</label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={editFormData.name}
+                        onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                        required
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">Email *</label>
+                      <input
+                        type="email"
+                        className="form-input"
+                        value={editFormData.email}
+                        onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
+                        required
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">Phone</label>
+                      <input
+                        type="tel"
+                        className="form-input"
+                        value={editFormData.phone}
+                        onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
+                        placeholder="Enter phone number"
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">Role *</label>
+                      <select
+                        className="form-select"
+                        value={editFormData.role}
+                        onChange={(e) => setEditFormData({ ...editFormData, role: e.target.value })}
+                        required
+                      >
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                        <option value="distributor">Distributor</option>
+                      </select>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+                      <div className="form-group">
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                          <input
+                            type="checkbox"
+                            checked={editFormData.isActive}
+                            onChange={(e) => setEditFormData({ ...editFormData, isActive: e.target.checked })}
+                            style={{ width: '18px', height: '18px' }}
+                          />
+                          <span className="form-label" style={{ margin: 0 }}>Active</span>
+                        </label>
+                      </div>
+
+                      <div className="form-group">
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                          <input
+                            type="checkbox"
+                            checked={editFormData.isVerified}
+                            onChange={(e) => setEditFormData({ ...editFormData, isVerified: e.target.checked })}
+                            style={{ width: '18px', height: '18px' }}
+                          />
+                          <span className="form-label" style={{ margin: 0 }}>Verified</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="modal-footer">
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={() => setShowEditModal(false)}
+                      disabled={actionLoading}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="btn btn-primary"
+                      disabled={actionLoading}
+                    >
+                      {actionLoading ? (
+                        <>
+                          <div className="loading-spinner" style={{ width: '16px', height: '16px', borderWidth: '2px' }} />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <FiCheck size={16} />
+                          Save Changes
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
 
         {/* Confirm Dialog */}
         <ConfirmDialog

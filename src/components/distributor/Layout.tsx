@@ -1,9 +1,10 @@
-import { ReactNode, useEffect } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Sidebar from './Sidebar';
 import SEO from '../SEO';
 import { NotificationBell } from '../NotificationBell';
-import { FiUser } from 'react-icons/fi';
+import { FiUser, FiAlertCircle } from 'react-icons/fi';
+import api from '../../services/api';
 
 interface LayoutProps {
   children: ReactNode;
@@ -12,9 +13,13 @@ interface LayoutProps {
 
 const DistributorLayout = ({ children, title = 'Distributor Panel' }: LayoutProps) => {
   const router = useRouter();
+  const [checkingSubscription, setCheckingSubscription] = useState(true);
+  const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
+  const [isApproved, setIsApproved] = useState(false);
 
   useEffect(() => {
     checkAuth();
+    checkSubscriptionStatus();
   }, []);
 
   const checkAuth = () => {
@@ -24,11 +29,90 @@ const DistributorLayout = ({ children, title = 'Distributor Panel' }: LayoutProp
     }
   };
 
+  const checkSubscriptionStatus = async () => {
+    try {
+      // Get profile to check approval status
+      const profileRes = await api.get('/auth/profile');
+      const isUserApproved = profileRes.data.user?.isApproved || false;
+      setIsApproved(isUserApproved);
+
+      // Get subscription status
+      let hasActive = false;
+      try {
+        const subRes = await api.get('/subscriptions/my-subscription');
+        const subscription = subRes.data.subscription;
+        hasActive = subscription && subscription.status === 'active';
+      } catch (subError: any) {
+        // 404 means no active subscription, which is fine
+        if (subError.response?.status !== 404) {
+          console.error('Error fetching subscription:', subError);
+        }
+      }
+      setHasActiveSubscription(hasActive);
+
+      // If not approved or no active subscription, and not on subscription page, redirect
+      const currentPath = router.pathname;
+      if ((!isUserApproved || !hasActive) && currentPath !== '/distributor/subscription') {
+        router.push('/distributor/subscription');
+      }
+    } catch (error: any) {
+      console.error('Error checking subscription:', error);
+      // Only redirect if it's not an authorization error for non-approved distributor
+      // (they should be allowed to access the subscription page)
+      if (router.pathname !== '/distributor/subscription') {
+        router.push('/distributor/subscription');
+      }
+    } finally {
+      setCheckingSubscription(false);
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('role');
+    localStorage.removeItem('user');
     router.push('/login');
   };
+
+  // Show loading while checking subscription
+  if (checkingSubscription) {
+    return (
+      <>
+        <SEO title={title} description="Distributor management panel" />
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '100vh',
+          background: 'var(--bg-primary, #f5f7fa)'
+        }}>
+          <div style={{ textAlign: 'center' }}>
+            <div className="loading-spinner" style={{
+              width: '40px',
+              height: '40px',
+              border: '4px solid #e5e7eb',
+              borderTopColor: '#667eea',
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite',
+              margin: '0 auto 1rem'
+            }} />
+            <p style={{ color: 'var(--text-secondary)' }}>Loading...</p>
+          </div>
+        </div>
+        <style jsx>{`
+          @keyframes spin {
+            to { transform: rotate(360deg); }
+          }
+        `}</style>
+      </>
+    );
+  }
+
+  // Check if on subscription page - allow access regardless of subscription status
+  const isSubscriptionPage = router.pathname === '/distributor/subscription';
+
+  // If not on subscription page and no active subscription, this will redirect via useEffect
+  // But we still render the layout for the subscription page
 
   return (
     <>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FiPackage, FiGrid, FiList, FiTrash2, FiEdit, FiEye, FiAlertCircle, FiTrendingUp, FiDollarSign, FiUpload } from 'react-icons/fi';
+import { FiPackage, FiGrid, FiList, FiTrash2, FiEdit, FiEye, FiAlertCircle, FiTrendingUp, FiDollarSign, FiUpload, FiX, FiCheck } from 'react-icons/fi';
 import AdminLayout from '../../components/admin/Layout';
 import StatCard from '../../components/admin/StatCard';
 import DataTable, { Column } from '../../components/admin/DataTable';
@@ -7,7 +7,7 @@ import FilterPanel, { FilterOption } from '../../components/admin/FilterPanel';
 import BulkActionBar, { BulkAction } from '../../components/admin/BulkActionBar';
 import ExportButton from '../../components/admin/ExportButton';
 import ConfirmDialog from '../../components/admin/ConfirmDialog';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../services/api';
 
 interface Product {
@@ -70,6 +70,18 @@ const ProductsManagement: React.FC = () => {
   });
   const [actionLoading, setActionLoading] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
+
+  // Edit Modal States
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [editFormData, setEditFormData] = useState({
+    name: '',
+    description: '',
+    price: 0,
+    mrp: 0,
+    stockQuantity: 0,
+    isActive: true
+  });
 
   useEffect(() => {
     fetchProducts();
@@ -342,8 +354,38 @@ const ProductsManagement: React.FC = () => {
   };
 
   const handleEditProduct = (productId: string) => {
-    // TODO: Open edit modal
-    console.log('Edit product:', productId);
+    const product = products.find(p => p._id === productId);
+    if (product) {
+      setSelectedProduct(product);
+      setEditFormData({
+        name: product.name || '',
+        description: product.description || '',
+        price: product.price || 0,
+        mrp: product.mrp || 0,
+        stockQuantity: product.stockQuantity || 0,
+        isActive: product.isActive ?? true
+      });
+      setShowEditModal(true);
+    }
+  };
+
+  const handleUpdateProduct = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedProduct) return;
+
+    try {
+      setActionLoading(true);
+      await api.put(`/admin/products/${selectedProduct._id}`, editFormData);
+      await fetchProducts();
+      await fetchStats();
+      setShowEditModal(false);
+      setSelectedProduct(null);
+    } catch (error: any) {
+      console.error('Update product failed:', error);
+      alert(error.response?.data?.message || 'Failed to update product');
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const handleDeleteProduct = (productId: string) => {
@@ -583,6 +625,166 @@ const ProductsManagement: React.FC = () => {
           actions={bulkActions}
           onClear={() => setSelectedProducts([])}
         />
+
+        {/* Edit Product Modal */}
+        <AnimatePresence>
+          {showEditModal && selectedProduct && (
+            <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
+              <motion.div
+                className="modal"
+                onClick={(e) => e.stopPropagation()}
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                style={{ maxWidth: '600px', maxHeight: '90vh', overflow: 'auto' }}
+              >
+                <div className="modal-header">
+                  <h2 className="modal-title">Edit Product</h2>
+                  <button className="modal-close" onClick={() => setShowEditModal(false)}>
+                    <FiX size={20} />
+                  </button>
+                </div>
+
+                <form onSubmit={handleUpdateProduct}>
+                  <div className="modal-body" style={{ padding: '1.5rem' }}>
+                    {/* Product Image Preview */}
+                    {selectedProduct.images && selectedProduct.images.length > 0 && (
+                      <div style={{ marginBottom: '1.5rem', textAlign: 'center' }}>
+                        <img
+                          src={selectedProduct.images[0]}
+                          alt={selectedProduct.name}
+                          style={{
+                            width: '120px',
+                            height: '120px',
+                            objectFit: 'cover',
+                            borderRadius: '8px',
+                            border: '1px solid var(--admin-border-primary)'
+                          }}
+                        />
+                      </div>
+                    )}
+
+                    {/* Distributor Info */}
+                    <div style={{
+                      background: 'var(--admin-bg-secondary)',
+                      borderRadius: '8px',
+                      padding: '0.75rem 1rem',
+                      marginBottom: '1rem',
+                      fontSize: '0.875rem'
+                    }}>
+                      <span style={{ color: 'var(--admin-text-secondary)' }}>Distributor: </span>
+                      <span style={{ color: 'var(--admin-text-primary)', fontWeight: 500 }}>
+                        {selectedProduct.distributor.businessName}
+                      </span>
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">Product Name *</label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={editFormData.name}
+                        onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                        required
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">Description</label>
+                      <textarea
+                        className="form-input"
+                        rows={3}
+                        value={editFormData.description}
+                        onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
+                        placeholder="Enter product description"
+                      />
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+                      <div className="form-group">
+                        <label className="form-label">Selling Price (₹) *</label>
+                        <input
+                          type="number"
+                          className="form-input"
+                          value={editFormData.price}
+                          onChange={(e) => setEditFormData({ ...editFormData, price: parseFloat(e.target.value) || 0 })}
+                          min="0"
+                          step="0.01"
+                          required
+                        />
+                      </div>
+
+                      <div className="form-group">
+                        <label className="form-label">MRP (₹)</label>
+                        <input
+                          type="number"
+                          className="form-input"
+                          value={editFormData.mrp}
+                          onChange={(e) => setEditFormData({ ...editFormData, mrp: parseFloat(e.target.value) || 0 })}
+                          min="0"
+                          step="0.01"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">Stock Quantity *</label>
+                      <input
+                        type="number"
+                        className="form-input"
+                        value={editFormData.stockQuantity}
+                        onChange={(e) => setEditFormData({ ...editFormData, stockQuantity: parseInt(e.target.value) || 0 })}
+                        min="0"
+                        required
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                        <input
+                          type="checkbox"
+                          checked={editFormData.isActive}
+                          onChange={(e) => setEditFormData({ ...editFormData, isActive: e.target.checked })}
+                          style={{ width: '18px', height: '18px' }}
+                        />
+                        <span className="form-label" style={{ margin: 0 }}>Active (visible to customers)</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="modal-footer">
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={() => setShowEditModal(false)}
+                      disabled={actionLoading}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="btn btn-primary"
+                      disabled={actionLoading}
+                    >
+                      {actionLoading ? (
+                        <>
+                          <div className="loading-spinner" style={{ width: '16px', height: '16px', borderWidth: '2px' }} />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <FiCheck size={16} />
+                          Save Changes
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
 
         {/* Confirm Dialog */}
         <ConfirmDialog

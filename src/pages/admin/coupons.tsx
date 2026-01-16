@@ -14,11 +14,16 @@ interface Coupon {
   discountType: 'percentage' | 'fixed';
   discountValue: number;
   minPurchase: number;
+  minOrderAmount?: number;
   maxDiscount: number;
   expiryDate?: string;
   isActive: boolean;
   usageCount?: number;
+  usedCount?: number;
   usageLimit?: number;
+  applicableFor: 'products' | 'subscription' | 'both';
+  freeMonths?: number;
+  description?: string;
   createdAt: string;
 }
 
@@ -54,7 +59,10 @@ const CouponsManagement: React.FC = () => {
     maxDiscount: 0,
     expiryDate: '',
     isActive: true,
-    usageLimit: 0
+    usageLimit: 0,
+    applicableFor: 'products' as 'products' | 'subscription' | 'both',
+    freeMonths: 0,
+    description: ''
   });
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
@@ -142,7 +150,10 @@ const CouponsManagement: React.FC = () => {
       maxDiscount: 0,
       expiryDate: '',
       isActive: true,
-      usageLimit: 0
+      usageLimit: 0,
+      applicableFor: 'products',
+      freeMonths: 0,
+      description: ''
     });
     setShowModal(true);
   };
@@ -153,11 +164,14 @@ const CouponsManagement: React.FC = () => {
       code: coupon.code,
       discountType: coupon.discountType,
       discountValue: coupon.discountValue,
-      minPurchase: coupon.minPurchase,
-      maxDiscount: coupon.maxDiscount,
+      minPurchase: coupon.minPurchase || coupon.minOrderAmount || 0,
+      maxDiscount: coupon.maxDiscount || 0,
       expiryDate: coupon.expiryDate ? new Date(coupon.expiryDate).toISOString().split('T')[0] : '',
       isActive: coupon.isActive,
-      usageLimit: coupon.usageLimit || 0
+      usageLimit: coupon.usageLimit || 0,
+      applicableFor: coupon.applicableFor || 'products',
+      freeMonths: coupon.freeMonths || 0,
+      description: coupon.description || ''
     });
     setShowModal(true);
   };
@@ -168,11 +182,14 @@ const CouponsManagement: React.FC = () => {
       code: `${coupon.code}_COPY`,
       discountType: coupon.discountType,
       discountValue: coupon.discountValue,
-      minPurchase: coupon.minPurchase,
-      maxDiscount: coupon.maxDiscount,
+      minPurchase: coupon.minPurchase || coupon.minOrderAmount || 0,
+      maxDiscount: coupon.maxDiscount || 0,
       expiryDate: '',
       isActive: true,
-      usageLimit: coupon.usageLimit || 0
+      usageLimit: coupon.usageLimit || 0,
+      applicableFor: coupon.applicableFor || 'products',
+      freeMonths: coupon.freeMonths || 0,
+      description: coupon.description || ''
     });
     setShowModal(true);
   };
@@ -309,14 +326,38 @@ const CouponsManagement: React.FC = () => {
       )
     },
     {
-      key: 'usageCount',
+      key: 'applicableFor',
+      label: 'Applies To',
+      render: (value, row: Coupon) => {
+        const labels: Record<string, { text: string; color: string }> = {
+          products: { text: 'Products', color: 'var(--admin-info)' },
+          subscription: { text: 'Subscription', color: 'var(--admin-warning)' },
+          both: { text: 'Both', color: 'var(--admin-success)' }
+        };
+        const config = labels[value] || labels.products;
+        return (
+          <div>
+            <span className="badge" style={{ backgroundColor: config.color, color: 'white' }}>
+              {config.text}
+            </span>
+            {row.freeMonths && row.freeMonths > 0 && (
+              <div style={{ fontSize: '0.75rem', color: 'var(--admin-success)', marginTop: '0.25rem' }}>
+                {row.freeMonths} month{row.freeMonths > 1 ? 's' : ''} free
+              </div>
+            )}
+          </div>
+        );
+      }
+    },
+    {
+      key: 'usedCount',
       label: 'Usage',
       sortable: true,
       render: (value, row: Coupon) => (
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
           <FiUsers size={14} style={{ color: 'var(--admin-text-secondary)' }} />
           <span style={{ fontWeight: 500 }}>
-            {value || 0}
+            {value || row.usageCount || 0}
             {row.usageLimit && row.usageLimit > 0 && ` / ${row.usageLimit}`}
           </span>
         </div>
@@ -479,6 +520,56 @@ const CouponsManagement: React.FC = () => {
                       placeholder="0 = Unlimited"
                     />
                   </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+                  <div className="form-group">
+                    <label className="form-label">Applicable For *</label>
+                    <select
+                      className="form-select"
+                      value={formData.applicableFor}
+                      onChange={(e) => setFormData({ ...formData, applicableFor: e.target.value as 'products' | 'subscription' | 'both' })}
+                      required
+                    >
+                      <option value="products">Products Only</option>
+                      <option value="subscription">Subscription Only</option>
+                      <option value="both">Both Products & Subscription</option>
+                    </select>
+                    <small style={{ color: 'var(--admin-text-secondary)', fontSize: '0.75rem' }}>
+                      Choose where this coupon can be used
+                    </small>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Free Months (Subscription)</label>
+                    <input
+                      type="number"
+                      className="form-input"
+                      value={formData.freeMonths}
+                      onChange={(e) => setFormData({ ...formData, freeMonths: parseInt(e.target.value) || 0 })}
+                      min="0"
+                      max="12"
+                      placeholder="0"
+                      disabled={formData.applicableFor === 'products'}
+                    />
+                    <small style={{ color: 'var(--admin-text-secondary)', fontSize: '0.75rem' }}>
+                      {formData.applicableFor === 'products'
+                        ? 'Only for subscription coupons'
+                        : 'Grant free months instead of discount'}
+                    </small>
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Description</label>
+                  <textarea
+                    className="form-input"
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    placeholder="Internal notes or description for this coupon"
+                    rows={2}
+                    style={{ resize: 'vertical' }}
+                  />
                 </div>
 
                 <div className="form-group">

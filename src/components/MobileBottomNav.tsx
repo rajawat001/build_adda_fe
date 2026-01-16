@@ -79,11 +79,11 @@ export default function MobileBottomNav() {
       </button>
 
       <button
-        className={`mobile-nav-item ${isActive('/user/profile') || isActive('/login') ? 'active' : ''}`}
+        className={`mobile-nav-item ${isActive('/profile') || isActive('/login') ? 'active' : ''}`}
         onClick={() => {
           const token = localStorage.getItem('token');
           if (token) {
-            handleNavigation('/user/profile');
+            handleNavigation('/profile');
           } else {
             handleNavigation('/login');
           }

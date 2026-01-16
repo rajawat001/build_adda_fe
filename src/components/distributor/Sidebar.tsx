@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useTheme } from '../../contexts/ThemeContext';
-import { FiHome, FiPackage, FiShoppingCart, FiUser, FiLogOut, FiSun, FiMoon, FiBarChart2 } from 'react-icons/fi';
+import { FiHome, FiPackage, FiShoppingCart, FiUser, FiLogOut, FiSun, FiMoon, FiBarChart2, FiCreditCard } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 
 interface SidebarProps {
@@ -22,6 +22,7 @@ const Sidebar = ({ onLogout }: SidebarProps) => {
     { path: '/distributor/products', icon: FiPackage, label: 'Products' },
     { path: '/distributor/orders', icon: FiShoppingCart, label: 'Orders' },
     { path: '/distributor/analytics', icon: FiBarChart2, label: 'Analytics' },
+    { path: '/distributor/subscription', icon: FiCreditCard, label: 'Subscription' },
     { path: '/distributor/profile', icon: FiUser, label: 'Profile' },
   ];
 

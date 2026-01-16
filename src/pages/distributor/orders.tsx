@@ -6,19 +6,14 @@ import {
   FiShoppingCart,
   FiCheck,
   FiX,
-  FiEye,
   FiDownload,
   FiSearch,
   FiClock,
   FiCheckCircle,
-  FiXCircle,
-  FiTruck,
-  FiPackage,
   FiDollarSign,
-  FiFilter,
 } from 'react-icons/fi';
 import { toast } from 'react-toastify';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import { format } from 'date-fns';
@@ -27,7 +22,7 @@ import api from '../../services/api';
 interface Order {
   _id: string;
   orderNumber: string;
-  user: { name: string; email: string; phone?: string };
+  user: { name: string; email: string; phone?: string } | null;
   totalAmount: number;
   orderStatus: string;
   approvalStatus: string;
@@ -63,9 +58,7 @@ const Orders = () => {
 
   useEffect(() => {
     const abortController = new AbortController();
-
     fetchOrders(abortController.signal);
-
     return () => {
       abortController.abort();
     };
@@ -78,7 +71,6 @@ const Orders = () => {
       setOrders(response.data.orders || []);
       toast.success('Orders loaded successfully');
     } catch (error: any) {
-      // Ignore abort errors
       if (error.name === 'AbortError' || error.name === 'CanceledError') {
         return;
       }
@@ -156,21 +148,11 @@ const Orders = () => {
     }
   };
 
-  const handleStatusUpdate = async (orderId: string, newStatus: string) => {
-    try {
-      await api.put(`/distributor/orders/${orderId}`, { orderStatus: newStatus });
-      toast.success('Order status updated successfully');
-      fetchOrders();
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to update status');
-    }
-  };
-
   const handleExport = () => {
     const exportData = filteredOrders.map((o) => ({
       'Order Number': o.orderNumber,
-      Customer: o.user.name,
-      Contact: o.user.phone || o.user.email,
+      Customer: o.user?.name || 'Unknown User',
+      Contact: o.user?.phone || o.user?.email || 'N/A',
       Amount: o.totalAmount,
       'Delivery Charge': o.deliveryCharge || 0,
       'Approval Status': o.approvalStatus,
@@ -230,21 +212,11 @@ const Orders = () => {
     return colors[status] || 'default';
   };
 
-  const getValidNextStatuses = (currentStatus: string) => {
-    const statusOrder = ['confirmed', 'processing', 'shipped', 'delivered'];
-    const currentIndex = statusOrder.indexOf(currentStatus);
-
-    if (currentIndex === -1 || currentStatus === 'delivered' || currentStatus === 'cancelled') {
-      return [currentStatus];
-    }
-
-    return statusOrder.slice(currentIndex);
-  };
-
   const filteredOrders = orders.filter((order) => {
+    const userName = order.user?.name || '';
     const matchesSearch =
       order.orderNumber.toLowerCase().includes(filter.search.toLowerCase()) ||
-      order.user.name.toLowerCase().includes(filter.search.toLowerCase());
+      userName.toLowerCase().includes(filter.search.toLowerCase());
     const matchesStatus = !filter.status || order.orderStatus === filter.status;
     const matchesApproval = !filter.approval || order.approvalStatus === filter.approval;
     const matchesPayment = !filter.paymentStatus || order.paymentStatus === filter.paymentStatus;
@@ -252,11 +224,9 @@ const Orders = () => {
     return matchesSearch && matchesStatus && matchesApproval && matchesPayment;
   });
 
-  // Pagination
   const totalPages = Math.ceil(filteredOrders.length / pageSize);
   const paginatedOrders = filteredOrders.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
-  // Stats calculations
   const stats = {
     total: orders.length,
     pending: orders.filter((o) => o.approvalStatus === 'pending').length,
@@ -277,7 +247,6 @@ const Orders = () => {
   return (
     <DistributorLayout title="Orders">
       <div className="space-y-6">
-        {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-[var(--text-primary)]">Orders Management</h1>
@@ -285,7 +254,6 @@ const Orders = () => {
           </div>
         </div>
 
-        {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatsCard
             title="Total Orders"
@@ -317,10 +285,8 @@ const Orders = () => {
           />
         </div>
 
-        {/* Filters & Actions */}
         <Card>
           <div className="space-y-4">
-            {/* Search & Filters */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="relative">
                 <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
@@ -370,7 +336,6 @@ const Orders = () => {
               </select>
             </div>
 
-            {/* Action Buttons */}
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <input
@@ -403,7 +368,6 @@ const Orders = () => {
           </div>
         </Card>
 
-        {/* Orders Table */}
         {filteredOrders.length === 0 ? (
           <EmptyState
             icon={<FiShoppingCart className="w-20 h-20" />}
@@ -440,7 +404,6 @@ const Orders = () => {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       onClick={(e) => {
-                        // Don't navigate if clicking on interactive elements
                         const target = e.target as HTMLElement;
                         if (
                           target.tagName === 'INPUT' ||
@@ -470,9 +433,11 @@ const Orders = () => {
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex flex-col">
-                          <span className="font-medium text-[var(--text-primary)]">{order.user.name}</span>
+                          <span className="font-medium text-[var(--text-primary)]">
+                            {order.user?.name || 'Unknown User'}
+                          </span>
                           <span className="text-xs text-[var(--text-tertiary)]">
-                            {order.user.phone || order.user.email}
+                            {order.user?.phone || order.user?.email || 'N/A'}
                           </span>
                         </div>
                       </td>
@@ -505,7 +470,6 @@ const Orders = () => {
               </table>
             </div>
 
-            {/* Pagination */}
             {totalPages > 1 && (
               <div className="flex items-center justify-between mt-4 pt-4 border-t border-[var(--border-primary)]">
                 <p className="text-sm text-[var(--text-secondary)]">
@@ -535,7 +499,6 @@ const Orders = () => {
           </Card>
         )}
 
-        {/* Approve Modal */}
         <Modal
           isOpen={showApproveModal}
           onClose={() => {
@@ -581,7 +544,6 @@ const Orders = () => {
           </div>
         </Modal>
 
-        {/* Reject Modal */}
         <Modal
           isOpen={showRejectModal}
           onClose={() => {
@@ -625,7 +587,6 @@ const Orders = () => {
           </div>
         </Modal>
 
-        {/* Bulk Approve Modal */}
         <Modal
           isOpen={showBulkApproveModal}
           onClose={() => {

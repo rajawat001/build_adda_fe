@@ -14,7 +14,8 @@ import {
   FiActivity,
   FiSettings,
   FiLogOut,
-  FiTruck
+  FiTruck,
+  FiCreditCard
 } from 'react-icons/fi';
 
 interface SidebarProps {
@@ -32,6 +33,7 @@ const Sidebar = ({ onLogout }: SidebarProps) => {
     { icon: FiShoppingCart, label: 'Orders', path: '/admin/orders' },
     { icon: FiFolder, label: 'Categories', path: '/admin/categories' },
     { icon: FiTag, label: 'Coupons', path: '/admin/coupons' },
+    { icon: FiCreditCard, label: 'Subscriptions', path: '/admin/subscription-plans' },
     { icon: FiShield, label: 'Roles', path: '/admin/roles' },
     { icon: FiMail, label: 'Email Templates', path: '/admin/email-templates' },
     { icon: FiStar, label: 'Reviews', path: '/admin/reviews' },

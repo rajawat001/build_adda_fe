@@ -248,10 +248,10 @@ const OrdersManagement: React.FC = () => {
       render: (value) => (
         <div>
           <div style={{ fontWeight: 500, color: 'var(--admin-text-primary)', marginBottom: '0.25rem' }}>
-            {value.name}
+            {value?.name}
           </div>
           <div style={{ fontSize: '0.75rem', color: 'var(--admin-text-secondary)' }}>
-            {value.email}
+            {value?.email}
           </div>
         </div>
       )
