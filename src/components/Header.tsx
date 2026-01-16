@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import authService from '../services/auth.service';
 import { NotificationBell } from './NotificationBell';
 import AnnouncementBar from './AnnouncementBar';
+import MobileBottomNav from './MobileBottomNav';
 import {
   FiSearch,
   FiShoppingCart,
@@ -356,6 +357,9 @@ export default function Header() {
           </div>
         )}
       </header>
+
+      {/* Mobile Bottom Navigation - Visible only on mobile */}
+      <MobileBottomNav />
     </>
   );
 }

@@ -26,9 +26,9 @@ export default function Home() {
   /* ✅ HERO BANNER IMAGES */
   const bannerImages = [
     '/Banner/Build_Adda_banner.png',
-    '/Banner/Banner_salman.png',
-    '/Banner/Banner_ambhitabh.png',
-    '/Banner/Banner_rashmika.png'
+    '/Banner/Banner_image1.png',
+    '/Banner/Banner_image2.png',
+    '/Banner/Banner_image3.png'
   ];
 
   const [currentBanner, setCurrentBanner] = useState(0);
