@@ -27,6 +27,29 @@ interface Address {
 export default function Checkout() {
   const router = useRouter();
   const { cart: cartItems, currentDistributor, clearCart } = useCart();
+
+  // Ensure cartItems is typed as CartItem[]
+  const typedCartItems = cartItems as CartItem[];
+
+  // Extend the type of CartItem to include acceptedPaymentMethods
+  interface CartItem {
+    _id: string;
+    name: string;
+    price: number;
+    quantity: number;
+    acceptedPaymentMethods?: string[];
+    // add other properties if needed
+  }
+
+  // Extend the type of currentDistributor to include city
+  type Distributor = {
+    _id: string;
+    businessName: string;
+    city?: string;
+    // add other properties if needed
+  };
+
+  const distributor: Distributor | undefined = currentDistributor;
   const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string>('');
   const [showAddressForm, setShowAddressForm] = useState(false);
@@ -315,13 +338,13 @@ export default function Checkout() {
 
   // Get available payment methods based on products in cart
   const getAvailablePaymentMethods = () => {
-    if (cartItems.length === 0) return ['COD', 'Online'];
+    if (typedCartItems.length === 0) return ['COD', 'Online'];
 
     // Find payment methods that ALL products accept
-    const allAcceptCOD = cartItems.every(item =>
+    const allAcceptCOD = typedCartItems.every(item =>
       item.acceptedPaymentMethods?.includes('COD') ?? true
     );
-    const allAcceptOnline = cartItems.every(item =>
+    const allAcceptOnline = typedCartItems.every(item =>
       item.acceptedPaymentMethods?.includes('Online') ?? true
     );
 
@@ -385,8 +408,8 @@ export default function Checkout() {
 
     try {
       // Get distributor from Cart Context (single distributor per cart)
-      const distributorId = currentDistributor?._id;
-      const distributorCity = currentDistributor?.city;
+      const distributorId = distributor?._id;
+      const distributorCity = distributor?.city;
 
       // Validation checks
       if (!distributorId) {
@@ -413,7 +436,7 @@ export default function Checkout() {
         if (shippingCity !== distCity) {
           alert(
             `Delivery not available!\n\n` +
-            `This distributor (${currentDistributor?.businessName}) only delivers to ${distributorCity}.\n\n` +
+            `This distributor (${distributor?.businessName}) only delivers to ${distributorCity}.\n\n` +
             `Your shipping address city is ${formData.shippingAddress.city}.\n\n` +
             `Please update your shipping address or choose products from a distributor in your city.`
           );
@@ -760,7 +783,7 @@ export default function Checkout() {
               <h2>Order Summary</h2>
               
               <div className="summary-items">
-                {cartItems.map((item) => (
+                {typedCartItems.map((item) => (
                   <div key={item._id} className="summary-item">
                     <span>{item.name} x {item.quantity}</span>
                     <span>₹{item.price * item.quantity}</span>
@@ -771,7 +794,7 @@ export default function Checkout() {
               <div className="price-breakdown">
                 <div className="summary-row">
                   <span>Subtotal:</span>
-                  <span>₹{cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0).toLocaleString('en-IN')}</span>
+                  <span>₹{typedCartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0).toLocaleString('en-IN')}</span>
                 </div>
 
                 {discount > 0 && (
