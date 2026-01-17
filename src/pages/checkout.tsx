@@ -86,10 +86,11 @@ export default function Checkout() {
     state: '',
     pincode: ''
   });
+  const [orderPlaced, setOrderPlaced] = useState(false);
 
   useEffect(() => {
-    // Redirect to cart if empty
-    if (cartItems.length === 0) {
+    // Redirect to cart if empty (but not after successful order placement)
+    if (cartItems.length === 0 && !orderPlaced) {
       router.push('/cart');
       return;
     }
@@ -383,6 +384,8 @@ export default function Checkout() {
             razorpaySignature: response.razorpay_signature
           });
 
+          // Set flag to prevent redirect to cart page
+          setOrderPlaced(true);
           clearCart();
           router.push('/order-success');
         } catch (error) {
@@ -469,6 +472,8 @@ export default function Checkout() {
       if (formData.paymentMethod === 'Online') {
         await handleRazorpayPayment(response.orderId, response.amount);
       } else {
+        // Set flag to prevent redirect to cart page
+        setOrderPlaced(true);
         clearCart();
         router.push('/order-success');
       }
