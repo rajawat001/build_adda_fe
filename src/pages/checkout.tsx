@@ -5,6 +5,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { createOrder, verifyPayment } from '../services/order.service';
 import authService from '../services/auth.service';
+import { useCart } from '../context/CartContext';
 
 declare global {
   interface Window {
@@ -25,7 +26,7 @@ interface Address {
 
 export default function Checkout() {
   const router = useRouter();
-  const [cartItems, setCartItems] = useState<any[]>([]);
+  const { cart: cartItems, currentDistributor, clearCart } = useCart();
   const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string>('');
   const [showAddressForm, setShowAddressForm] = useState(false);
@@ -64,22 +65,21 @@ export default function Checkout() {
   });
 
   useEffect(() => {
-    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-    if (cart.length === 0) {
+    // Redirect to cart if empty
+    if (cartItems.length === 0) {
       router.push('/cart');
       return;
     }
 
-    setCartItems(cart);
-
     // Fetch user profile to get saved addresses
     fetchUserProfile();
 
+    // Load Razorpay script
     const script = document.createElement('script');
     script.src = 'https://checkout.razorpay.com/v1/checkout.js';
     script.async = true;
     document.body.appendChild(script);
-  }, []);
+  }, [cartItems.length]);
 
   const fetchUserProfile = async () => {
     try {
@@ -359,8 +359,8 @@ export default function Checkout() {
             razorpayPaymentId: response.razorpay_payment_id,
             razorpaySignature: response.razorpay_signature
           });
-          
-          localStorage.removeItem('cart');
+
+          clearCart();
           router.push('/order-success');
         } catch (error) {
           router.push('/order-failure');
@@ -384,24 +384,42 @@ export default function Checkout() {
     setLoading(true);
 
     try {
-      // Get distributor from first item (assuming all items from same distributor)
-      const distributor = cartItems[0]?.distributor?._id || cartItems[0]?.distributor;
+      // Get distributor from Cart Context (single distributor per cart)
+      const distributorId = currentDistributor?._id;
+      const distributorCity = currentDistributor?.city;
 
       // Validation checks
-      if (!distributor) {
-        const clearCart = confirm(
+      if (!distributorId) {
+        const shouldClear = confirm(
           'Product distributor information is missing from your cart items.\n\n' +
           'This happens when cart items are outdated.\n\n' +
           'Click OK to clear your cart and start fresh, or Cancel to go back.'
         );
 
-        if (clearCart) {
-          localStorage.removeItem('cart');
+        if (shouldClear) {
+          clearCart();
           router.push('/products');
         }
 
         setLoading(false);
         return;
+      }
+
+      // Validate shipping city matches distributor's city
+      if (distributorCity && formData.shippingAddress.city) {
+        const shippingCity = formData.shippingAddress.city.toLowerCase().trim();
+        const distCity = distributorCity.toLowerCase().trim();
+
+        if (shippingCity !== distCity) {
+          alert(
+            `Delivery not available!\n\n` +
+            `This distributor (${currentDistributor?.businessName}) only delivers to ${distributorCity}.\n\n` +
+            `Your shipping address city is ${formData.shippingAddress.city}.\n\n` +
+            `Please update your shipping address or choose products from a distributor in your city.`
+          );
+          setLoading(false);
+          return;
+        }
       }
 
       if (!formData.paymentMethod) {
@@ -420,7 +438,7 @@ export default function Checkout() {
         paymentMethod: formData.paymentMethod,
         totalAmount: getTotal(),
         couponCode: formData.couponCode,
-        distributor: distributor
+        distributor: distributorId
       };
 
       const response = await createOrder(orderData);
@@ -428,7 +446,7 @@ export default function Checkout() {
       if (formData.paymentMethod === 'Online') {
         await handleRazorpayPayment(response.orderId, response.amount);
       } else {
-        localStorage.removeItem('cart');
+        clearCart();
         router.push('/order-success');
       }
     } catch (error) {

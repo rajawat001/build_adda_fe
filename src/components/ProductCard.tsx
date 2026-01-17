@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Product } from '../types';
+import { useCart } from '../context/CartContext';
 
 interface ProductCardProps {
   product: Product;
@@ -10,11 +11,11 @@ interface ProductCardProps {
 
 export default function ProductCard({ product, onAddToCart, onAddToWishlist }: ProductCardProps) {
   const [isInWishlist, setIsInWishlist] = useState(false);
+  const { addToCart } = useCart();
 
   const handleAddToCart = () => {
-    if (onAddToCart) {
-      onAddToCart(product);
-    }
+    // Use Cart Context for single-distributor cart logic
+    addToCart(product);
   };
 
   const handleToggleWishlist = () => {
@@ -73,15 +74,13 @@ export default function ProductCard({ product, onAddToCart, onAddToWishlist }: P
             {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
           </span>
         </div>
-        {onAddToCart && (
-          <button 
-            className="btn-add-cart"
-            onClick={handleAddToCart}
-            disabled={product.stock === 0}
-          >
-            Add to Cart
-          </button>
-        )}
+        <button
+          className="btn-add-cart"
+          onClick={handleAddToCart}
+          disabled={product.stock === 0}
+        >
+          Add to Cart
+        </button>
       </div>
     </div>
   );

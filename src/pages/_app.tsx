@@ -1,8 +1,10 @@
 import type { AppProps} from 'next/app';
 import { ThemeProvider } from '../contexts/ThemeContext';
 import { NotificationProvider } from '../contexts/NotificationContext';
+import { CartProvider } from '../context/CartContext';
 import { ToastProvider } from '../components/common/ToastContainer';
 import { ToastContainer } from 'react-toastify';
+import CartConflictModal from '../components/CartConflictModal';
 import 'react-toastify/dist/ReactToastify.css';
 import '../styles/globals.css';
 import '../styles/theme.css';
@@ -38,21 +40,24 @@ export default function App({ Component, pageProps }: AppProps) {
   return (
     <ThemeProvider>
       <NotificationProvider>
-        <ToastProvider>
-          <Component {...pageProps} />
-          <ToastContainer
-            position="top-right"
-            autoClose={3000}
-            hideProgressBar={false}
-            newestOnTop
-            closeOnClick
-            rtl={false}
-            pauseOnFocusLoss
-            draggable
-            pauseOnHover
-            theme="colored"
-          />
-        </ToastProvider>
+        <CartProvider>
+          <ToastProvider>
+            <Component {...pageProps} />
+            <CartConflictModal />
+            <ToastContainer
+              position="top-right"
+              autoClose={3000}
+              hideProgressBar={false}
+              newestOnTop
+              closeOnClick
+              rtl={false}
+              pauseOnFocusLoss
+              draggable
+              pauseOnHover
+              theme="colored"
+            />
+          </ToastProvider>
+        </CartProvider>
       </NotificationProvider>
     </ThemeProvider>
   );

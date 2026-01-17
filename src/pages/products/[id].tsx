@@ -7,10 +7,12 @@ import Footer from '../../components/Footer';
 import ProductCard from '../../components/ProductCard';
 import productService from '../../services/product.service';
 import { Product } from '../../types';
+import { useCart } from '../../context/CartContext';
 
 export default function ProductDetail() {
   const router = useRouter();
   const { id } = router.query;
+  const { addToCart } = useCart();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
@@ -114,68 +116,29 @@ export default function ProductDetail() {
     }
   };
 
-  const handleAddToCart = async () => {
-    try {
-      const user = localStorage.getItem('user');
+  const handleAddToCart = () => {
+    if (!product) return;
 
-      if (!user) {
-        router.push('/login');
-        return;
-      }
-
-      // Validate quantity before adding to cart
-      if (quantity < minQty) {
-        alert(`Minimum quantity for ${product!.name} is ${minQty}`);
-        return;
-      }
-
-      const effectiveMax = Math.min(maxQty, product!.stock);
-      if (quantity > effectiveMax) {
-        alert(`Maximum quantity for ${product!.name} is ${effectiveMax}`);
-        return;
-      }
-
-      setAddingToCart(true);
-
-      // Try to add to backend cart
-      try {
-        await productService.addToCart(product!._id, quantity);
-      } catch (err) {
-        console.log('Backend cart failed, using local cart');
-      }
-
-      // Also update local cart for immediate UI feedback
-      const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-      const existingIndex = cart.findIndex((item: any) => item._id === product!._id);
-
-      if (existingIndex > -1) {
-        const newQuantity = cart[existingIndex].quantity + quantity;
-
-        // Check if new total exceeds max
-        if (newQuantity > effectiveMax) {
-          alert(`Cannot add more. Maximum quantity for ${product!.name} is ${effectiveMax}`);
-          setAddingToCart(false);
-          return;
-        }
-
-        cart[existingIndex].quantity = newQuantity;
-      } else {
-        cart.push({ ...product, quantity });
-      }
-
-      localStorage.setItem('cart', JSON.stringify(cart));
-
-      // Trigger storage event to update header
-      window.dispatchEvent(new Event('storage'));
-
-      alert(`Added ${quantity} ${product!.name} to cart!`);
-
-    } catch (err: any) {
-      console.error('Error adding to cart:', err);
-      alert(err.response?.data?.message || 'Error adding to cart');
-    } finally {
-      setAddingToCart(false);
+    const user = localStorage.getItem('user');
+    if (!user) {
+      router.push('/login');
+      return;
     }
+
+    // Validate quantity before adding to cart
+    if (quantity < minQty) {
+      alert(`Minimum quantity for ${product.name} is ${minQty}`);
+      return;
+    }
+
+    const effectiveMax = Math.min(maxQty, product.stock);
+    if (quantity > effectiveMax) {
+      alert(`Maximum quantity for ${product.name} is ${effectiveMax}`);
+      return;
+    }
+
+    // Use Cart Context - handles single distributor logic
+    addToCart(product, quantity);
   };
 
   const handleAddToWishlist = async () => {

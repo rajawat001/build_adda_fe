@@ -188,36 +188,6 @@ const Products = () => {
     filters.availability !== 'all' ? filters.availability : ''
   ].filter(Boolean).length;
 
-  const handleAddToCart = (product: Product) => {
-    try {
-      const cartData = localStorage.getItem('cart');
-      const cart = cartData && cartData !== 'undefined' ? JSON.parse(cartData) : [];
-      const existing = cart.find((item: any) => item._id === product._id);
-
-      const minQty = product.minQuantity || 1;
-      const maxQty = product.maxQuantity || product.stock;
-
-      if (existing) {
-        const newQuantity = existing.quantity + minQty;
-
-        // Check if adding minQty exceeds max
-        if (newQuantity > maxQty) {
-          alert(`Cannot add more. Maximum quantity for ${product.name} is ${maxQty}`);
-          return;
-        }
-
-        existing.quantity = newQuantity;
-      } else {
-        cart.push({ ...product, quantity: minQty });
-      }
-
-      localStorage.setItem('cart', JSON.stringify(cart));
-      alert(`Added ${minQty} ${product.name} to cart!`);
-    } catch (error) {
-      console.error('Error adding to cart:', error);
-    }
-  };
-
   const handleAddToWishlist = (product: Product) => {
     try {
       const wishlistData = localStorage.getItem('wishlist');
@@ -401,7 +371,6 @@ const Products = () => {
                     <ProductCard
                       key={product._id}
                       product={product}
-                      onAddToCart={handleAddToCart}
                       onAddToWishlist={handleAddToWishlist}
                     />
                   ))}
