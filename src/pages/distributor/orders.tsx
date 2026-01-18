@@ -230,9 +230,9 @@ const Orders = () => {
   const stats = {
     total: orders.length,
     pending: orders.filter((o) => o.approvalStatus === 'pending').length,
-    approved: orders.filter((o) => o.approvalStatus === 'approved').length,
+    delivered: orders.filter((o) => o.orderStatus === 'delivered').length,
     totalRevenue: orders
-      .filter((o) => o.approvalStatus === 'approved')
+      .filter((o) => o.orderStatus === 'delivered')
       .reduce((sum, o) => sum + o.totalAmount, 0),
   };
 
@@ -270,18 +270,18 @@ const Orders = () => {
             subtitle="Needs action"
           />
           <StatsCard
-            title="Approved Orders"
-            value={stats.approved}
+            title="Delivered Orders"
+            value={stats.delivered}
             icon={<FiCheckCircle className="w-6 h-6" />}
             color="green"
-            subtitle="Confirmed"
+            subtitle="Completed"
           />
           <StatsCard
             title="Total Revenue"
             value={`₹${stats.totalRevenue.toLocaleString('en-IN')}`}
             icon={<FiDollarSign className="w-6 h-6" />}
             color="purple"
-            subtitle="From approved orders"
+            subtitle="From delivered orders"
           />
         </div>
 
