@@ -7,11 +7,8 @@ import { useEffect, useRef } from 'react';
 
 interface SidebarProps {
   onLogout: () => void;
-  /** Whether the sidebar drawer is open (mobile only) */
   isOpen?: boolean;
-  /** Callback to close the sidebar (mobile only) */
   onClose?: () => void;
-  /** Whether we're on mobile */
   isMobile?: boolean;
 }
 
@@ -36,7 +33,6 @@ const Sidebar = ({ onLogout, isOpen = false, onClose, isMobile = false }: Sideba
     { path: '/distributor/profile', icon: FiUser, label: 'Profile' },
   ];
 
-  // Handle swipe to close on mobile
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
   };
@@ -44,7 +40,6 @@ const Sidebar = ({ onLogout, isOpen = false, onClose, isMobile = false }: Sideba
   const handleTouchEnd = (e: React.TouchEvent) => {
     const touchEndX = e.changedTouches[0].clientX;
     const diff = touchStartX.current - touchEndX;
-    // If swiped left more than 50px, close the drawer
     if (diff > 50 && onClose) {
       onClose();
     }
@@ -53,9 +48,35 @@ const Sidebar = ({ onLogout, isOpen = false, onClose, isMobile = false }: Sideba
   // Close sidebar when route changes on mobile
   useEffect(() => {
     if (isMobile && onClose) {
-      onClose();
+      const handleRouteChange = () => {
+        onClose();
+      };
+      
+      router.events.on('routeChangeStart', handleRouteChange);
+      return () => {
+        router.events.off('routeChangeStart', handleRouteChange);
+      };
     }
-  }, [currentPath]);
+  }, [isMobile, onClose, router.events]);
+
+  // Prevent body scroll when mobile sidebar is open
+  useEffect(() => {
+    if (isMobile && isOpen) {
+      const scrollY = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+      document.body.style.overflow = 'hidden';
+      
+      return () => {
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        document.body.style.overflow = '';
+        window.scrollTo(0, scrollY);
+      };
+    }
+  }, [isMobile, isOpen]);
 
   // Desktop Sidebar
   if (!isMobile) {
@@ -238,222 +259,211 @@ const Sidebar = ({ onLogout, isOpen = false, onClose, isMobile = false }: Sideba
     );
   }
 
-  // Mobile Drawer
   return (
-    <AnimatePresence>
+    <>
+      {/* Backdrop - Always render when open, no AnimatePresence wrapper */}
       {isOpen && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
-            onClick={onClose}
-          />
-
-          {/* Drawer */}
-          <motion.aside
-            ref={sidebarRef}
-            initial={{ x: '-100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '-100%' }}
-            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            onTouchStart={handleTouchStart}
-            onTouchEnd={handleTouchEnd}
-            className="mobile-sidebar"
-          >
-            {/* Header with close button */}
-            <div className="mobile-sidebar-header">
-              <h2>Distributor Panel</h2>
-              <button onClick={onClose} className="close-btn" aria-label="Close menu">
-                <FiX />
-              </button>
-            </div>
-
-            {/* Navigation */}
-            <nav className="mobile-sidebar-nav">
-              {menuItems.map((item, index) => {
-                const Icon = item.icon;
-                return (
-                  <motion.div
-                    key={item.path}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                  >
-                    <Link
-                      href={item.path}
-                      className={`mobile-nav-item ${isActive(item.path) ? 'active' : ''}`}
-                      onClick={onClose}
-                    >
-                      <Icon className="nav-icon" />
-                      <span>{item.label}</span>
-                    </Link>
-                  </motion.div>
-                );
-              })}
-            </nav>
-
-            {/* Footer */}
-            <div className="mobile-sidebar-footer">
-              <button onClick={toggleTheme} className="mobile-footer-btn">
-                {theme === 'light' ? (
-                  <>
-                    <FiMoon className="icon" />
-                    <span>Dark Mode</span>
-                  </>
-                ) : (
-                  <>
-                    <FiSun className="icon" />
-                    <span>Light Mode</span>
-                  </>
-                )}
-              </button>
-
-              <button onClick={onLogout} className="mobile-footer-btn logout">
-                <FiLogOut className="icon" />
-                <span>Logout</span>
-              </button>
-            </div>
-
-            <style jsx>{`
-              .mobile-sidebar {
-                position: fixed;
-                left: 0;
-                top: 0;
-                bottom: 0;
-                width: 280px;
-                max-width: calc(100vw - 60px);
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                color: white;
-                display: flex;
-                flex-direction: column;
-                z-index: 50;
-                padding-top: env(safe-area-inset-top, 0px);
-                padding-bottom: env(safe-area-inset-bottom, 0px);
-                overflow-y: auto;
-                overscroll-behavior: contain;
-              }
-
-              .mobile-sidebar-header {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                padding: 20px;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-              }
-
-              .mobile-sidebar-header h2 {
-                margin: 0;
-                font-size: 18px;
-                font-weight: 600;
-              }
-
-              .close-btn {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                width: 40px;
-                height: 40px;
-                background: rgba(255, 255, 255, 0.1);
-                border: none;
-                border-radius: 10px;
-                color: white;
-                cursor: pointer;
-                transition: background 0.2s;
-              }
-
-              .close-btn:hover {
-                background: rgba(255, 255, 255, 0.2);
-              }
-
-              .close-btn :global(svg) {
-                width: 20px;
-                height: 20px;
-              }
-
-              .mobile-sidebar-nav {
-                flex: 1;
-                padding: 16px 0;
-                display: flex;
-                flex-direction: column;
-                gap: 4px;
-              }
-
-              .mobile-sidebar-nav :global(.mobile-nav-item) {
-                display: flex;
-                align-items: center;
-                gap: 14px;
-                padding: 14px 20px;
-                color: rgba(255, 255, 255, 0.85);
-                text-decoration: none;
-                font-size: 15px;
-                transition: all 0.2s;
-                border-left: 3px solid transparent;
-              }
-
-              .mobile-sidebar-nav :global(.mobile-nav-item:active) {
-                background: rgba(255, 255, 255, 0.15);
-              }
-
-              .mobile-sidebar-nav :global(.mobile-nav-item.active) {
-                background: rgba(255, 255, 255, 0.15);
-                color: white;
-                border-left-color: white;
-                font-weight: 600;
-              }
-
-              .mobile-sidebar-nav :global(.nav-icon) {
-                width: 22px;
-                height: 22px;
-                flex-shrink: 0;
-              }
-
-              .mobile-sidebar-footer {
-                padding: 16px;
-                border-top: 1px solid rgba(255, 255, 255, 0.1);
-                display: flex;
-                flex-direction: column;
-                gap: 10px;
-              }
-
-              .mobile-footer-btn {
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                width: 100%;
-                padding: 14px 16px;
-                background: rgba(255, 255, 255, 0.1);
-                border: none;
-                border-radius: 10px;
-                color: white;
-                font-size: 14px;
-                cursor: pointer;
-                transition: all 0.2s;
-              }
-
-              .mobile-footer-btn:active {
-                background: rgba(255, 255, 255, 0.2);
-                transform: scale(0.98);
-              }
-
-              .mobile-footer-btn :global(.icon) {
-                width: 20px;
-                height: 20px;
-                flex-shrink: 0;
-              }
-
-              .mobile-footer-btn.logout {
-                background: rgba(255, 255, 255, 0.05);
-                border: 1px solid rgba(255, 255, 255, 0.2);
-              }
-            `}</style>
-          </motion.aside>
-        </>
+        <div
+          className="sidebar-backdrop"
+          onClick={(e) => {
+            e.stopPropagation();
+            onClose?.();
+          }}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.6)',
+            backdropFilter: 'blur(4px)',
+            WebkitBackdropFilter: 'blur(4px)',
+            zIndex: 9998,
+            cursor: 'pointer',
+          }}
+        />
       )}
-    </AnimatePresence>
+
+      {/* Drawer - Always render when open */}
+      {isOpen && (
+        <aside
+          ref={sidebarRef}
+          className="mobile-sidebar"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          style={{
+            position: 'fixed',
+            left: 0,
+            top: 0,
+            bottom: 0,
+            width: '280px',
+            maxWidth: 'calc(100vw - 60px)',
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            color: 'white',
+            display: 'flex',
+            flexDirection: 'column',
+            zIndex: 9999,
+            paddingTop: 'env(safe-area-inset-top, 0px)',
+            paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+            overflowY: 'auto',
+            overscrollBehavior: 'contain',
+            boxShadow: '4px 0 20px rgba(0, 0, 0, 0.5)',
+            transform: 'translateX(0)',
+            transition: 'transform 0.3s ease-out',
+          }}
+        >
+          {/* Header */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '20px',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+            backgroundColor: 'rgba(0, 0, 0, 0.2)',
+          }}>
+            <h2 style={{
+              margin: 0,
+              fontSize: '18px',
+              fontWeight: 600,
+              color: 'white',
+            }}>
+              Distributor Panel
+            </h2>
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                onClose?.();
+              }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '40px',
+                height: '40px',
+                background: 'rgba(255, 255, 255, 0.2)',
+                border: 'none',
+                borderRadius: '10px',
+                color: 'white',
+                cursor: 'pointer',
+                fontSize: '20px',
+              }}
+              aria-label="Close menu"
+            >
+              <FiX />
+            </button>
+          </div>
+
+          {/* Navigation */}
+          <nav style={{
+            flex: 1,
+            padding: '16px 0',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '4px',
+          }}>
+            {menuItems.map((item) => {
+              const Icon = item.icon;
+              const active = isActive(item.path);
+              
+              return (
+                <Link
+                  key={item.path}
+                  href={item.path}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (isMobile) {
+                      onClose?.();
+                    }
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '14px',
+                    padding: '14px 20px',
+                    color: 'white',
+                    textDecoration: 'none',
+                    fontSize: '15px',
+                    transition: 'all 0.2s',
+                    borderLeft: active ? '3px solid white' : '3px solid transparent',
+                    backgroundColor: active ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
+                    fontWeight: active ? 600 : 400,
+                    cursor: 'pointer',
+                  }}
+                >
+                  <Icon style={{ width: '22px', height: '22px', flexShrink: 0 }} />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* Footer */}
+          <div style={{
+            padding: '16px',
+            borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '10px',
+            backgroundColor: 'rgba(0, 0, 0, 0.2)',
+          }}>
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleTheme();
+              }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                width: '100%',
+                padding: '14px 16px',
+                background: 'rgba(255, 255, 255, 0.15)',
+                border: 'none',
+                borderRadius: '10px',
+                color: 'white',
+                fontSize: '14px',
+                cursor: 'pointer',
+              }}
+            >
+              {theme === 'light' ? (
+                <>
+                  <FiMoon style={{ width: '20px', height: '20px' }} />
+                  <span>Dark Mode</span>
+                </>
+              ) : (
+                <>
+                  <FiSun style={{ width: '20px', height: '20px' }} />
+                  <span>Light Mode</span>
+                </>
+              )}
+            </button>
+
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                onLogout();
+              }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                width: '100%',
+                padding: '14px 16px',
+                background: 'rgba(255, 255, 255, 0.1)',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                borderRadius: '10px',
+                color: 'white',
+                fontSize: '14px',
+                cursor: 'pointer',
+              }}
+            >
+              <FiLogOut style={{ width: '20px', height: '20px' }} />
+              <span>Logout</span>
+            </button>
+          </div>
+        </aside>
+      )}
+    </>
   );
 };
 

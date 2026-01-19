@@ -6,7 +6,7 @@ export default function AnnouncementBar() {
 
   const announcements = [
     "Free Delivery on Orders Above ₹50,000",
-    "Get 10% OFF on Your First Order - Use Code: FIRST10",
+    "Get 3 Months Free Subscription for distributor joining - Use Code: BUILD3",
     "Same Day Delivery Available in Select Cities"
   ];
 
