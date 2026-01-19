@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import Sidebar from './Sidebar';
 import SEO from '../SEO';
 import { NotificationBell } from '../NotificationBell';
-import { FiUser, FiAlertCircle } from 'react-icons/fi';
+import { FiUser, FiMenu } from 'react-icons/fi';
 import api from '../../services/api';
 
 interface LayoutProps {
@@ -11,8 +11,24 @@ interface LayoutProps {
   title?: string;
 }
 
+// Hook to detect mobile
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  return isMobile;
+};
+
 const DistributorLayout = ({ children, title = 'Distributor Panel' }: LayoutProps) => {
   const router = useRouter();
+  const isMobile = useIsMobile();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [checkingSubscription, setCheckingSubscription] = useState(true);
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
   const [isApproved, setIsApproved] = useState(false);
@@ -21,6 +37,13 @@ const DistributorLayout = ({ children, title = 'Distributor Panel' }: LayoutProp
     checkAuth();
     checkSubscriptionStatus();
   }, []);
+
+  // Close sidebar when switching from mobile to desktop
+  useEffect(() => {
+    if (!isMobile) {
+      setSidebarOpen(false);
+    }
+  }, [isMobile]);
 
   const checkAuth = () => {
     const role = localStorage.getItem('role');
@@ -74,6 +97,9 @@ const DistributorLayout = ({ children, title = 'Distributor Panel' }: LayoutProp
     router.push('/login');
   };
 
+  const openSidebar = () => setSidebarOpen(true);
+  const closeSidebar = () => setSidebarOpen(false);
+
   // Show loading while checking subscription
   if (checkingSubscription) {
     return (
@@ -108,24 +134,41 @@ const DistributorLayout = ({ children, title = 'Distributor Panel' }: LayoutProp
     );
   }
 
-  // Check if on subscription page - allow access regardless of subscription status
-  const isSubscriptionPage = router.pathname === '/distributor/subscription';
-
-  // If not on subscription page and no active subscription, this will redirect via useEffect
-  // But we still render the layout for the subscription page
-
   return (
     <>
       <SEO title={title} description="Distributor management panel" />
 
       <div className="distributor-layout">
-        <Sidebar onLogout={handleLogout} />
+        {/* Desktop Sidebar */}
+        {!isMobile && <Sidebar onLogout={handleLogout} isMobile={false} />}
+
+        {/* Mobile Sidebar Drawer */}
+        {isMobile && (
+          <Sidebar
+            onLogout={handleLogout}
+            isMobile={true}
+            isOpen={sidebarOpen}
+            onClose={closeSidebar}
+          />
+        )}
 
         <main className="distributor-main">
           {/* Header Bar */}
           <div className="header-bar">
             <div className="header-content">
+              {/* Hamburger Menu - Mobile Only */}
+              {isMobile && (
+                <button
+                  onClick={openSidebar}
+                  className="hamburger-btn"
+                  aria-label="Open menu"
+                >
+                  <FiMenu />
+                </button>
+              )}
+
               <h1 className="page-title">{title}</h1>
+
               <div className="header-actions">
                 <NotificationBell />
                 <div className="user-avatar">
@@ -153,12 +196,13 @@ const DistributorLayout = ({ children, title = 'Distributor Panel' }: LayoutProp
           overflow-x: hidden;
           display: flex;
           flex-direction: column;
+          min-width: 0;
         }
 
         .header-bar {
           position: sticky;
           top: 0;
-          z-index: 40;
+          z-index: 30;
           background: var(--bg-card, #ffffff);
           border-bottom: 1px solid var(--border-primary, #e5e7eb);
           backdrop-filter: blur(10px);
@@ -176,6 +220,36 @@ const DistributorLayout = ({ children, title = 'Distributor Panel' }: LayoutProp
           padding: 1rem 2rem;
           max-width: 1400px;
           margin: 0 auto;
+          gap: 1rem;
+        }
+
+        .hamburger-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 44px;
+          height: 44px;
+          background: transparent;
+          border: none;
+          border-radius: 10px;
+          color: var(--text-primary, #1a202c);
+          cursor: pointer;
+          transition: background 0.2s;
+          margin-left: -8px;
+          flex-shrink: 0;
+        }
+
+        .hamburger-btn:hover {
+          background: var(--bg-hover, #f3f4f6);
+        }
+
+        .hamburger-btn:active {
+          background: var(--bg-tertiary, #e5e7eb);
+        }
+
+        .hamburger-btn :global(svg) {
+          width: 24px;
+          height: 24px;
         }
 
         .page-title {
@@ -183,12 +257,18 @@ const DistributorLayout = ({ children, title = 'Distributor Panel' }: LayoutProp
           font-weight: 700;
           color: var(--text-primary, #1a202c);
           margin: 0;
+          flex: 1;
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
 
         .header-actions {
           display: flex;
           align-items: center;
-          gap: 1rem;
+          gap: 0.75rem;
+          flex-shrink: 0;
         }
 
         .user-avatar {
@@ -202,6 +282,7 @@ const DistributorLayout = ({ children, title = 'Distributor Panel' }: LayoutProp
           color: white;
           cursor: pointer;
           transition: transform 0.2s;
+          flex-shrink: 0;
         }
 
         .user-avatar:hover {
@@ -221,22 +302,49 @@ const DistributorLayout = ({ children, title = 'Distributor Panel' }: LayoutProp
           width: 100%;
         }
 
+        /* Mobile Styles */
         @media (max-width: 768px) {
           .header-content {
-            padding: 1rem;
+            padding: 0.875rem 1rem;
           }
 
           .page-title {
-            font-size: 1.25rem;
+            font-size: 1.125rem;
+            text-align: center;
           }
 
           .main-content {
-            padding: 20px 15px;
+            padding: 1rem;
           }
 
           .user-avatar {
-            width: 35px;
-            height: 35px;
+            width: 36px;
+            height: 36px;
+          }
+
+          :global(.avatar-icon) {
+            width: 18px;
+            height: 18px;
+          }
+        }
+
+        /* Small Mobile */
+        @media (max-width: 375px) {
+          .header-content {
+            padding: 0.75rem;
+            gap: 0.5rem;
+          }
+
+          .page-title {
+            font-size: 1rem;
+          }
+
+          .header-actions {
+            gap: 0.5rem;
+          }
+
+          .main-content {
+            padding: 0.875rem;
           }
         }
 

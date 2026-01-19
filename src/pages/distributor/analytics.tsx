@@ -20,6 +20,7 @@ import { toast } from 'react-toastify';
 import { format, subDays, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
+import { useIsMobile } from '../../hooks';
 import {
   FiTrendingUp,
   FiTrendingDown,
@@ -72,6 +73,7 @@ interface AnalyticsData {
 
 const Analytics = () => {
   const router = useRouter();
+  const isMobile = useIsMobile();
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState('30days');
   const [customStartDate, setCustomStartDate] = useState('');
@@ -356,61 +358,71 @@ const Analytics = () => {
 
   return (
     <DistributorLayout>
-      <div className="space-y-6">
+      <div className="space-y-4 md:space-y-6">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
           <div>
-            <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-2">
-              <FiBarChart2 className="inline-block mr-2 mb-1" />
-              Analytics & Insights
+            <h1 className={`${isMobile ? 'text-xl' : 'text-3xl'} font-bold text-[var(--text-primary)] mb-1`}>
+              {!isMobile && <FiBarChart2 className="inline-block mr-2 mb-1" />}
+              {isMobile ? 'Analytics' : 'Analytics & Insights'}
             </h1>
-            <p className="text-[var(--text-secondary)]">
-              Comprehensive analytics and performance metrics
-            </p>
+            {!isMobile && (
+              <p className="text-[var(--text-secondary)]">
+                Comprehensive analytics and performance metrics
+              </p>
+            )}
           </div>
-          <Button onClick={exportToExcel} variant="primary" leftIcon={<FiDownload />}>
-            Export Report
+          <Button
+            onClick={exportToExcel}
+            variant="primary"
+            leftIcon={<FiDownload />}
+            className={isMobile ? 'w-full min-h-tap' : ''}
+          >
+            {isMobile ? 'Export' : 'Export Report'}
           </Button>
         </div>
 
         {/* Date Range Filter */}
-        <Card>
-          <div className="flex flex-wrap items-center gap-4">
-            <FiCalendar className="text-[var(--text-secondary)] text-xl" />
-            <div className="flex flex-wrap gap-2">
-              {['7days', '30days', '90days', 'thisMonth', 'thisYear', 'custom'].map((range) => (
-                <button
-                  key={range}
-                  onClick={() => setDateRange(range)}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                    dateRange === range
-                      ? 'bg-[var(--primary-color)] text-white shadow-lg'
-                      : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)]'
-                  }`}
-                >
-                  {range === '7days' && 'Last 7 Days'}
-                  {range === '30days' && 'Last 30 Days'}
-                  {range === '90days' && 'Last 90 Days'}
-                  {range === 'thisMonth' && 'This Month'}
-                  {range === 'thisYear' && 'This Year'}
-                  {range === 'custom' && 'Custom Range'}
-                </button>
-              ))}
+        <Card className={isMobile ? 'p-3' : ''}>
+          <div className={`${isMobile ? '' : 'flex flex-wrap items-center gap-4'}`}>
+            {!isMobile && <FiCalendar className="text-[var(--text-secondary)] text-xl" />}
+            {/* Horizontal scroll on mobile */}
+            <div className={`${isMobile ? 'overflow-x-auto -mx-1 px-1 pb-2' : ''}`}>
+              <div className={`flex gap-2 ${isMobile ? 'min-w-max' : 'flex-wrap'}`}>
+                {['7days', '30days', '90days', 'thisMonth', 'thisYear', 'custom'].map((range) => (
+                  <button
+                    key={range}
+                    onClick={() => setDateRange(range)}
+                    className={`px-3 md:px-4 py-2 rounded-lg font-medium transition-all whitespace-nowrap ${isMobile ? 'min-h-tap text-sm' : ''} ${
+                      dateRange === range
+                        ? 'bg-[var(--primary-color)] text-white shadow-lg'
+                        : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)]'
+                    }`}
+                  >
+                    {range === '7days' && '7 Days'}
+                    {range === '30days' && '30 Days'}
+                    {range === '90days' && '90 Days'}
+                    {range === 'thisMonth' && 'Month'}
+                    {range === 'thisYear' && 'Year'}
+                    {range === 'custom' && 'Custom'}
+                  </button>
+                ))}
+              </div>
             </div>
             {dateRange === 'custom' && (
-              <div className="flex gap-2 items-center">
+              <div className={`flex gap-2 items-center ${isMobile ? 'mt-3 flex-col' : ''}`}>
                 <input
                   type="date"
                   value={customStartDate}
                   onChange={(e) => setCustomStartDate(e.target.value)}
-                  className="px-4 py-2 rounded-lg border border-[var(--border-primary)] bg-[var(--bg-secondary)] text-[var(--text-primary)]"
+                  className={`px-4 py-2 rounded-lg border border-[var(--border-primary)] bg-[var(--bg-secondary)] text-[var(--text-primary)] ${isMobile ? 'w-full min-h-tap' : ''}`}
                 />
-                <span className="text-[var(--text-secondary)]">to</span>
+                {!isMobile && <span className="text-[var(--text-secondary)]">to</span>}
                 <input
                   type="date"
                   value={customEndDate}
                   onChange={(e) => setCustomEndDate(e.target.value)}
-                  className="px-4 py-2 rounded-lg border border-[var(--border-primary)] bg-[var(--bg-secondary)] text-[var(--text-primary)]"
+                  className={`px-4 py-2 rounded-lg border border-[var(--border-primary)] bg-[var(--bg-secondary)] text-[var(--text-primary)] ${isMobile ? 'w-full min-h-tap' : ''}`}
                 />
               </div>
             )}
@@ -418,102 +430,110 @@ const Analytics = () => {
         </Card>
 
         {/* Key Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card hoverable>
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-gradient-to-br from-green-500 to-green-600 rounded-lg">
-                <FiDollarSign className="text-white text-2xl" />
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
+          <Card hoverable className={isMobile ? 'p-3' : ''}>
+            <div className={`flex items-center justify-between ${isMobile ? 'mb-2' : 'mb-4'}`}>
+              <div className={`${isMobile ? 'p-2' : 'p-3'} bg-gradient-to-br from-green-500 to-green-600 rounded-lg`}>
+                <FiDollarSign className={`text-white ${isMobile ? 'text-lg' : 'text-2xl'}`} />
               </div>
               {analyticsData.revenue.growth >= 0 ? (
-                <Badge variant="success">
+                <Badge variant="success" size={isMobile ? 'sm' : 'md'}>
                   <FiTrendingUp className="inline mr-1" />
                   {analyticsData.revenue.growth.toFixed(1)}%
                 </Badge>
               ) : (
-                <Badge variant="error">
+                <Badge variant="error" size={isMobile ? 'sm' : 'md'}>
                   <FiTrendingDown className="inline mr-1" />
                   {Math.abs(analyticsData.revenue.growth).toFixed(1)}%
                 </Badge>
               )}
             </div>
-            <h3 className="text-[var(--text-secondary)] text-sm font-medium mb-1">Total Revenue</h3>
-            <p className="text-2xl font-bold text-[var(--text-primary)]">
-              ₹{analyticsData.revenue.total.toLocaleString()}
+            <h3 className={`text-[var(--text-secondary)] ${isMobile ? 'text-xs' : 'text-sm'} font-medium mb-1`}>
+              {isMobile ? 'Revenue' : 'Total Revenue'}
+            </h3>
+            <p className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-[var(--text-primary)]`}>
+              ₹{isMobile ? (analyticsData.revenue.total / 100000).toFixed(1) + 'L' : analyticsData.revenue.total.toLocaleString()}
             </p>
           </Card>
 
-          <Card hoverable>
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg">
-                <FiShoppingCart className="text-white text-2xl" />
+          <Card hoverable className={isMobile ? 'p-3' : ''}>
+            <div className={`flex items-center justify-between ${isMobile ? 'mb-2' : 'mb-4'}`}>
+              <div className={`${isMobile ? 'p-2' : 'p-3'} bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg`}>
+                <FiShoppingCart className={`text-white ${isMobile ? 'text-lg' : 'text-2xl'}`} />
               </div>
               {analyticsData.orders.growth >= 0 ? (
-                <Badge variant="success">
+                <Badge variant="success" size={isMobile ? 'sm' : 'md'}>
                   <FiTrendingUp className="inline mr-1" />
                   {analyticsData.orders.growth.toFixed(1)}%
                 </Badge>
               ) : (
-                <Badge variant="error">
+                <Badge variant="error" size={isMobile ? 'sm' : 'md'}>
                   <FiTrendingDown className="inline mr-1" />
                   {Math.abs(analyticsData.orders.growth).toFixed(1)}%
                 </Badge>
               )}
             </div>
-            <h3 className="text-[var(--text-secondary)] text-sm font-medium mb-1">Total Orders</h3>
-            <p className="text-2xl font-bold text-[var(--text-primary)]">
+            <h3 className={`text-[var(--text-secondary)] ${isMobile ? 'text-xs' : 'text-sm'} font-medium mb-1`}>
+              {isMobile ? 'Orders' : 'Total Orders'}
+            </h3>
+            <p className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-[var(--text-primary)]`}>
               {analyticsData.orders.total.toLocaleString()}
             </p>
           </Card>
 
-          <Card hoverable>
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg">
-                <FiPackage className="text-white text-2xl" />
+          <Card hoverable className={isMobile ? 'p-3' : ''}>
+            <div className={`flex items-center justify-between ${isMobile ? 'mb-2' : 'mb-4'}`}>
+              <div className={`${isMobile ? 'p-2' : 'p-3'} bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg`}>
+                <FiPackage className={`text-white ${isMobile ? 'text-lg' : 'text-2xl'}`} />
               </div>
-              <Badge variant="info">Active</Badge>
+              <Badge variant="info" size={isMobile ? 'sm' : 'md'}>Active</Badge>
             </div>
-            <h3 className="text-[var(--text-secondary)] text-sm font-medium mb-1">Total Products</h3>
-            <p className="text-2xl font-bold text-[var(--text-primary)]">
+            <h3 className={`text-[var(--text-secondary)] ${isMobile ? 'text-xs' : 'text-sm'} font-medium mb-1`}>
+              {isMobile ? 'Products' : 'Total Products'}
+            </h3>
+            <p className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-[var(--text-primary)]`}>
               {analyticsData.products.total}
             </p>
           </Card>
 
-          <Card hoverable>
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg">
-                <FiUsers className="text-white text-2xl" />
+          <Card hoverable className={isMobile ? 'p-3' : ''}>
+            <div className={`flex items-center justify-between ${isMobile ? 'mb-2' : 'mb-4'}`}>
+              <div className={`${isMobile ? 'p-2' : 'p-3'} bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg`}>
+                <FiUsers className={`text-white ${isMobile ? 'text-lg' : 'text-2xl'}`} />
               </div>
-              <Badge variant="warning">
+              <Badge variant="warning" size={isMobile ? 'sm' : 'md'}>
                 {analyticsData.customers.new} New
               </Badge>
             </div>
-            <h3 className="text-[var(--text-secondary)] text-sm font-medium mb-1">Total Customers</h3>
-            <p className="text-2xl font-bold text-[var(--text-primary)]">
+            <h3 className={`text-[var(--text-secondary)] ${isMobile ? 'text-xs' : 'text-sm'} font-medium mb-1`}>
+              {isMobile ? 'Customers' : 'Total Customers'}
+            </h3>
+            <p className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-[var(--text-primary)]`}>
               {analyticsData.customers.total}
             </p>
           </Card>
         </div>
 
         {/* Revenue Trend Chart */}
-        <Card>
-          <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-6 flex items-center">
+        <Card className={isMobile ? 'p-3' : ''}>
+          <h2 className={`${isMobile ? 'text-base' : 'text-xl'} font-semibold text-[var(--text-primary)] ${isMobile ? 'mb-4' : 'mb-6'} flex items-center`}>
             <FiTrendingUp className="mr-2 text-green-500" />
             Revenue Trend
           </h2>
-          <div style={{ height: '400px' }}>
+          <div style={{ height: isMobile ? '200px' : '400px' }}>
             <Line data={revenueChartData} options={revenueChartOptions} />
           </div>
         </Card>
 
         {/* Charts Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
           {/* Order Status Distribution */}
-          <Card>
-            <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-6 flex items-center">
+          <Card className={isMobile ? 'p-3' : ''}>
+            <h2 className={`${isMobile ? 'text-base' : 'text-xl'} font-semibold text-[var(--text-primary)] ${isMobile ? 'mb-4' : 'mb-6'} flex items-center`}>
               <FiPieChart className="mr-2 text-blue-500" />
-              Order Status Distribution
+              Order Status
             </h2>
-            <div style={{ height: '300px' }} className="flex items-center justify-center">
+            <div style={{ height: isMobile ? '180px' : '300px' }} className="flex items-center justify-center">
               <Doughnut
                 data={orderStatusData}
                 options={{
@@ -522,18 +542,25 @@ const Analytics = () => {
                   plugins: {
                     legend: {
                       position: 'bottom',
+                      labels: {
+                        boxWidth: isMobile ? 12 : 40,
+                        padding: isMobile ? 8 : 10,
+                        font: {
+                          size: isMobile ? 10 : 12,
+                        },
+                      },
                     },
                   },
                 }}
               />
             </div>
-            <div className="mt-6 space-y-2">
+            <div className={`${isMobile ? 'mt-4' : 'mt-6'} space-y-2`}>
               {analyticsData.orders.byStatus.map((status, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-[var(--bg-secondary)] rounded-lg">
-                  <span className="text-[var(--text-primary)] font-medium">{status.status}</span>
-                  <div className="flex items-center gap-4">
-                    <span className="text-[var(--text-secondary)]">{status.count} orders</span>
-                    <span className="text-[var(--text-primary)] font-semibold">{status.percentage}%</span>
+                <div key={index} className={`flex items-center justify-between ${isMobile ? 'p-2' : 'p-3'} bg-[var(--bg-secondary)] rounded-lg`}>
+                  <span className={`text-[var(--text-primary)] font-medium ${isMobile ? 'text-sm' : ''}`}>{status.status}</span>
+                  <div className="flex items-center gap-2 md:gap-4">
+                    <span className={`text-[var(--text-secondary)] ${isMobile ? 'text-xs' : ''}`}>{status.count}</span>
+                    <span className={`text-[var(--text-primary)] font-semibold ${isMobile ? 'text-sm' : ''}`}>{status.percentage}%</span>
                   </div>
                 </div>
               ))}
@@ -541,74 +568,106 @@ const Analytics = () => {
           </Card>
 
           {/* Category Revenue */}
-          <Card>
-            <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-6 flex items-center">
+          <Card className={isMobile ? 'p-3' : ''}>
+            <h2 className={`${isMobile ? 'text-base' : 'text-xl'} font-semibold text-[var(--text-primary)] ${isMobile ? 'mb-4' : 'mb-6'} flex items-center`}>
               <FiBarChart2 className="mr-2 text-purple-500" />
-              Revenue by Category
+              {isMobile ? 'By Category' : 'Revenue by Category'}
             </h2>
-            <div style={{ height: '300px' }}>
+            <div style={{ height: isMobile ? '200px' : '300px' }}>
               <Bar data={categoryRevenueData} options={barChartOptions} />
             </div>
           </Card>
         </div>
 
         {/* Top Selling Products */}
-        <Card>
-          <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-6 flex items-center">
+        <Card className={isMobile ? 'p-3' : ''}>
+          <h2 className={`${isMobile ? 'text-base' : 'text-xl'} font-semibold text-[var(--text-primary)] ${isMobile ? 'mb-4' : 'mb-6'} flex items-center`}>
             <FiPackage className="mr-2 text-orange-500" />
             Top Selling Products
           </h2>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-[var(--border-primary)]">
-                  <th className="text-left py-3 px-4 text-[var(--text-secondary)] font-semibold">Rank</th>
-                  <th className="text-left py-3 px-4 text-[var(--text-secondary)] font-semibold">Product Name</th>
-                  <th className="text-right py-3 px-4 text-[var(--text-secondary)] font-semibold">Units Sold</th>
-                  <th className="text-right py-3 px-4 text-[var(--text-secondary)] font-semibold">Revenue</th>
-                </tr>
-              </thead>
-              <tbody>
-                {analyticsData.products.topSelling.map((product, index) => (
-                  <tr
-                    key={product.id}
-                    className="border-b border-[var(--border-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
-                  >
-                    <td className="py-4 px-4">
-                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-white font-bold">
-                        {index + 1}
+
+          {/* Mobile: Card View */}
+          {isMobile ? (
+            <div className="space-y-3">
+              {analyticsData.products.topSelling.map((product, index) => (
+                <div
+                  key={product.id}
+                  className="bg-[var(--bg-secondary)] rounded-lg p-3"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="flex items-center justify-center w-7 h-7 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-white text-sm font-bold flex-shrink-0">
+                      {index + 1}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-sm font-medium text-[var(--text-primary)] line-clamp-1">
+                        {product.name}
+                      </h4>
+                      <div className="flex justify-between mt-1 text-xs">
+                        <span className="text-[var(--text-secondary)]">{product.sales.toLocaleString()} sold</span>
+                        <span className="text-[var(--text-primary)] font-semibold">₹{(product.revenue / 1000).toFixed(0)}K</span>
                       </div>
-                    </td>
-                    <td className="py-4 px-4 text-[var(--text-primary)] font-medium">{product.name}</td>
-                    <td className="py-4 px-4 text-right text-[var(--text-primary)]">{product.sales.toLocaleString()}</td>
-                    <td className="py-4 px-4 text-right text-[var(--text-primary)] font-semibold">
-                      ₹{product.revenue.toLocaleString()}
-                    </td>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            /* Desktop: Table View */
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-[var(--border-primary)]">
+                    <th className="text-left py-3 px-4 text-[var(--text-secondary)] font-semibold">Rank</th>
+                    <th className="text-left py-3 px-4 text-[var(--text-secondary)] font-semibold">Product Name</th>
+                    <th className="text-right py-3 px-4 text-[var(--text-secondary)] font-semibold">Units Sold</th>
+                    <th className="text-right py-3 px-4 text-[var(--text-secondary)] font-semibold">Revenue</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {analyticsData.products.topSelling.map((product, index) => (
+                    <tr
+                      key={product.id}
+                      className="border-b border-[var(--border-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
+                    >
+                      <td className="py-4 px-4">
+                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-white font-bold">
+                          {index + 1}
+                        </div>
+                      </td>
+                      <td className="py-4 px-4 text-[var(--text-primary)] font-medium">{product.name}</td>
+                      <td className="py-4 px-4 text-right text-[var(--text-primary)]">{product.sales.toLocaleString()}</td>
+                      <td className="py-4 px-4 text-right text-[var(--text-primary)] font-semibold">
+                        ₹{product.revenue.toLocaleString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </Card>
 
         {/* Category Performance */}
-        <Card>
-          <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-6">
+        <Card className={isMobile ? 'p-3' : ''}>
+          <h2 className={`${isMobile ? 'text-base' : 'text-xl'} font-semibold text-[var(--text-primary)] ${isMobile ? 'mb-4' : 'mb-6'}`}>
             Category Performance
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className={`grid ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'}`}>
             {analyticsData.products.byCategory.map((category, index) => (
               <div
                 key={index}
-                className="p-4 bg-gradient-to-br from-[var(--bg-secondary)] to-[var(--bg-tertiary)] rounded-lg border border-[var(--border-primary)] hover:shadow-lg transition-all"
+                className={`${isMobile ? 'p-3' : 'p-4'} bg-gradient-to-br from-[var(--bg-secondary)] to-[var(--bg-tertiary)] rounded-lg border border-[var(--border-primary)] hover:shadow-lg transition-all`}
               >
-                <h3 className="text-[var(--text-primary)] font-semibold mb-2">{category.category}</h3>
+                <h3 className={`text-[var(--text-primary)] font-semibold ${isMobile ? 'text-sm mb-1' : 'mb-2'}`}>
+                  {category.category}
+                </h3>
                 <div className="space-y-1">
-                  <p className="text-[var(--text-secondary)] text-sm">
-                    Products: <span className="text-[var(--text-primary)] font-medium">{category.count}</span>
+                  <p className={`text-[var(--text-secondary)] ${isMobile ? 'text-xs' : 'text-sm'}`}>
+                    {isMobile ? category.count : `Products: ${category.count}`}
+                    {!isMobile && <span className="text-[var(--text-primary)] font-medium"></span>}
                   </p>
-                  <p className="text-[var(--text-secondary)] text-sm">
-                    Revenue: <span className="text-[var(--text-primary)] font-semibold">₹{category.revenue.toLocaleString()}</span>
+                  <p className={`text-[var(--text-primary)] font-semibold ${isMobile ? 'text-sm' : 'text-sm'}`}>
+                    ₹{isMobile ? (category.revenue / 1000).toFixed(0) + 'K' : category.revenue.toLocaleString()}
                   </p>
                 </div>
               </div>

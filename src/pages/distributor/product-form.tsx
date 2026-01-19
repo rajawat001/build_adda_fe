@@ -2,10 +2,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import DistributorLayout from '../../components/distributor/Layout';
 import { Button, Card, Badge, Loading } from '../../components/ui';
-import { FiUpload, FiX, FiCheck, FiImage, FiArrowLeft } from 'react-icons/fi';
+import { FiUpload, FiX, FiCheck, FiImage, FiArrowLeft, FiCamera } from 'react-icons/fi';
 import { useDropzone } from 'react-dropzone';
 import { toast } from 'react-toastify';
 import { motion } from 'framer-motion';
+import { useIsMobile } from '../../hooks';
 import api from '../../services/api';
 
 interface ProductFormData {
@@ -23,6 +24,7 @@ interface ProductFormData {
 
 const ProductForm = () => {
   const router = useRouter();
+  const isMobile = useIsMobile();
   const { id } = router.query;
   const isEditing = !!id;
 
@@ -202,30 +204,36 @@ const ProductForm = () => {
 
   return (
     <DistributorLayout title={isEditing ? 'Edit Product' : 'Add Product'}>
-      <div className="max-w-4xl space-y-6">
+      <div className={`max-w-4xl space-y-4 md:space-y-6 ${isMobile ? 'pb-24' : ''}`}>
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-[var(--text-primary)]">
-              {isEditing ? 'Edit Product' : 'Add New Product'}
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <h1 className={`${isMobile ? 'text-xl' : 'text-3xl'} font-bold text-[var(--text-primary)]`}>
+              {isEditing ? 'Edit Product' : isMobile ? 'New Product' : 'Add New Product'}
             </h1>
-            <p className="text-[var(--text-secondary)] mt-1">
-              {isEditing ? 'Update product information' : 'Fill in the details to add a new product'}
-            </p>
+            {!isMobile && (
+              <p className="text-[var(--text-secondary)] mt-1">
+                {isEditing ? 'Update product information' : 'Fill in the details to add a new product'}
+              </p>
+            )}
           </div>
-          <Button variant="secondary" leftIcon={<FiArrowLeft />} onClick={() => router.back()}>
-            Back
-          </Button>
+          {!isMobile && (
+            <Button variant="secondary" leftIcon={<FiArrowLeft />} onClick={() => router.back()}>
+              Back
+            </Button>
+          )}
         </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit}>
-          <Card>
+          <Card className={isMobile ? 'p-4' : ''}>
             <div className="space-y-6">
               {/* Basic Information */}
               <div>
-                <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4">Basic Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <h3 className={`${isMobile ? 'text-base' : 'text-lg'} font-semibold text-[var(--text-primary)] mb-4`}>
+                  Basic Information
+                </h3>
+                <div className={`grid grid-cols-1 ${isMobile ? 'gap-4' : 'md:grid-cols-2 gap-6'}`}>
                   {/* Product Name */}
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">
@@ -236,7 +244,7 @@ const ProductForm = () => {
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       placeholder="Enter product name"
-                      className={`w-full px-4 py-2 bg-[var(--bg-primary)] border ${
+                      className={`w-full px-4 ${isMobile ? 'py-3 min-h-tap' : 'py-2'} bg-[var(--bg-primary)] border ${
                         errors.name ? 'border-[var(--error)]' : 'border-[var(--border-primary)]'
                       } rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]`}
                     />
@@ -249,11 +257,11 @@ const ProductForm = () => {
                       Description <span className="text-[var(--error)]">*</span>
                     </label>
                     <textarea
-                      rows={4}
+                      rows={isMobile ? 3 : 4}
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                       placeholder="Enter product description"
-                      className={`w-full px-4 py-2 bg-[var(--bg-primary)] border ${
+                      className={`w-full px-4 ${isMobile ? 'py-3' : 'py-2'} bg-[var(--bg-primary)] border ${
                         errors.description ? 'border-[var(--error)]' : 'border-[var(--border-primary)]'
                       } rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]`}
                     />
@@ -268,10 +276,11 @@ const ProductForm = () => {
                     <input
                       type="number"
                       step="0.01"
+                      inputMode="decimal"
                       value={formData.price}
                       onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                       placeholder="0.00"
-                      className={`w-full px-4 py-2 bg-[var(--bg-primary)] border ${
+                      className={`w-full px-4 ${isMobile ? 'py-3 min-h-tap' : 'py-2'} bg-[var(--bg-primary)] border ${
                         errors.price ? 'border-[var(--error)]' : 'border-[var(--border-primary)]'
                       } rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]`}
                     />
@@ -285,10 +294,11 @@ const ProductForm = () => {
                     </label>
                     <input
                       type="number"
+                      inputMode="numeric"
                       value={formData.stock}
                       onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
                       placeholder="0"
-                      className={`w-full px-4 py-2 bg-[var(--bg-primary)] border ${
+                      className={`w-full px-4 ${isMobile ? 'py-3 min-h-tap' : 'py-2'} bg-[var(--bg-primary)] border ${
                         errors.stock ? 'border-[var(--error)]' : 'border-[var(--border-primary)]'
                       } rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]`}
                     />
@@ -303,7 +313,7 @@ const ProductForm = () => {
                     <select
                       value={formData.category}
                       onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                      className={`w-full px-4 py-2 bg-[var(--bg-primary)] border ${
+                      className={`w-full px-4 ${isMobile ? 'py-3 min-h-tap' : 'py-2'} bg-[var(--bg-primary)] border ${
                         errors.category ? 'border-[var(--error)]' : 'border-[var(--border-primary)]'
                       } rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]`}
                     >
@@ -327,7 +337,7 @@ const ProductForm = () => {
                       value={formData.unit}
                       onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
                       placeholder="e.g., kg, piece, bag"
-                      className="w-full px-4 py-2 bg-[var(--bg-primary)] border border-[var(--border-primary)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]"
+                      className={`w-full px-4 ${isMobile ? 'py-3 min-h-tap' : 'py-2'} bg-[var(--bg-primary)] border border-[var(--border-primary)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]`}
                     />
                   </div>
                 </div>
@@ -335,8 +345,10 @@ const ProductForm = () => {
 
               {/* Quantity Limits */}
               <div>
-                <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4">Quantity Limits</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <h3 className={`${isMobile ? 'text-base' : 'text-lg'} font-semibold text-[var(--text-primary)] mb-4`}>
+                  Quantity Limits
+                </h3>
+                <div className={`grid grid-cols-1 ${isMobile ? 'gap-4' : 'md:grid-cols-2 gap-6'}`}>
                   {/* Min Quantity */}
                   <div>
                     <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">
@@ -345,10 +357,11 @@ const ProductForm = () => {
                     <input
                       type="number"
                       min="1"
+                      inputMode="numeric"
                       value={formData.minQuantity}
                       onChange={(e) => setFormData({ ...formData, minQuantity: e.target.value })}
                       placeholder="1"
-                      className="w-full px-4 py-2 bg-[var(--bg-primary)] border border-[var(--border-primary)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]"
+                      className={`w-full px-4 ${isMobile ? 'py-3 min-h-tap' : 'py-2'} bg-[var(--bg-primary)] border border-[var(--border-primary)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]`}
                     />
                     <p className="text-xs text-[var(--text-tertiary)] mt-1">Minimum order quantity</p>
                   </div>
@@ -361,10 +374,11 @@ const ProductForm = () => {
                     <input
                       type="number"
                       min="1"
+                      inputMode="numeric"
                       value={formData.maxQuantity}
                       onChange={(e) => setFormData({ ...formData, maxQuantity: e.target.value })}
                       placeholder="Leave empty for unlimited"
-                      className={`w-full px-4 py-2 bg-[var(--bg-primary)] border ${
+                      className={`w-full px-4 ${isMobile ? 'py-3 min-h-tap' : 'py-2'} bg-[var(--bg-primary)] border ${
                         errors.maxQuantity ? 'border-[var(--error)]' : 'border-[var(--border-primary)]'
                       } rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]`}
                     />
@@ -376,11 +390,11 @@ const ProductForm = () => {
 
               {/* Payment Methods */}
               <div>
-                <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4">
+                <h3 className={`${isMobile ? 'text-base' : 'text-lg'} font-semibold text-[var(--text-primary)] mb-4`}>
                   Payment Methods <span className="text-[var(--error)]">*</span>
                 </h3>
-                <div className="flex gap-4">
-                  <label className="flex items-center gap-2 cursor-pointer">
+                <div className={`flex ${isMobile ? 'flex-col gap-3' : 'gap-4'}`}>
+                  <label className={`flex items-center gap-3 cursor-pointer ${isMobile ? 'p-3 bg-[var(--bg-tertiary)] rounded-lg min-h-tap' : ''}`}>
                     <input
                       type="checkbox"
                       checked={formData.acceptedPaymentMethods.includes('COD')}
@@ -389,7 +403,7 @@ const ProductForm = () => {
                     />
                     <span className="text-[var(--text-primary)]">Cash on Delivery (COD)</span>
                   </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
+                  <label className={`flex items-center gap-3 cursor-pointer ${isMobile ? 'p-3 bg-[var(--bg-tertiary)] rounded-lg min-h-tap' : ''}`}>
                     <input
                       type="checkbox"
                       checked={formData.acceptedPaymentMethods.includes('Online')}
@@ -404,13 +418,15 @@ const ProductForm = () => {
 
               {/* Image Upload */}
               <div>
-                <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4">Product Image</h3>
+                <h3 className={`${isMobile ? 'text-base' : 'text-lg'} font-semibold text-[var(--text-primary)] mb-4`}>
+                  Product Image
+                </h3>
 
                 {/* Current Image (when editing and no new image) */}
                 {existingImageUrl && !imagePreview && !formData.image && (
                   <div className="mb-4">
                     <p className="text-sm text-[var(--text-secondary)] mb-2">Current Image:</p>
-                    <div className="relative w-64 h-64">
+                    <div className={`relative ${isMobile ? 'w-full aspect-square max-w-[280px]' : 'w-64 h-64'}`}>
                       <img
                         src={existingImageUrl}
                         alt="Current product"
@@ -428,7 +444,7 @@ const ProductForm = () => {
                     className="mb-4 relative"
                   >
                     <p className="text-sm font-medium text-[var(--success)] mb-2">New Image:</p>
-                    <div className="relative w-64 h-64 group">
+                    <div className={`relative ${isMobile ? 'w-full aspect-square max-w-[280px]' : 'w-64 h-64'} group`}>
                       <img
                         src={imagePreview}
                         alt="Preview"
@@ -437,7 +453,7 @@ const ProductForm = () => {
                       <button
                         type="button"
                         onClick={removeImage}
-                        className="absolute top-2 right-2 p-2 bg-[var(--error)] text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                        className={`absolute top-2 right-2 p-2 bg-[var(--error)] text-white rounded-full transition-opacity ${isMobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
                       >
                         <FiX />
                       </button>
@@ -448,24 +464,51 @@ const ProductForm = () => {
                 {/* Dropzone */}
                 <div
                   {...getRootProps()}
-                  className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all ${
+                  className={`border-2 border-dashed rounded-lg ${isMobile ? 'p-6' : 'p-8'} text-center cursor-pointer transition-all ${
                     isDragActive
                       ? 'border-[var(--primary-color)] bg-[var(--info-bg)]'
                       : 'border-[var(--border-primary)] hover:border-[var(--primary-color)]'
                   }`}
                 >
                   <input {...getInputProps()} />
-                  <FiUpload className="w-12 h-12 mx-auto mb-4 text-[var(--text-tertiary)]" />
-                  {isDragActive ? (
-                    <p className="text-[var(--primary-color)] font-medium">Drop the image here...</p>
+                  {isMobile ? (
+                    <div className="space-y-4">
+                      <div className="flex justify-center gap-4">
+                        <div className="flex flex-col items-center gap-2">
+                          <div className="w-14 h-14 rounded-full bg-[var(--bg-tertiary)] flex items-center justify-center">
+                            <FiCamera className="w-6 h-6 text-[var(--primary-color)]" />
+                          </div>
+                          <span className="text-sm text-[var(--text-secondary)]">Camera</span>
+                        </div>
+                        <div className="flex flex-col items-center gap-2">
+                          <div className="w-14 h-14 rounded-full bg-[var(--bg-tertiary)] flex items-center justify-center">
+                            <FiImage className="w-6 h-6 text-[var(--primary-color)]" />
+                          </div>
+                          <span className="text-sm text-[var(--text-secondary)]">Gallery</span>
+                        </div>
+                      </div>
+                      <p className="text-sm text-[var(--text-primary)] font-medium">
+                        Tap to upload image
+                      </p>
+                      <p className="text-xs text-[var(--text-tertiary)]">
+                        JPG, PNG, GIF, WEBP (Max 5MB)
+                      </p>
+                    </div>
                   ) : (
                     <>
-                      <p className="text-[var(--text-primary)] font-medium mb-2">
-                        Drag and drop an image here, or click to select
-                      </p>
-                      <p className="text-sm text-[var(--text-tertiary)]">
-                        Supports: JPG, PNG, GIF, WEBP (Max 5MB)
-                      </p>
+                      <FiUpload className="w-12 h-12 mx-auto mb-4 text-[var(--text-tertiary)]" />
+                      {isDragActive ? (
+                        <p className="text-[var(--primary-color)] font-medium">Drop the image here...</p>
+                      ) : (
+                        <>
+                          <p className="text-[var(--text-primary)] font-medium mb-2">
+                            Drag and drop an image here, or click to select
+                          </p>
+                          <p className="text-sm text-[var(--text-tertiary)]">
+                            Supports: JPG, PNG, GIF, WEBP (Max 5MB)
+                          </p>
+                        </>
+                      )}
                     </>
                   )}
                 </div>
@@ -478,16 +521,47 @@ const ProductForm = () => {
             </div>
           </Card>
 
-          {/* Form Actions */}
-          <div className="flex justify-end gap-4 mt-6">
-            <Button type="button" variant="secondary" onClick={() => router.back()}>
-              Cancel
-            </Button>
-            <Button type="submit" variant="primary" isLoading={loading} leftIcon={<FiCheck />}>
-              {isEditing ? 'Update Product' : 'Add Product'}
-            </Button>
-          </div>
+          {/* Desktop Form Actions */}
+          {!isMobile && (
+            <div className="flex justify-end gap-4 mt-6">
+              <Button type="button" variant="secondary" onClick={() => router.back()}>
+                Cancel
+              </Button>
+              <Button type="submit" variant="primary" isLoading={loading} leftIcon={<FiCheck />}>
+                {isEditing ? 'Update Product' : 'Add Product'}
+              </Button>
+            </div>
+          )}
         </form>
+
+        {/* Mobile Fixed Bottom Action Bar */}
+        {isMobile && (
+          <div
+            className="fixed bottom-0 left-0 right-0 bg-[var(--bg-card)] border-t border-[var(--border-primary)] p-4 z-40 shadow-lg"
+            style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1rem)' }}
+          >
+            <div className="flex gap-3">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => router.back()}
+                className="flex-1 min-h-tap"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                isLoading={loading}
+                leftIcon={<FiCheck />}
+                className="flex-1 min-h-tap"
+                onClick={handleSubmit}
+              >
+                {isEditing ? 'Update' : 'Add Product'}
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </DistributorLayout>
   );
