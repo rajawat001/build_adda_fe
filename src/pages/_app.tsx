@@ -1,10 +1,12 @@
 import type { AppProps} from 'next/app';
+import Head from 'next/head';
 import { ThemeProvider } from '../contexts/ThemeContext';
 import { NotificationProvider } from '../contexts/NotificationContext';
 import { CartProvider } from '../context/CartContext';
 import { ToastProvider } from '../components/common/ToastContainer';
 import { ToastContainer } from 'react-toastify';
 import CartConflictModal from '../components/CartConflictModal';
+import InstallPWA from '../components/common/InstallPWA';
 import 'react-toastify/dist/ReactToastify.css';
 import '../styles/globals.css';
 import '../styles/theme.css';
@@ -35,13 +37,37 @@ import '../styles/mobile-enhancements.css';
 import '../styles/mobile-filters.css';
 import '../styles/mobile-overflow-fix.css';
 import '../styles/mobile-bottom-nav.css';
+import '../styles/InstallPWA.css';
 
 export default function App({ Component, pageProps }: AppProps) {
   return (
+    <>
+    <Head>
+        <link rel="icon" href="/favicon.ico" />
+        
+        {/* PWA Meta Tags */}
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#FF6B35" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="BuildAdda" />
+        
+        {/* Apple Touch Icons */}
+        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+        <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192x192.png" />
+        <link rel="apple-touch-icon" sizes="167x167" href="/icons/icon-192x192.png" />
+        
+        {/* Viewport */}
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes" />
+      </Head>
     <ThemeProvider>
       <NotificationProvider>
         <CartProvider>
           <ToastProvider>
+            {/* PWA Install Banner */}
+              <InstallPWA />
             <Component {...pageProps} />
             <CartConflictModal />
             <ToastContainer
@@ -60,5 +86,6 @@ export default function App({ Component, pageProps }: AppProps) {
         </CartProvider>
       </NotificationProvider>
     </ThemeProvider>
+    </>
   );
 }
