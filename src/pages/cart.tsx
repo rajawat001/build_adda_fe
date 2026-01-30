@@ -69,7 +69,20 @@ export default function Cart() {
                         <Link href={`/products/${item._id}`}>
                           <h3>{item.name}</h3>
                         </Link>
-                        <p className="price">₹{item.price} / {item.unit}</p>
+                        <p className="price">
+                          {item.realPrice && item.realPrice > item.price ? (
+                            <>
+                              <span className="cart-real-price">₹{item.realPrice.toLocaleString('en-IN')}</span>
+                              <span className="cart-offer-price">₹{item.price.toLocaleString('en-IN')}</span>
+                              <span className="cart-discount-badge">
+                                {Math.round(((item.realPrice - item.price) / item.realPrice) * 100)}% OFF
+                              </span>
+                            </>
+                          ) : (
+                            <>₹{item.price.toLocaleString('en-IN')}</>
+                          )}
+                          {item.unit && <span className="cart-unit"> / {item.unit}</span>}
+                        </p>
                         {(item.minQuantity > 1 || item.maxQuantity) && (
                           <p className="quantity-limits">
                             <small>
@@ -109,6 +122,20 @@ export default function Cart() {
                     <span>Items ({cart.reduce((sum, item) => sum + item.quantity, 0)}):</span>
                     <span>₹{cartTotal.toLocaleString('en-IN')}</span>
                   </div>
+                  {(() => {
+                    const totalSavings = cart.reduce((sum, item) => {
+                      if (item.realPrice && item.realPrice > item.price) {
+                        return sum + ((item.realPrice - item.price) * item.quantity);
+                      }
+                      return sum;
+                    }, 0);
+                    return totalSavings > 0 ? (
+                      <div className="summary-row savings-row">
+                        <span>You Save:</span>
+                        <span className="savings-amount">-₹{totalSavings.toLocaleString('en-IN')}</span>
+                      </div>
+                    ) : null;
+                  })()}
                   <div className="summary-row">
                     <span>Shipping:</span>
                     <span className="free-shipping">

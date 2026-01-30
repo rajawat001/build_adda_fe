@@ -258,7 +258,19 @@ const Products = () => {
             "@type": "Offer",
             "price": product.price,
             "priceCurrency": "INR",
-            "availability": product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
+            "availability": product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+            ...(product.realPrice && product.realPrice > product.price ? {
+              "priceSpecification": {
+                "@type": "PriceSpecification",
+                "price": product.price,
+                "priceCurrency": "INR",
+                "referencePrice": {
+                  "@type": "PriceSpecification",
+                  "price": product.realPrice,
+                  "priceCurrency": "INR"
+                }
+              }
+            } : {})
           }
         }
       }))

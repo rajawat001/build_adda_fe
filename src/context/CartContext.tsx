@@ -6,6 +6,7 @@ interface CartItem {
   _id: string;
   name: string;
   price: number;
+  realPrice?: number;
   image: string;
   quantity: number;
   minQuantity: number;
@@ -139,6 +140,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         _id: product._id,
         name: product.name,
         price: product.price,
+        realPrice: product.realPrice,
         image: product.image || product.images?.[0] || '/placeholder.jpg',
         quantity: Math.min(quantity, product.stock),
         minQuantity: product.minQuantity || 1,
@@ -178,6 +180,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       _id: pendingItem.product._id,
       name: pendingItem.product.name,
       price: pendingItem.product.price,
+      realPrice: pendingItem.product.realPrice,
       image: pendingItem.product.image || pendingItem.product.images?.[0] || '/placeholder.jpg',
       quantity: Math.min(pendingItem.quantity, pendingItem.product.stock),
       minQuantity: pendingItem.product.minQuantity || 1,

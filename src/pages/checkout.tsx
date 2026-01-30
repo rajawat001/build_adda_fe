@@ -36,6 +36,7 @@ export default function Checkout() {
     _id: string;
     name: string;
     price: number;
+    realPrice?: number;
     quantity: number;
     acceptedPaymentMethods?: string[];
     // add other properties if needed
@@ -791,7 +792,16 @@ export default function Checkout() {
                 {typedCartItems.map((item) => (
                   <div key={item._id} className="summary-item">
                     <span>{item.name} x {item.quantity}</span>
-                    <span>₹{item.price * item.quantity}</span>
+                    <span className="summary-item-price">
+                      {item.realPrice && item.realPrice > item.price ? (
+                        <>
+                          <span className="checkout-real-price">₹{(item.realPrice * item.quantity).toLocaleString('en-IN')}</span>
+                          <span>₹{(item.price * item.quantity).toLocaleString('en-IN')}</span>
+                        </>
+                      ) : (
+                        <>₹{(item.price * item.quantity).toLocaleString('en-IN')}</>
+                      )}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -801,6 +811,21 @@ export default function Checkout() {
                   <span>Subtotal:</span>
                   <span>₹{typedCartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0).toLocaleString('en-IN')}</span>
                 </div>
+
+                {(() => {
+                  const totalSavings = typedCartItems.reduce((sum, item) => {
+                    if (item.realPrice && item.realPrice > item.price) {
+                      return sum + ((item.realPrice - item.price) * item.quantity);
+                    }
+                    return sum;
+                  }, 0);
+                  return totalSavings > 0 ? (
+                    <div className="summary-row checkout-savings-row">
+                      <span>You Save:</span>
+                      <span className="checkout-savings-amount">-₹{totalSavings.toLocaleString('en-IN')}</span>
+                    </div>
+                  ) : null;
+                })()}
 
                 {discount > 0 && (
                   <div className="summary-row discount-row">

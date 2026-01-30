@@ -142,10 +142,11 @@ export default function Register() {
     if (pincodeError) errors.pincode = pincodeError;
     if (addressError) errors.address = addressError;
 
+    if (!formData.state?.trim()) errors.state = 'State is required';
+    if (!formData.city?.trim()) errors.city = 'City is required';
+
     if (formData.role === 'distributor') {
       if (!formData.businessName?.trim()) errors.businessName = 'Business name is required';
-      if (!formData.city?.trim()) errors.city = 'City is required';
-      if (!formData.state?.trim()) errors.state = 'State is required';
     }
 
     setValidationErrors(errors);
@@ -402,6 +403,38 @@ export default function Register() {
                   </div>
 
                   <div className="form-group">
+                    <label htmlFor="state">State</label>
+                    <select
+                      id="state" name="state" value={formData.state}
+                      onChange={handleStateChange}
+                      className={validationErrors.state ? 'input-error' : ''} required
+                    >
+                      <option value="">Select State</option>
+                      {indianStates.map(state => (
+                        <option key={state} value={state}>{state}</option>
+                      ))}
+                    </select>
+                    {validationErrors.state && <span className="validation-error">{validationErrors.state}</span>}
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="city">City</label>
+                    <select
+                      id="city" name="city" value={formData.city}
+                      onChange={handleChange}
+                      className={validationErrors.city ? 'input-error' : ''}
+                      disabled={!formData.state} required
+                    >
+                      <option value="">Select City</option>
+                      {availableCities.map(city => (
+                        <option key={city} value={city}>{city}</option>
+                      ))}
+                    </select>
+                    {validationErrors.city && <span className="validation-error">{validationErrors.city}</span>}
+                    {!formData.state && <small className="field-hint">Please select a state first</small>}
+                  </div>
+
+                  <div className="form-group">
                     <label htmlFor="pincode">Pincode</label>
                     <input
                       id="pincode" type="text" name="pincode"
@@ -414,51 +447,16 @@ export default function Register() {
                   </div>
 
                   <div className="form-group">
-                    <label htmlFor="address">Address</label>
+                    <label htmlFor="address">Street Address</label>
                     <textarea
                       id="address" name="address" value={formData.address}
                       onChange={handleChange}
                       className={validationErrors.address ? 'input-error' : ''}
+                      placeholder="House/Flat no, Building, Street, Landmark"
                       autoComplete="street-address" rows={3} required
                     />
                     {validationErrors.address && <span className="validation-error">{validationErrors.address}</span>}
                   </div>
-
-                  {formData.role === 'distributor' && (
-                    <>
-                      <div className="form-group">
-                        <label htmlFor="state">State</label>
-                        <select
-                          id="state" name="state" value={formData.state}
-                          onChange={handleStateChange}
-                          className={validationErrors.state ? 'input-error' : ''} required
-                        >
-                          <option value="">Select State</option>
-                          {indianStates.map(state => (
-                            <option key={state} value={state}>{state}</option>
-                          ))}
-                        </select>
-                        {validationErrors.state && <span className="validation-error">{validationErrors.state}</span>}
-                      </div>
-
-                      <div className="form-group">
-                        <label htmlFor="city">City</label>
-                        <select
-                          id="city" name="city" value={formData.city}
-                          onChange={handleChange}
-                          className={validationErrors.city ? 'input-error' : ''}
-                          disabled={!formData.state} required
-                        >
-                          <option value="">Select City</option>
-                          {availableCities.map(city => (
-                            <option key={city} value={city}>{city}</option>
-                          ))}
-                        </select>
-                        {validationErrors.city && <span className="validation-error">{validationErrors.city}</span>}
-                        {!formData.state && <small className="field-hint">Please select a state first</small>}
-                      </div>
-                    </>
-                  )}
 
                   <button type="button" className="btn-location" onClick={handleGetLocation}>
                     Capture Current Location

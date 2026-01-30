@@ -3,6 +3,7 @@ export interface Product {
   name: string;
   description: string;
   price: number;
+  realPrice?: number;
   image: string;        // ✅ REQUIRED (important)
   images?: string[];
   category?: {

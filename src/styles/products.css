@@ -306,6 +306,31 @@
   color: #27ae60;
   font-size: 1.5rem;
   font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.price .real-price {
+  text-decoration: line-through;
+  color: #999;
+  font-size: 0.95rem;
+  font-weight: 400;
+}
+
+.price .offer-price {
+  color: #27ae60;
+  font-weight: 700;
+}
+
+.price .discount-badge {
+  background: #e8f5e9;
+  color: #2e7d32;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
 }
 
 .stock {

@@ -318,6 +318,30 @@
   font-size: 1.1rem;
 }
 
+.summary-item-price {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.checkout-real-price {
+  text-decoration: line-through;
+  color: var(--neutral-400) !important;
+  font-size: 0.85rem !important;
+  font-weight: var(--font-weight-normal) !important;
+}
+
+.checkout-savings-row span:first-child {
+  color: var(--success-color);
+}
+
+.checkout-savings-amount {
+  color: var(--success-color) !important;
+  font-weight: var(--font-weight-extrabold) !important;
+}
+
 /* ==================
    COUPON SECTION
    ================== */

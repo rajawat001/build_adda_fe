@@ -162,6 +162,32 @@
   font-size: 24px;
 }
 
+.real-price-detail {
+  text-decoration: line-through;
+  color: #999;
+  font-size: 18px;
+  font-weight: 400;
+  margin-right: 4px;
+}
+
+.real-price-detail .currency {
+  font-size: 14px;
+}
+
+.offer-price-detail {
+  color: #ff6b35;
+}
+
+.discount-badge-detail {
+  background: #e8f5e9;
+  color: #2e7d32;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
+  margin-left: 8px;
+}
+
 .product-stock {
   font-size: 15px;
   font-weight: 500;

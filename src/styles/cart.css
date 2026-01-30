@@ -60,6 +60,37 @@
   color: #27ae60;
   font-weight: bold;
   margin-bottom: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.cart-real-price {
+  text-decoration: line-through;
+  color: #999;
+  font-size: 0.9rem;
+  font-weight: 400;
+}
+
+.cart-offer-price {
+  color: #27ae60;
+  font-weight: 700;
+}
+
+.cart-discount-badge {
+  background: #e8f5e9;
+  color: #2e7d32;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.cart-unit {
+  color: #7f8c8d;
+  font-weight: 400;
+  font-size: 0.85rem;
 }
 
 .item-details .distributor {
@@ -135,6 +166,11 @@
   font-size: 1.3rem;
   font-weight: bold;
   color: #2c3e50;
+}
+
+.savings-row .savings-amount {
+  color: #2e7d32;
+  font-weight: 600;
 }
 
 .btn-checkout {

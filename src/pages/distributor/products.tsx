@@ -28,6 +28,7 @@ interface Product {
   name: string;
   description: string;
   price: number;
+  realPrice?: number;
   stock: number;
   category: string;
   image: string;
@@ -120,7 +121,8 @@ const Products = () => {
     const exportData = filteredProducts.map((p) => ({
       Name: p.name,
       Category: p.category,
-      Price: p.price,
+      'MRP (Real Price)': p.realPrice || '-',
+      'Selling Price': p.price,
       Stock: p.stock,
       Unit: p.unit || '-',
       'Min Quantity': p.minQuantity || '-',
@@ -240,7 +242,19 @@ const Products = () => {
             <div className="flex justify-between text-sm">
               <span className="text-[var(--text-secondary)]">Price:</span>
               <span className="font-semibold text-[var(--text-primary)]">
-                ₹{product.price.toLocaleString('en-IN')}
+                {product.realPrice && product.realPrice > product.price ? (
+                  <>
+                    <span style={{ textDecoration: 'line-through', color: 'var(--text-tertiary)', fontWeight: 400, marginRight: 4 }}>
+                      ₹{product.realPrice.toLocaleString('en-IN')}
+                    </span>
+                    ₹{product.price.toLocaleString('en-IN')}
+                    <span style={{ color: 'var(--success)', fontSize: '11px', marginLeft: 4 }}>
+                      {Math.round(((product.realPrice - product.price) / product.realPrice) * 100)}% OFF
+                    </span>
+                  </>
+                ) : (
+                  <>₹{product.price.toLocaleString('en-IN')}</>
+                )}
               </span>
             </div>
             <div className="flex justify-between text-sm">

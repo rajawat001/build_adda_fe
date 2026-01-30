@@ -12,6 +12,7 @@ import api from '../../services/api';
 interface ProductFormData {
   name: string;
   description: string;
+  realPrice: string;
   price: string;
   category: string;
   stock: string;
@@ -31,6 +32,7 @@ const ProductForm = () => {
   const [formData, setFormData] = useState<ProductFormData>({
     name: '',
     description: '',
+    realPrice: '',
     price: '',
     category: '',
     stock: '',
@@ -63,6 +65,7 @@ const ProductForm = () => {
         setFormData({
           name: product.name,
           description: product.description,
+          realPrice: product.realPrice ? product.realPrice.toString() : '',
           price: product.price.toString(),
           category: product.category,
           stock: product.stock.toString(),
@@ -117,7 +120,10 @@ const ProductForm = () => {
     if (!formData.name.trim()) newErrors.name = 'Product name is required';
     if (!formData.description.trim()) newErrors.description = 'Description is required';
     if (!formData.price || parseFloat(formData.price) <= 0) {
-      newErrors.price = 'Price must be greater than 0';
+      newErrors.price = 'Selling price must be greater than 0';
+    }
+    if (formData.realPrice && parseFloat(formData.realPrice) < parseFloat(formData.price)) {
+      newErrors.realPrice = 'MRP must be greater than or equal to selling price';
     }
     if (!formData.category) newErrors.category = 'Category is required';
     if (!formData.stock || parseInt(formData.stock) < 0) {
@@ -148,6 +154,9 @@ const ProductForm = () => {
     submitData.append('name', formData.name);
     submitData.append('description', formData.description);
     submitData.append('price', formData.price);
+    if (formData.realPrice) {
+      submitData.append('realPrice', formData.realPrice);
+    }
     submitData.append('category', formData.category);
     submitData.append('stock', formData.stock);
     submitData.append('unit', formData.unit);
@@ -268,10 +277,30 @@ const ProductForm = () => {
                     {errors.description && <p className="text-[var(--error)] text-sm mt-1">{errors.description}</p>}
                   </div>
 
-                  {/* Price */}
+                  {/* Real Price (MRP) */}
                   <div>
                     <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">
-                      Price (₹) <span className="text-[var(--error)]">*</span>
+                      MRP / Real Price (₹)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      inputMode="decimal"
+                      value={formData.realPrice}
+                      onChange={(e) => setFormData({ ...formData, realPrice: e.target.value })}
+                      placeholder="Original price (optional)"
+                      className={`w-full px-4 ${isMobile ? 'py-3 min-h-tap' : 'py-2'} bg-[var(--bg-primary)] border ${
+                        errors.realPrice ? 'border-[var(--error)]' : 'border-[var(--border-primary)]'
+                      } rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]`}
+                    />
+                    {errors.realPrice && <p className="text-[var(--error)] text-sm mt-1">{errors.realPrice}</p>}
+                    <p className="text-xs text-[var(--text-tertiary)] mt-1">Leave empty if no discount</p>
+                  </div>
+
+                  {/* Selling / Offer Price */}
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">
+                      Selling / Offer Price (₹) <span className="text-[var(--error)]">*</span>
                     </label>
                     <input
                       type="number"
@@ -285,6 +314,11 @@ const ProductForm = () => {
                       } rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]`}
                     />
                     {errors.price && <p className="text-[var(--error)] text-sm mt-1">{errors.price}</p>}
+                    {formData.realPrice && formData.price && parseFloat(formData.realPrice) > parseFloat(formData.price) && (
+                      <p className="text-xs font-semibold text-[var(--success)] mt-1">
+                        {Math.round(((parseFloat(formData.realPrice) - parseFloat(formData.price)) / parseFloat(formData.realPrice)) * 100)}% OFF
+                      </p>
+                    )}
                   </div>
 
                   {/* Stock */}

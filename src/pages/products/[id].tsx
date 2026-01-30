@@ -309,8 +309,26 @@ export default function ProductDetail() {
             )}
 
             <div className="product-price">
-              <span className="currency">₹</span>
-              <span className="amount">{product.price.toLocaleString('en-IN')}</span>
+              {product.realPrice && product.realPrice > product.price ? (
+                <>
+                  <span className="real-price-detail">
+                    <span className="currency">₹</span>
+                    <span className="amount">{product.realPrice.toLocaleString('en-IN')}</span>
+                  </span>
+                  <span className="offer-price-detail">
+                    <span className="currency">₹</span>
+                    <span className="amount">{product.price.toLocaleString('en-IN')}</span>
+                  </span>
+                  <span className="discount-badge-detail">
+                    {Math.round(((product.realPrice - product.price) / product.realPrice) * 100)}% OFF
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span className="currency">₹</span>
+                  <span className="amount">{product.price.toLocaleString('en-IN')}</span>
+                </>
+              )}
             </div>
 
             <div className="product-stock">
