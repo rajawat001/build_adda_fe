@@ -1,0 +1,615 @@
+/* ====================================
+   MOBILE CARDS — Flipkart / Zomato / Swiggy Style
+   Mobile-only overrides. Desktop is NOT affected.
+   ==================================== */
+
+/* ──────────────────────────────────────
+   PRODUCT CARDS — Mobile
+   ────────────────────────────────────── */
+
+@media (max-width: 768px) {
+
+  /* ── 2-column compact grid ── */
+  .products-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+
+  /* ── Card base ── */
+  .product-card {
+    border-radius: 10px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    border: 1px solid #f0f0f0;
+    overflow: hidden;
+    transition: none;
+  }
+
+  .product-card:hover {
+    transform: none;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  }
+
+  /* ── Image — compact square ── */
+  .product-card .product-image {
+    height: 150px;
+    background: #fafafa;
+  }
+
+  .product-card .product-image img {
+    object-fit: contain;
+    padding: 6px;
+  }
+
+  .product-card:hover .product-image img {
+    transform: none;
+  }
+
+  /* ── Wishlist button — smaller ── */
+  .product-card .wishlist-btn {
+    width: 30px;
+    height: 30px;
+    font-size: 1rem;
+    top: 6px;
+    right: 6px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  }
+
+  /* ── Info section — tight padding ── */
+  .product-card .product-info {
+    padding: 8px 10px 10px;
+  }
+
+  /* ── Title — 2-line clamp ── */
+  .product-card .product-info h3 {
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.35;
+    margin-bottom: 2px;
+    min-height: unset;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    color: #212121;
+  }
+
+  /* ── Category label ── */
+  .product-card .category {
+    font-size: 10px;
+    margin-bottom: 2px;
+    color: #999;
+    letter-spacing: 0.3px;
+  }
+
+  /* ── Distributor — hide on small cards to save space ── */
+  .product-card .distributor {
+    font-size: 11px;
+    margin-bottom: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #888;
+  }
+
+  /* ── Footer (price + stock) — stack vertically ── */
+  .product-card .product-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding-top: 6px;
+    margin-bottom: 8px;
+    border-top: 1px solid #f5f5f5;
+  }
+
+  /* ── Price — Flipkart style ── */
+  .product-card .price {
+    font-size: 15px;
+    font-weight: 700;
+    color: #212121;
+    gap: 4px;
+  }
+
+  .product-card .price .real-price {
+    font-size: 11px;
+    color: #aaa;
+  }
+
+  .product-card .price .offer-price {
+    color: #212121;
+    font-size: 15px;
+  }
+
+  .product-card .price .discount-badge {
+    font-size: 10px;
+    padding: 1px 5px;
+    background: #e8f5e9;
+    color: #388e3c;
+    border-radius: 3px;
+    font-weight: 700;
+  }
+
+  /* ── Stock badge — compact ── */
+  .product-card .stock {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 3px;
+  }
+
+  /* ── Add to Cart — compact ── */
+  .product-card .btn-add-cart {
+    padding: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+  }
+
+  .product-card .btn-add-cart:disabled {
+    background: #e0e0e0;
+    color: #999;
+  }
+}
+
+/* Very small screens — single column fallback */
+@media (max-width: 359px) {
+  .products-grid,
+  .product-grid-modern {
+    grid-template-columns: 1fr !important;
+  }
+
+  .product-card .product-image {
+    height: 180px;
+  }
+}
+
+
+/* ──────────────────────────────────────
+   HOME PAGE — Product Grid (product-grid-modern)
+   ────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .product-grid-modern {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+}
+
+@media (max-width: 359px) {
+  .product-grid-modern {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+
+/* ──────────────────────────────────────
+   HOME PAGE — Distributor Cards (distributor-card-modern)
+   Flipkart / Zomato compact mobile style
+   ────────────────────────────────────── */
+
+@media (max-width: 768px) {
+
+  .distributor-card-modern {
+    border-radius: 12px !important;
+    padding: 14px !important;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06) !important;
+    border: 1px solid #f0f0f0 !important;
+    cursor: pointer;
+  }
+
+  .distributor-card-modern:hover {
+    transform: none !important;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06) !important;
+  }
+
+  /* Header — inline avatar + badge */
+  .distributor-card-modern .distributor-header {
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .distributor-card-modern .distributor-avatar {
+    width: 40px !important;
+    height: 40px !important;
+    font-size: 16px !important;
+    border-radius: 10px !important;
+    flex-shrink: 0;
+  }
+
+  .distributor-card-modern .verified-badge-modern {
+    font-size: 9px !important;
+    padding: 2px 6px !important;
+    border-radius: 4px !important;
+  }
+
+  /* Name — 1-line clamp */
+  .distributor-card-modern .distributor-name {
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    margin-bottom: 6px !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #212121;
+  }
+
+  /* Info items — compact */
+  .distributor-card-modern .distributor-info {
+    gap: 4px !important;
+    margin-bottom: 8px;
+  }
+
+  .distributor-card-modern .info-item {
+    font-size: 11px !important;
+    gap: 4px !important;
+    color: #666;
+  }
+
+  .distributor-card-modern .info-item svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .distributor-card-modern .rating-row {
+    font-size: 11px !important;
+    gap: 3px !important;
+  }
+
+  .distributor-card-modern .rating-row svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  /* CTA button — compact */
+  .distributor-card-modern .btn-view-distributor {
+    padding: 8px 12px !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    border-radius: 8px !important;
+    gap: 4px !important;
+  }
+
+  .distributor-card-modern .btn-view-distributor svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .distributor-card-modern .distributor-name {
+    font-size: 12px !important;
+  }
+
+  .distributor-card-modern .btn-view-distributor {
+    padding: 7px 10px !important;
+    font-size: 11px !important;
+  }
+}
+
+
+/* ──────────────────────────────────────
+   DISTRIBUTOR CARDS — Mobile (Zomato / Swiggy style)
+   (for distributor list page — .distributor-card)
+   ────────────────────────────────────── */
+
+@media (max-width: 768px) {
+
+  .distributors-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+
+  /* ── Card — compact, no big hover ── */
+  .distributor-card {
+    border-radius: 12px;
+    border: 1px solid #eee;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    animation: none !important;
+  }
+
+  .distributor-card:hover {
+    transform: none;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    border-color: #eee;
+  }
+
+  .distributor-card::before {
+    display: none;
+  }
+
+  .distributor-card:hover::before {
+    display: none;
+  }
+
+  /* ── Card Header — compact, horizontal layout ── */
+  .distributor-card .card-header {
+    background: white;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid #f0f0f0;
+    position: relative;
+  }
+
+  /* Zomato-style avatar circle */
+  .distributor-card .card-header::before {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+    flex-shrink: 0;
+  }
+
+  .distributor-card .card-header h3 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #212121;
+    margin-bottom: 0;
+    padding-right: 0;
+    line-height: 1.3;
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .distributor-card .verified-badge {
+    position: static;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: #e8f5e9;
+    color: #2e7d32;
+    box-shadow: none;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .distributor-card .rating-stars {
+    margin-top: 0;
+  }
+
+  /* ── Card Body — condensed info ── */
+  .distributor-card .card-body {
+    padding: 10px 14px;
+  }
+
+  .distributor-card .info-row {
+    padding: 0;
+    margin-bottom: 6px;
+    background: none;
+    border-radius: 0;
+    gap: 6px;
+  }
+
+  .distributor-card .info-row:hover {
+    background: none;
+    transform: none;
+  }
+
+  .distributor-card .info-row .icon {
+    font-size: 14px;
+    width: 20px;
+    height: 20px;
+    background: none;
+    border-radius: 0;
+  }
+
+  .distributor-card .info-row span:last-child {
+    font-size: 12px;
+    color: #555;
+    line-height: 1.4;
+  }
+
+  .distributor-card .distance-badge {
+    margin-top: 8px;
+    padding: 6px 10px;
+    font-size: 11px;
+    border-radius: 6px;
+    background: #f0f4ff;
+    color: #3b5998;
+    box-shadow: none;
+  }
+
+  /* ── Card Footer — compact CTA ── */
+  .distributor-card .card-footer {
+    padding: 10px 14px;
+    background: white;
+    border-top: 1px solid #f5f5f5;
+  }
+
+  .distributor-card .btn-view-profile {
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 700;
+    border-radius: 8px;
+    text-transform: none;
+    letter-spacing: 0;
+    box-shadow: 0 2px 8px rgba(217, 119, 6, 0.2);
+    background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+  }
+}
+
+/* ──────────────────────────────────────
+   MOBILE FILTER BAR — Swiggy / Zomato Chips
+   ────────────────────────────────────── */
+
+@media (max-width: 768px) {
+
+  /* ── Filter bar — horizontal scrollable chips ── */
+  .mobile-filter-bar {
+    display: flex !important;
+    grid-template-columns: unset !important;
+    gap: 8px !important;
+    padding: 10px 14px !important;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    background: #fff !important;
+    border-bottom: 1px solid #eee !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+  }
+
+  .mobile-filter-bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* ── Filter button — chip style ── */
+  .mobile-filter-btn {
+    padding: 8px 14px !important;
+    font-size: 13px !important;
+    border-radius: 20px !important;
+    min-height: 36px !important;
+    box-shadow: none !important;
+    border: 1.5px solid #d97706 !important;
+    background: white !important;
+    color: #d97706 !important;
+    flex-shrink: 0;
+  }
+
+  .mobile-filter-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  /* ── Sort dropdown — chip style ── */
+  .mobile-sort {
+    flex: unset !important;
+    min-width: unset !important;
+  }
+
+  .mobile-sort select {
+    padding: 8px 32px 8px 12px !important;
+    border-radius: 20px !important;
+    min-height: 36px !important;
+    border: 1.5px solid #e0e0e0 !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    background-position: right 10px center !important;
+  }
+
+  /* ── Results count — chip style ── */
+  .mobile-results-count {
+    font-size: 12px !important;
+    padding: 8px 12px !important;
+    border-radius: 20px !important;
+    background: #f5f5f5 !important;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* ── Drawer — modern bottom sheet ── */
+  .mobile-filter-drawer {
+    border-radius: 20px 20px 0 0 !important;
+  }
+
+  .mobile-filter-header::before {
+    width: 36px;
+    height: 4px;
+    background: #ddd;
+    border-radius: 2px;
+  }
+}
+
+/* ──────────────────────────────────────
+   PAGE-LEVEL mobile overrides
+   ────────────────────────────────────── */
+
+@media (max-width: 768px) {
+
+  /* Products page */
+  .products-page {
+    padding: 0.5rem 0 !important;
+  }
+
+  .products-page .products-header {
+    padding: 12px 14px 0;
+    margin-bottom: 0;
+  }
+
+  .products-page .products-header h1 {
+    font-size: 18px;
+    margin-bottom: 8px;
+    font-weight: 700;
+    color: #212121;
+  }
+
+  .products-page .products-content {
+    gap: 0;
+  }
+
+  .products-page .products-grid {
+    padding: 10px;
+  }
+
+  /* Distributors page */
+  .distributors-page {
+    padding: 0 !important;
+    background: #fafafa !important;
+  }
+
+  .distributors-section {
+    padding: 0 10px !important;
+  }
+
+  .distributors-section .section-header {
+    margin-bottom: 12px;
+    text-align: left;
+    padding: 12px 4px 0;
+  }
+
+  .distributors-section .section-header h2 {
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  .distributors-section .section-header p {
+    font-size: 13px;
+    color: #888;
+  }
+
+  /* Search active banner — compact */
+  .search-active-banner {
+    margin: 10px 10px 10px;
+    padding: 10px 12px;
+    font-size: 13px;
+    border-radius: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .products-page .products-header h1 {
+    font-size: 16px;
+  }
+
+  .product-card .product-image {
+    height: 130px;
+  }
+
+  .product-card .product-info h3 {
+    font-size: 12px;
+  }
+
+  .product-card .price {
+    font-size: 14px;
+  }
+
+  .product-card .price .offer-price {
+    font-size: 14px;
+  }
+
+  .product-card .btn-add-cart {
+    padding: 7px;
+    font-size: 11px;
+  }
+
+  .distributor-card .card-header h3 {
+    font-size: 13px;
+  }
+}

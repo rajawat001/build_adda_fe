@@ -40,6 +40,7 @@ import '../styles/mobile-bottom-nav.css';
 import '../styles/InstallPWA.css';
 import '../styles/otp.css';
 import '../styles/email-auth.css';
+import '../styles/mobile-cards.css';
 
 export default function App({ Component, pageProps }: AppProps) {
   return (
