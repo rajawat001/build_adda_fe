@@ -81,8 +81,8 @@ export default function MobileBottomNav() {
       <button
         className={`mobile-nav-item ${isActive('/profile') || isActive('/login') ? 'active' : ''}`}
         onClick={() => {
-          const token = localStorage.getItem('token');
-          if (token) {
+          const userData = localStorage.getItem('user');
+          if (userData && userData !== 'undefined' && userData !== 'null') {
             handleNavigation('/profile');
           } else {
             handleNavigation('/login');

@@ -1,0 +1,190 @@
+/* OTP Input Component Styles */
+
+.otp-container {
+  text-align: center;
+  padding: 8px 0;
+}
+
+.otp-icon {
+  margin: 0 auto 16px;
+  display: flex;
+  justify-content: center;
+}
+
+.otp-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin: 0 0 8px;
+}
+
+.otp-subtitle {
+  font-size: 14px;
+  color: #6c757d;
+  margin: 0 0 28px;
+  line-height: 1.6;
+}
+
+.otp-subtitle strong {
+  color: #FF6B35;
+  word-break: break-all;
+}
+
+/* OTP Digit Inputs */
+.otp-inputs {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.otp-digit {
+  width: 52px;
+  height: 60px;
+  text-align: center;
+  font-size: 24px;
+  font-weight: 700;
+  font-family: 'Courier New', monospace;
+  border: 2px solid #dee2e6;
+  border-radius: 12px;
+  outline: none;
+  transition: all 0.25s ease;
+  background: #f8f9fa;
+  color: #1a1a2e;
+  caret-color: #FF6B35;
+}
+
+.otp-digit:focus {
+  border-color: #FF6B35;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.15);
+  transform: translateY(-2px);
+}
+
+.otp-digit.filled {
+  border-color: #FF6B35;
+  background: #fff;
+  color: #FF6B35;
+}
+
+.otp-digit.error {
+  border-color: #dc3545;
+  background: #fff5f5;
+}
+
+.otp-digit.error:focus {
+  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.15);
+}
+
+.otp-digit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Error Message */
+.otp-error {
+  color: #dc3545;
+  font-size: 13px;
+  margin: 0 0 16px;
+  padding: 8px 16px;
+  background: #f8d7da;
+  border-radius: 8px;
+  border-left: 3px solid #dc3545;
+}
+
+/* Loading State */
+.otp-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 12px 0;
+  color: #FF6B35;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.otp-spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255, 107, 53, 0.2);
+  border-top-color: #FF6B35;
+  border-radius: 50%;
+  animation: otpSpin 0.8s linear infinite;
+}
+
+@keyframes otpSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* Resend Section */
+.otp-resend {
+  margin-top: 24px;
+}
+
+.otp-timer {
+  font-size: 14px;
+  color: #6c757d;
+  margin: 0;
+}
+
+.timer-count {
+  font-weight: 700;
+  color: #FF6B35;
+  font-family: 'Courier New', monospace;
+  font-size: 16px;
+}
+
+.otp-resend-btn {
+  background: none;
+  border: none;
+  color: #FF6B35;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 8px 20px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.otp-resend-btn:hover {
+  background: rgba(255, 107, 53, 0.08);
+  text-decoration: none;
+}
+
+.otp-resend-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .otp-digit {
+    width: 44px;
+    height: 52px;
+    font-size: 20px;
+    border-radius: 10px;
+  }
+
+  .otp-inputs {
+    gap: 6px;
+  }
+
+  .otp-title {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 360px) {
+  .otp-digit {
+    width: 38px;
+    height: 46px;
+    font-size: 18px;
+  }
+
+  .otp-inputs {
+    gap: 4px;
+  }
+}

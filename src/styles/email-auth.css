@@ -1,0 +1,297 @@
+/* Email Auth Enhanced Styles */
+
+/* Auth Mode Tabs */
+.auth-tabs {
+  display: flex;
+  background: #f0f0f0;
+  border-radius: 12px;
+  padding: 4px;
+  margin-bottom: 28px;
+  position: relative;
+}
+
+.auth-tab {
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 600;
+  color: #6c757d;
+  cursor: pointer;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.auth-tab.active {
+  color: #fff;
+  background: linear-gradient(135deg, #FF6B35, #e85d2a);
+  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
+}
+
+.auth-tab:not(.active):hover {
+  color: #FF6B35;
+  background: rgba(255, 107, 53, 0.05);
+}
+
+/* Step Progress Bar */
+.step-progress {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 32px;
+  padding: 0 20px;
+}
+
+.step-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.step-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  border: 2px solid #dee2e6;
+  background: #fff;
+  color: #6c757d;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.step-circle.active {
+  border-color: #FF6B35;
+  background: linear-gradient(135deg, #FF6B35, #e85d2a);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
+}
+
+.step-circle.completed {
+  border-color: #28a745;
+  background: #28a745;
+  color: #fff;
+}
+
+.step-label {
+  font-size: 12px;
+  color: #6c757d;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.step-label.active {
+  color: #FF6B35;
+  font-weight: 600;
+}
+
+.step-label.completed {
+  color: #28a745;
+}
+
+.step-connector {
+  width: 40px;
+  height: 2px;
+  background: #dee2e6;
+  margin: 0 4px;
+  transition: background 0.3s ease;
+  flex-shrink: 0;
+}
+
+.step-connector.completed {
+  background: #28a745;
+}
+
+/* Auth Success State */
+.auth-success {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.auth-success-icon {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 20px;
+  background: linear-gradient(135deg, #28a745, #20c997);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  color: #fff;
+}
+
+.auth-success h2 {
+  font-size: 22px;
+  color: #1a1a2e;
+  margin: 0 0 8px;
+}
+
+.auth-success p {
+  font-size: 14px;
+  color: #6c757d;
+  margin: 0 0 24px;
+}
+
+/* Password Strength Indicator */
+.password-strength {
+  display: flex;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.strength-bar {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: #e9ecef;
+  transition: background 0.3s ease;
+}
+
+.strength-bar.weak { background: #dc3545; }
+.strength-bar.medium { background: #FFC107; }
+.strength-bar.strong { background: #28a745; }
+
+.strength-label {
+  font-size: 12px;
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+.strength-label.weak { color: #dc3545; }
+.strength-label.medium { color: #FFC107; }
+.strength-label.strong { color: #28a745; }
+
+/* OTP Email Input Section */
+.otp-email-section {
+  margin-bottom: 24px;
+}
+
+.otp-email-display {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: #f0f7ff;
+  border: 1px solid #b8daff;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.otp-email-display .email-icon {
+  color: #007bff;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.otp-email-display .email-text {
+  font-size: 14px;
+  color: #004085;
+  font-weight: 500;
+  word-break: break-all;
+}
+
+.otp-email-display .email-change {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: #FF6B35;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.otp-email-display .email-change:hover {
+  background: rgba(255, 107, 53, 0.08);
+}
+
+/* Divider */
+.auth-divider {
+  display: flex;
+  align-items: center;
+  margin: 20px 0;
+  gap: 12px;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #dee2e6;
+}
+
+.auth-divider span {
+  font-size: 13px;
+  color: #adb5bd;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Back Button */
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: #6c757d;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  transition: all 0.2s ease;
+}
+
+.btn-back:hover {
+  color: #FF6B35;
+  background: rgba(255, 107, 53, 0.05);
+}
+
+.btn-back svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .auth-tabs {
+    margin-bottom: 20px;
+  }
+
+  .auth-tab {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  .step-progress {
+    padding: 0;
+  }
+
+  .step-label {
+    display: none;
+  }
+
+  .step-connector {
+    width: 28px;
+  }
+
+  .step-circle {
+    width: 32px;
+    height: 32px;
+    font-size: 13px;
+  }
+}

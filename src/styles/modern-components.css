@@ -240,31 +240,40 @@
 
 .dropdown-menu a,
 .dropdown-logout {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   padding: 10px 16px;
   color: #374151;
   text-decoration: none;
   border-radius: 8px;
-  transition: all 0.2s;
+  transition: all 0.15s ease;
   background: none;
   border: none;
   width: 100%;
   text-align: left;
   cursor: pointer;
   font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
 }
 
 .dropdown-menu a:hover,
 .dropdown-logout:hover {
-  background: #f9fafb;
+  background: #fff7ed;
   color: #d97706;
 }
 
 .dropdown-logout {
   border-top: 1px solid #f3f4f6;
-  margin-top: 8px;
+  margin-top: 4px;
   padding-top: 12px;
   color: #ef4444;
+}
+
+.dropdown-logout:hover {
+  background: #fef2f2;
+  color: #dc2626;
 }
 
 .mobile-menu-toggle {
@@ -483,6 +492,12 @@
     padding: 8px;
     min-width: 44px;
     min-height: 44px;
+  }
+
+  /* Hide cart and wishlist from header on mobile - already in bottom nav */
+  .header-actions .header-action-btn[href="/wishlist"],
+  .header-actions .header-action-btn[href="/cart"] {
+    display: none;
   }
 
   .icon-badge .badge {

@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
 import SEO from '../components/SEO';
-import { register } from '../services/auth.service';
+import { sendRegisterOTP, verifyRegisterOTP } from '../services/email-auth.service';
 import { getLocationDetails } from '../utils/location';
+import OTPInput from '../components/common/OTPInput';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 
@@ -18,6 +20,8 @@ interface ValidationErrors {
   city?: string;
   state?: string;
 }
+
+type RegisterStep = 'details' | 'verify' | 'success';
 
 // Indian states and their cities
 const indianStatesAndCities: Record<string, string[]> = {
@@ -58,6 +62,7 @@ const indianStates = Object.keys(indianStatesAndCities).sort();
 
 export default function Register() {
   const router = useRouter();
+  const [step, setStep] = useState<RegisterStep>('details');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -75,6 +80,7 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
   const [availableCities, setAvailableCities] = useState<string[]>([]);
+  const [otpError, setOtpError] = useState('');
 
   const validateName = (name: string): string | null => {
     if (!name || !name.trim()) return 'Name is required';
@@ -109,24 +115,13 @@ export default function Register() {
 
   const validatePincode = (pincode: string): string | null => {
     if (!pincode) return 'Pincode is required';
-    const pincodeRegex = /^\d{6}$/;
-    if (!pincodeRegex.test(pincode)) return 'Pincode must be exactly 6 digits';
+    if (!/^\d{6}$/.test(pincode)) return 'Pincode must be exactly 6 digits';
     return null;
   };
 
   const validateAddress = (address: string): string | null => {
     if (!address || !address.trim()) return 'Address is required';
     if (address.trim().length < 10) return 'Address must be at least 10 characters';
-    return null;
-  };
-
-  const validateCity = (city: string): string | null => {
-    if (!city || !city.trim()) return 'City is required';
-    return null;
-  };
-
-  const validateState = (state: string): string | null => {
-    if (!state || !state.trim()) return 'State is required';
     return null;
   };
 
@@ -147,16 +142,10 @@ export default function Register() {
     if (pincodeError) errors.pincode = pincodeError;
     if (addressError) errors.address = addressError;
 
-    // Validate business name, city, and state for distributors only
     if (formData.role === 'distributor') {
-      const businessNameError = validateName(formData.businessName);
-      if (businessNameError) errors.businessName = 'Business name is required';
-
-      const cityError = validateCity(formData.city);
-      if (cityError) errors.city = cityError;
-
-      const stateError = validateState(formData.state);
-      if (stateError) errors.state = stateError;
+      if (!formData.businessName?.trim()) errors.businessName = 'Business name is required';
+      if (!formData.city?.trim()) errors.city = 'City is required';
+      if (!formData.state?.trim()) errors.state = 'State is required';
     }
 
     setValidationErrors(errors);
@@ -165,14 +154,8 @@ export default function Register() {
 
   const handleStateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedState = e.target.value;
-    setFormData({
-      ...formData,
-      state: selectedState,
-      city: '' // Reset city when state changes
-    });
+    setFormData({ ...formData, state: selectedState, city: '' });
     setAvailableCities(selectedState ? indianStatesAndCities[selectedState] || [] : []);
-
-    // Clear validation errors
     if (validationErrors.state) {
       setValidationErrors({ ...validationErrors, state: undefined, city: undefined });
     }
@@ -180,17 +163,9 @@ export default function Register() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value
-    });
-
-    // Clear validation error for this field
+    setFormData({ ...formData, [name]: value });
     if (validationErrors[name as keyof ValidationErrors]) {
-      setValidationErrors({
-        ...validationErrors,
-        [name]: undefined
-      });
+      setValidationErrors({ ...validationErrors, [name]: undefined });
     }
   };
 
@@ -198,17 +173,11 @@ export default function Register() {
     try {
       setLoading(true);
       const locationDetails = await getLocationDetails();
-
-      // Try to match the state from location with our dropdown options
       const matchedState = indianStates.find(
         s => s.toLowerCase() === locationDetails.state.toLowerCase()
       ) || '';
-
-      // Get cities for the matched state
       const cities = matchedState ? indianStatesAndCities[matchedState] || [] : [];
       setAvailableCities(cities);
-
-      // Try to match the city from location with the available cities
       const matchedCity = cities.find(
         c => c.toLowerCase() === locationDetails.city.toLowerCase()
       ) || '';
@@ -231,29 +200,50 @@ export default function Register() {
         alert(`Location captured!\nPincode: ${locationDetails.pincode}\nPlease select your state and city from the dropdowns.`);
       }
     } catch (error: any) {
-      console.error('Location error:', error);
       alert('Unable to get location. Please enable location services and try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Step 1: Validate form and send OTP
+  const handleSubmitDetails = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-
-    // Validate form
-    if (!validateForm()) {
-      return;
-    }
-
+    if (!validateForm()) return;
     setLoading(true);
 
     try {
-      const response = await register(formData);
+      await sendRegisterOTP(formData.email);
+      setStep('verify');
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to send verification code. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      // SECURITY FIX: Don't store JWT token - it's in httpOnly cookie
-      // Only store non-sensitive user data for UI purposes
+  // Step 2: Verify OTP and complete registration
+  const handleVerifyOTP = async (otp: string) => {
+    setOtpError('');
+    setLoading(true);
+
+    try {
+      const response = await verifyRegisterOTP({
+        email: formData.email,
+        otp,
+        name: formData.name,
+        password: formData.password,
+        phone: formData.phone,
+        role: formData.role,
+        businessName: formData.businessName,
+        pincode: formData.pincode,
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        location: formData.location
+      });
+
       if (response.user) {
         localStorage.setItem('user', JSON.stringify({
           _id: response.user._id,
@@ -262,43 +252,39 @@ export default function Register() {
           role: response.user.role
         }));
         localStorage.setItem('role', response.user.role);
-
-        // Trigger custom event to update header
         window.dispatchEvent(new Event('userLogin'));
+        setStep('success');
 
-        // Redirect based on role (user is now logged in automatically)
-        if (response.user.role === 'admin') {
-          router.push('/admin/dashboard');
-        } else if (response.user.role === 'distributor') {
-          // Redirect new distributors to subscription page
-          // They must subscribe before accessing the platform
-          router.push('/distributor/subscription');
-        } else {
-          router.push('/');
-        }
+        // Auto-redirect after showing success
+        setTimeout(() => {
+          if (response.user.role === 'distributor') {
+            router.push('/distributor/subscription');
+          } else {
+            router.push('/');
+          }
+        }, 2000);
       }
     } catch (err: any) {
-      console.error('Registration error:', err.response?.data);
-
-      // Handle validation errors from backend
-      if (err.response?.data?.validationErrors) {
-        const backendErrors: ValidationErrors = {};
-        err.response.data.validationErrors.forEach((error: any) => {
-          backendErrors[error.field as keyof ValidationErrors] = error.message;
-        });
-        setValidationErrors(backendErrors);
-        setError('Please fix the validation errors below');
-      } else {
-        // Handle general errors
-        const errorMessage = err.response?.data?.message ||
-                            err.response?.data?.error ||
-                            err.message ||
-                            'Registration failed. Please try again.';
-        setError(errorMessage);
-      }
+      setOtpError(err.response?.data?.message || 'Verification failed. Please try again.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleResendOTP = async () => {
+    try {
+      await sendRegisterOTP(formData.email);
+    } catch (err: any) {
+      setOtpError(err.response?.data?.message || 'Failed to resend OTP.');
+    }
+  };
+
+  const getStepStatus = (s: number) => {
+    const steps: Record<RegisterStep, number> = { details: 1, verify: 2, success: 3 };
+    const current = steps[step];
+    if (s < current) return 'completed';
+    if (s === current) return 'active';
+    return '';
   };
 
   return (
@@ -310,213 +296,236 @@ export default function Register() {
         <div className="login-container">
           <h1>Register at BuildAdda</h1>
 
-          {error && <div className="error-message">{error}</div>}
-
-          <form onSubmit={handleSubmit} noValidate>
-            <div className="form-group">
-              <label htmlFor="role">Register As</label>
-              <select
-                id="role"
-                name="role"
-                value={formData.role}
-                onChange={handleChange}
-              >
-                <option value="user">User</option>
-                <option value="distributor">Distributor</option>
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="name">Name</label>
-              <input
-                id="name"
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                className={validationErrors.name ? 'input-error' : ''}
-                autoComplete="name"
-                required
-              />
-              {validationErrors.name && (
-                <span className="validation-error">{validationErrors.name}</span>
-              )}
-            </div>
-
-            {formData.role === 'distributor' && (
-              <div className="form-group">
-                <label htmlFor="businessName">Business Name</label>
-                <input
-                  id="businessName"
-                  type="text"
-                  name="businessName"
-                  value={formData.businessName}
-                  onChange={handleChange}
-                  className={validationErrors.businessName ? 'input-error' : ''}
-                  autoComplete="organization"
-                  required
-                />
-                {validationErrors.businessName && (
-                  <span className="validation-error">{validationErrors.businessName}</span>
-                )}
+          {/* Step Progress */}
+          <div className="step-progress">
+            <div className="step-item">
+              <div className={`step-circle ${getStepStatus(1)}`}>
+                {getStepStatus(1) === 'completed' ? '\u2713' : '1'}
               </div>
+              <span className={`step-label ${getStepStatus(1)}`}>Details</span>
+            </div>
+            <div className={`step-connector ${getStepStatus(1) === 'completed' ? 'completed' : ''}`} />
+            <div className="step-item">
+              <div className={`step-circle ${getStepStatus(2)}`}>
+                {getStepStatus(2) === 'completed' ? '\u2713' : '2'}
+              </div>
+              <span className={`step-label ${getStepStatus(2)}`}>Verify</span>
+            </div>
+            <div className={`step-connector ${getStepStatus(2) === 'completed' ? 'completed' : ''}`} />
+            <div className="step-item">
+              <div className={`step-circle ${getStepStatus(3)}`}>
+                {getStepStatus(3) === 'completed' ? '\u2713' : '3'}
+              </div>
+              <span className={`step-label ${getStepStatus(3)}`}>Done</span>
+            </div>
+          </div>
+
+          <AnimatePresence mode="wait">
+            {step === 'details' && (
+              <motion.div
+                key="details"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ duration: 0.25 }}
+              >
+                {error && <div className="error-message">{error}</div>}
+
+                <form onSubmit={handleSubmitDetails} noValidate>
+                  <div className="form-group">
+                    <label htmlFor="role">Register As</label>
+                    <select id="role" name="role" value={formData.role} onChange={handleChange}>
+                      <option value="user">User</option>
+                      <option value="distributor">Distributor</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="name">Name</label>
+                    <input
+                      id="name" type="text" name="name" value={formData.name}
+                      onChange={handleChange}
+                      className={validationErrors.name ? 'input-error' : ''}
+                      autoComplete="name" required
+                    />
+                    {validationErrors.name && <span className="validation-error">{validationErrors.name}</span>}
+                  </div>
+
+                  {formData.role === 'distributor' && (
+                    <div className="form-group">
+                      <label htmlFor="businessName">Business Name</label>
+                      <input
+                        id="businessName" type="text" name="businessName"
+                        value={formData.businessName} onChange={handleChange}
+                        className={validationErrors.businessName ? 'input-error' : ''}
+                        autoComplete="organization" required
+                      />
+                      {validationErrors.businessName && <span className="validation-error">{validationErrors.businessName}</span>}
+                    </div>
+                  )}
+
+                  <div className="form-group">
+                    <label htmlFor="email">Email</label>
+                    <input
+                      id="email" type="email" name="email" value={formData.email}
+                      onChange={handleChange}
+                      className={validationErrors.email ? 'input-error' : ''}
+                      autoComplete="email" required
+                    />
+                    {validationErrors.email && <span className="validation-error">{validationErrors.email}</span>}
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="phone">Phone</label>
+                    <input
+                      id="phone" type="tel" name="phone" value={formData.phone}
+                      onChange={handleChange}
+                      className={validationErrors.phone ? 'input-error' : ''}
+                      placeholder="10-digit mobile number"
+                      autoComplete="tel" required
+                    />
+                    {validationErrors.phone && <span className="validation-error">{validationErrors.phone}</span>}
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="password">Password</label>
+                    <input
+                      id="password" type="password" name="password"
+                      value={formData.password} onChange={handleChange}
+                      className={validationErrors.password ? 'input-error' : ''}
+                      autoComplete="new-password" required
+                    />
+                    {validationErrors.password && <span className="validation-error">{validationErrors.password}</span>}
+                    <small className="field-hint">
+                      Must be 8+ characters with uppercase, lowercase, number, and special character
+                    </small>
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="pincode">Pincode</label>
+                    <input
+                      id="pincode" type="text" name="pincode"
+                      value={formData.pincode} onChange={handleChange}
+                      className={validationErrors.pincode ? 'input-error' : ''}
+                      placeholder="6-digit pincode" maxLength={6}
+                      autoComplete="postal-code" required
+                    />
+                    {validationErrors.pincode && <span className="validation-error">{validationErrors.pincode}</span>}
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="address">Address</label>
+                    <textarea
+                      id="address" name="address" value={formData.address}
+                      onChange={handleChange}
+                      className={validationErrors.address ? 'input-error' : ''}
+                      autoComplete="street-address" rows={3} required
+                    />
+                    {validationErrors.address && <span className="validation-error">{validationErrors.address}</span>}
+                  </div>
+
+                  {formData.role === 'distributor' && (
+                    <>
+                      <div className="form-group">
+                        <label htmlFor="state">State</label>
+                        <select
+                          id="state" name="state" value={formData.state}
+                          onChange={handleStateChange}
+                          className={validationErrors.state ? 'input-error' : ''} required
+                        >
+                          <option value="">Select State</option>
+                          {indianStates.map(state => (
+                            <option key={state} value={state}>{state}</option>
+                          ))}
+                        </select>
+                        {validationErrors.state && <span className="validation-error">{validationErrors.state}</span>}
+                      </div>
+
+                      <div className="form-group">
+                        <label htmlFor="city">City</label>
+                        <select
+                          id="city" name="city" value={formData.city}
+                          onChange={handleChange}
+                          className={validationErrors.city ? 'input-error' : ''}
+                          disabled={!formData.state} required
+                        >
+                          <option value="">Select City</option>
+                          {availableCities.map(city => (
+                            <option key={city} value={city}>{city}</option>
+                          ))}
+                        </select>
+                        {validationErrors.city && <span className="validation-error">{validationErrors.city}</span>}
+                        {!formData.state && <small className="field-hint">Please select a state first</small>}
+                      </div>
+                    </>
+                  )}
+
+                  <button type="button" className="btn-location" onClick={handleGetLocation}>
+                    Capture Current Location
+                  </button>
+
+                  <button type="submit" className="btn-submit" disabled={loading}>
+                    {loading ? 'Sending Verification...' : 'Continue & Verify Email'}
+                  </button>
+                </form>
+              </motion.div>
             )}
 
-            <div className="form-group">
-              <label htmlFor="email">Email</label>
-              <input
-                id="email"
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                className={validationErrors.email ? 'input-error' : ''}
-                autoComplete="email"
-                required
-              />
-              {validationErrors.email && (
-                <span className="validation-error">{validationErrors.email}</span>
-              )}
-            </div>
+            {step === 'verify' && (
+              <motion.div
+                key="verify"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.25 }}
+              >
+                <button
+                  className="btn-back"
+                  onClick={() => { setStep('details'); setOtpError(''); }}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                  </svg>
+                  Back to Details
+                </button>
 
-            <div className="form-group">
-              <label htmlFor="phone">Phone</label>
-              <input
-                id="phone"
-                type="tel"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                className={validationErrors.phone ? 'input-error' : ''}
-                placeholder="10-digit mobile number"
-                autoComplete="tel"
-                required
-              />
-              {validationErrors.phone && (
-                <span className="validation-error">{validationErrors.phone}</span>
-              )}
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="password">Password</label>
-              <input
-                id="password"
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                className={validationErrors.password ? 'input-error' : ''}
-                autoComplete="new-password"
-                required
-              />
-              {validationErrors.password && (
-                <span className="validation-error">{validationErrors.password}</span>
-              )}
-              <small className="field-hint">
-                Must be 8+ characters with uppercase, lowercase, number, and special character
-              </small>
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="pincode">Pincode</label>
-              <input
-                id="pincode"
-                type="text"
-                name="pincode"
-                value={formData.pincode}
-                onChange={handleChange}
-                className={validationErrors.pincode ? 'input-error' : ''}
-                placeholder="6-digit pincode"
-                maxLength={6}
-                autoComplete="postal-code"
-                required
-              />
-              {validationErrors.pincode && (
-                <span className="validation-error">{validationErrors.pincode}</span>
-              )}
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="address">Address</label>
-              <textarea
-                id="address"
-                name="address"
-                value={formData.address}
-                onChange={handleChange}
-                className={validationErrors.address ? 'input-error' : ''}
-                autoComplete="street-address"
-                rows={3}
-                required
-              />
-              {validationErrors.address && (
-                <span className="validation-error">{validationErrors.address}</span>
-              )}
-            </div>
-
-            {formData.role === 'distributor' && (
-              <>
-                <div className="form-group">
-                  <label htmlFor="state">State</label>
-                  <select
-                    id="state"
-                    name="state"
-                    value={formData.state}
-                    onChange={handleStateChange}
-                    className={validationErrors.state ? 'input-error' : ''}
-                    required
-                  >
-                    <option value="">Select State</option>
-                    {indianStates.map((state) => (
-                      <option key={state} value={state}>
-                        {state}
-                      </option>
-                    ))}
-                  </select>
-                  {validationErrors.state && (
-                    <span className="validation-error">{validationErrors.state}</span>
-                  )}
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="city">City</label>
-                  <select
-                    id="city"
-                    name="city"
-                    value={formData.city}
-                    onChange={handleChange}
-                    className={validationErrors.city ? 'input-error' : ''}
-                    disabled={!formData.state}
-                    required
-                  >
-                    <option value="">Select City</option>
-                    {availableCities.map((city) => (
-                      <option key={city} value={city}>
-                        {city}
-                      </option>
-                    ))}
-                  </select>
-                  {validationErrors.city && (
-                    <span className="validation-error">{validationErrors.city}</span>
-                  )}
-                  {!formData.state && (
-                    <small className="field-hint">Please select a state first</small>
-                  )}
-                </div>
-              </>
+                <OTPInput
+                  onComplete={handleVerifyOTP}
+                  onResend={handleResendOTP}
+                  error={otpError}
+                  loading={loading}
+                  email={formData.email}
+                  purpose="register"
+                />
+              </motion.div>
             )}
 
-            <button type="button" className="btn-location" onClick={handleGetLocation}>
-              📍 Capture Current Location
-            </button>
+            {step === 'success' && (
+              <motion.div
+                key="success"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="auth-success">
+                  <div className="auth-success-icon">{'\u2713'}</div>
+                  <h2>Registration Successful!</h2>
+                  <p>
+                    {formData.role === 'distributor'
+                      ? 'Your account is created. Redirecting to subscription...'
+                      : 'Welcome to BuildAdda! Redirecting...'
+                    }
+                  </p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-            <button type="submit" className="btn-submit" disabled={loading}>
-              {loading ? 'Registering...' : 'Register'}
-            </button>
-          </form>
-
-          <p className="login-footer">
-            Already have an account? <Link href="/login">Login here</Link>
-          </p>
+          {step !== 'success' && (
+            <p className="login-footer">
+              Already have an account? <Link href="/login">Login here</Link>
+            </p>
+          )}
         </div>
       </div>
       <Footer />

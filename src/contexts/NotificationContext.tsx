@@ -140,6 +140,15 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
 
   // Fetch notifications
   const fetchNotifications = useCallback(async () => {
+    // Skip if not authenticated
+    if (!isAuthenticated()) {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
+      return;
+    }
+
     try {
       const response = await api.get('/notifications');
       const newNotifications = response.data.notifications || [];
@@ -164,10 +173,17 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
       }
 
       setNotifications(newNotifications);
-    } catch (error) {
+    } catch (error: any) {
+      // Stop polling on auth errors
+      if (error.response?.status === 401) {
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current);
+          pollingIntervalRef.current = null;
+        }
+        setNotifications([]);
+        return;
+      }
       console.error('Error fetching notifications:', error);
-      // Generate mock notifications for demo purposes
-      generateMockNotifications();
     }
   }, [playNotificationSound]);
 
