@@ -5,7 +5,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import api from '../services/api';
 import { getCurrentLocation } from '../utils/location';
-import { FiFilter, FiX, FiMapPin } from 'react-icons/fi';
+import { FiFilter, FiX, FiMapPin, FiSearch } from 'react-icons/fi';
 
 interface Distributor {
   _id: string;
@@ -36,12 +36,20 @@ const Distributors = () => {
   const [maxDistance, setMaxDistance] = useState(50);
   const [userLocation, setUserLocation] = useState<{lat: number; lng: number} | null>(null);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [activeSearch, setActiveSearch] = useState('');
   const router = useRouter();
 
   useEffect(() => {
-    fetchAllDistributors(1, true);
+    const searchParam = router.query.search as string | undefined;
+    if (searchParam && searchParam.trim()) {
+      setActiveSearch(searchParam.trim());
+      fetchAllDistributors(1, true, searchParam.trim());
+    } else {
+      setActiveSearch('');
+      fetchAllDistributors(1, true);
+    }
     detectUserLocation();
-  }, []);
+  }, [router.query.search]);
 
   // Lock body scroll when mobile filters are open
   useEffect(() => {
@@ -70,7 +78,7 @@ const Distributors = () => {
     }
   };
 
-  const fetchAllDistributors = async (pageNum: number = 1, reset: boolean = false) => {
+  const fetchAllDistributors = async (pageNum: number = 1, reset: boolean = false, search?: string) => {
     try {
       if (reset) {
         setLoading(true);
@@ -78,7 +86,12 @@ const Distributors = () => {
         setLoadingMore(true);
       }
 
-      const response = await api.get(`/users/distributors?page=${pageNum}&limit=20`);
+      let url = `/users/distributors?page=${pageNum}&limit=20`;
+      const searchTerm = search ?? activeSearch;
+      if (searchTerm) {
+        url += `&search=${encodeURIComponent(searchTerm)}`;
+      }
+      const response = await api.get(url);
       const newDistributors = response.data.distributors || [];
 
       if (reset) {
@@ -302,8 +315,24 @@ const Distributors = () => {
         </div>
         
         <div className="distributors-section">
+          {activeSearch && (
+            <div className="search-active-banner">
+              <FiSearch size={16} />
+              <span>Showing results for "<strong>{activeSearch}</strong>"</span>
+              <button
+                className="clear-search-btn"
+                onClick={() => {
+                  setActiveSearch('');
+                  router.push('/distributors', undefined, { shallow: true });
+                }}
+              >
+                <FiX size={16} />
+                Clear
+              </button>
+            </div>
+          )}
           <div className="section-header">
-            <h2>Available Distributors</h2>
+            <h2>{activeSearch ? 'Search Results' : 'Available Distributors'}</h2>
             <p>{distributors.length} distributors found</p>
           </div>
           

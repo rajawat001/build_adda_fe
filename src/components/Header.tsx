@@ -1,8 +1,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import authService from '../services/auth.service';
-import { NotificationBell } from './NotificationBell';
 import AnnouncementBar from './AnnouncementBar';
 import MobileBottomNav from './MobileBottomNav';
 import {
@@ -13,7 +12,8 @@ import {
   FiMenu,
   FiX,
   FiPackage,
-  FiMapPin
+  FiMapPin,
+  FiBell
 } from 'react-icons/fi';
 
 export default function Header() {
@@ -23,46 +23,99 @@ export default function Header() {
   const [cartCount, setCartCount] = useState(0);
   const [wishlistCount, setWishlistCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchType, setSearchType] = useState<'products' | 'categories' | 'distributors'>('products');
   const [showCategoryMenu, setShowCategoryMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showSearchPanel, setShowSearchPanel] = useState(false);
+  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
+  const profileRef = useRef<HTMLDivElement>(null);
+  const searchPanelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadUserData();
 
-    // Listen for storage changes (when user logs in/out)
     const handleStorageChange = () => {
       loadUserData();
     };
 
     window.addEventListener('storage', handleStorageChange);
-
-    // Also listen for custom event we'll trigger on login
     window.addEventListener('userLogin', handleStorageChange);
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('userLogin', handleStorageChange);
     };
-  }, [router.pathname]); // Reload when route changes
+  }, [router.pathname]);
+
+  // Close profile dropdown on outside click & position dropdown on mobile
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setShowProfileMenu(false);
+      }
+    };
+    if (showProfileMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+      // Position dropdown so it stays within viewport on mobile
+      if (profileRef.current) {
+        const rect = profileRef.current.getBoundingClientRect();
+        const menuWidth = 200;
+        const viewportWidth = window.innerWidth;
+        // Check if dropdown would overflow left side
+        if (rect.right - menuWidth < 8) {
+          // Align to left edge of viewport with padding
+          setDropdownStyle({
+            position: 'fixed',
+            top: rect.bottom + 8,
+            right: 'auto',
+            left: 8,
+          });
+        } else if (viewportWidth <= 768) {
+          // On mobile, use fixed positioning anchored to right of viewport
+          setDropdownStyle({
+            position: 'fixed',
+            top: rect.bottom + 8,
+            right: 12,
+            left: 'auto',
+          });
+        } else {
+          setDropdownStyle({});
+        }
+      }
+    } else {
+      setDropdownStyle({});
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showProfileMenu]);
+
+  // Close search panel on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (searchPanelRef.current && !searchPanelRef.current.contains(e.target as Node)) {
+        setShowSearchPanel(false);
+      }
+    };
+    if (showSearchPanel) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showSearchPanel]);
 
   const loadUserData = () => {
     try {
       const userData = localStorage.getItem('user');
       const userRole = localStorage.getItem('role');
 
-      // Check if userData exists and is valid JSON
       if (userData && userData !== 'undefined' && userData !== 'null') {
         const parsedUser = JSON.parse(userData);
         setUser(parsedUser);
       }
 
-      // Set user role
       if (userRole && userRole !== 'undefined' && userRole !== 'null') {
         setRole(userRole);
       }
-      
-      // Load cart
+
       const cartData = localStorage.getItem('cart');
       if (cartData && cartData !== 'undefined' && cartData !== 'null') {
         const cart = JSON.parse(cartData);
@@ -70,8 +123,7 @@ export default function Header() {
       } else {
         setCartCount(0);
       }
-      
-      // Load wishlist
+
       const wishlistData = localStorage.getItem('wishlist');
       if (wishlistData && wishlistData !== 'undefined' && wishlistData !== 'null') {
         const wishlist = JSON.parse(wishlistData);
@@ -81,7 +133,6 @@ export default function Header() {
       }
     } catch (error) {
       console.error('Error loading user data:', error);
-      // Clear invalid data
       localStorage.removeItem('user');
       localStorage.removeItem('cart');
       localStorage.removeItem('wishlist');
@@ -90,14 +141,12 @@ export default function Header() {
 
   const handleLogout = async () => {
     try {
-      // Call backend to clear httpOnly cookie
       await authService.logout();
       setUser(null);
       setRole(null);
       router.push('/login');
     } catch (error) {
       console.error('Logout error:', error);
-      // Clear client-side data even if backend call fails
       localStorage.removeItem('user');
       localStorage.removeItem('role');
       setUser(null);
@@ -106,7 +155,6 @@ export default function Header() {
     }
   };
 
-  // Handle mobile menu toggle with body scroll lock
   useEffect(() => {
     if (showMobileMenu) {
       document.body.classList.add('mobile-menu-open');
@@ -128,12 +176,29 @@ export default function Header() {
     { id: 'Tiles', name: 'Tiles', icon: '◽' }
   ];
 
+  const searchPlaceholders: Record<string, string> = {
+    products: 'Search products by name...',
+    categories: 'Search categories...',
+    distributors: 'Search distributors by name, city...'
+  };
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      router.push(`/products?search=${encodeURIComponent(searchQuery)}`);
-      setSearchQuery('');
+    const q = searchQuery.trim();
+    if (!q) return;
+
+    if (searchType === 'products') {
+      router.push(`/products?search=${encodeURIComponent(q)}`);
+    } else if (searchType === 'categories') {
+      const match = categories.find(
+        (c) => c.name.toLowerCase().includes(q.toLowerCase())
+      );
+      router.push(`/products?category=${encodeURIComponent(match ? match.id : q)}`);
+    } else {
+      router.push(`/distributors?search=${encodeURIComponent(q)}`);
     }
+    setSearchQuery('');
+    setShowSearchPanel(false);
   };
 
   const handleCategoryClick = (categoryId: string) => {
@@ -156,21 +221,35 @@ export default function Header() {
                 </Link>
               </div>
 
-              {/* Search Bar */}
-              <form className="search-bar" onSubmit={handleSearch}>
-                <div className="search-input-wrapper">
-                  <FiSearch className="search-icon" />
-                  <input
-                    type="text"
-                    placeholder="Search for cement, steel, bricks..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
+              {/* Desktop Search Bar - hidden on mobile, replaced by mobile search below */}
+              <div className="desktop-search-wrapper desktop-search">
+                <div className="search-toggle-group">
+                  {(['products', 'categories', 'distributors'] as const).map((type) => (
+                    <button
+                      key={type}
+                      type="button"
+                      className={`search-toggle-btn${searchType === type ? ' active' : ''}`}
+                      onClick={() => setSearchType(type)}
+                    >
+                      {type.charAt(0).toUpperCase() + type.slice(1)}
+                    </button>
+                  ))}
                 </div>
-                <button type="submit" className="search-button">
-                  Search
-                </button>
-              </form>
+                <form className="search-bar" onSubmit={handleSearch}>
+                  <div className="search-input-wrapper">
+                    <FiSearch className="search-icon" />
+                    <input
+                      type="text"
+                      placeholder={searchPlaceholders[searchType]}
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                  </div>
+                  <button type="submit" className="search-button">
+                    Search
+                  </button>
+                </form>
+              </div>
 
               {/* Header Actions */}
               <div className="header-actions">
@@ -212,7 +291,7 @@ export default function Header() {
                           <span className="action-label">Cart</span>
                         </Link>
 
-                        <div className="profile-dropdown">
+                        <div className="profile-dropdown" ref={profileRef}>
                           <button
                             className="header-action-btn"
                             onClick={() => setShowProfileMenu(!showProfileMenu)}
@@ -222,14 +301,17 @@ export default function Header() {
                           </button>
 
                           {showProfileMenu && (
-                            <div className="dropdown-menu">
+                            <div className="dropdown-menu" style={dropdownStyle}>
                               <Link href="/profile" onClick={() => setShowProfileMenu(false)}>
                                 My Profile
                               </Link>
                               <Link href="/orders" onClick={() => setShowProfileMenu(false)}>
                                 My Orders
                               </Link>
-                              <NotificationBell />
+                              <Link href="/notifications" onClick={() => setShowProfileMenu(false)}>
+                                <FiBell size={16} />
+                                Notifications
+                              </Link>
                               <button onClick={handleLogout} className="dropdown-logout">
                                 Logout
                               </button>
@@ -252,13 +334,23 @@ export default function Header() {
                 )}
               </div>
 
-              {/* Mobile Menu Toggle */}
-              <button
-                className="mobile-menu-toggle"
-                onClick={() => setShowMobileMenu(!showMobileMenu)}
-              >
-                {showMobileMenu ? <FiX size={24} /> : <FiMenu size={24} />}
-              </button>
+              {/* Mobile: Search Icon + Hamburger */}
+              <div className="mobile-header-icons">
+                <button
+                  className="mobile-search-icon-btn"
+                  onClick={() => setShowSearchPanel(!showSearchPanel)}
+                  aria-label="Search"
+                >
+                  {showSearchPanel ? <FiX size={22} /> : <FiSearch size={22} />}
+                </button>
+
+                <button
+                  className="mobile-menu-toggle"
+                  onClick={() => setShowMobileMenu(!showMobileMenu)}
+                >
+                  {showMobileMenu ? <FiX size={24} /> : <FiMenu size={24} />}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -313,12 +405,50 @@ export default function Header() {
           </div>
         </div>
 
+        {/* Mobile Search Panel - Fixed overlay */}
+        {showSearchPanel && (
+          <div className="search-panel-overlay" onClick={() => setShowSearchPanel(false)}>
+            <div
+              className="search-dropdown-panel"
+              ref={searchPanelRef}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="search-toggle-group">
+                {(['products', 'categories', 'distributors'] as const).map((type) => (
+                  <button
+                    key={type}
+                    type="button"
+                    className={`search-toggle-btn${searchType === type ? ' active' : ''}`}
+                    onClick={() => setSearchType(type)}
+                  >
+                    {type.charAt(0).toUpperCase() + type.slice(1)}
+                  </button>
+                ))}
+              </div>
+              <form className="search-panel-form" onSubmit={handleSearch}>
+                <div className="search-panel-input-wrap">
+                  <FiSearch className="search-panel-icon" />
+                  <input
+                    type="text"
+                    placeholder={searchPlaceholders[searchType]}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    autoFocus
+                  />
+                </div>
+                <button type="submit" className="search-panel-submit">
+                  Search
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+
         {/* Mobile Menu */}
         {showMobileMenu && (
           <div
             className={`mobile-menu ${showMobileMenu ? 'active' : ''}`}
             onClick={(e) => {
-              // Close menu when clicking overlay (not content)
               if (e.target === e.currentTarget) {
                 setShowMobileMenu(false);
               }
@@ -358,7 +488,6 @@ export default function Header() {
         )}
       </header>
 
-      {/* Mobile Bottom Navigation - Visible only on mobile */}
       <MobileBottomNav />
     </>
   );

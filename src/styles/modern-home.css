@@ -8,31 +8,60 @@
 
 /* HERO BANNER */
 .hero-banner {
-  background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
-  color: white;
-  padding: 80px 0 100px;
   position: relative;
+  overflow: hidden;
+  background: #111827;
+  color: white;
+  z-index: 1;
+}
+
+/* Image wrapper — aspect-ratio fallback prevents collapse before images load */
+.hero-banner-img-wrap {
+  position: relative;
+  width: 100%;
+  display: block;
+  aspect-ratio: 16 / 6;
   overflow: hidden;
 }
 
-.hero-banner::before {
-  content: '';
+.hero-banner-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  transition: opacity 1s ease-in-out;
+}
+
+/* First image is in flow to set the natural height once loaded */
+.hero-banner-img:first-child {
+  position: relative;
+}
+
+.hero-banner-img.active {
+  opacity: 1;
+}
+
+/* Content overlays the image */
+.hero-content {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="%231f2937"/><circle cx="50" cy="50" r="30" fill="%23374151" opacity="0.1"/></svg>');
-  opacity: 0.3;
-}
-
-.hero-content {
-  position: relative;
-  z-index: 1;
+  display: flex;
+  align-items: center;
+  z-index: 2;
+  background: linear-gradient(90deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.2) 60%, transparent 100%);
 }
 
 .hero-text {
-  max-width: 700px;
+  max-width: 600px;
+  padding: 40px 0;
 }
 
 .hero-title {
@@ -488,31 +517,35 @@
 }
 
 @media (max-width: 768px) {
-  .hero-banner {
-    padding: 40px 0 60px;
+  .hero-banner-img-wrap {
+    aspect-ratio: 16 / 9;
+  }
+
+  .hero-text {
+    padding: 16px 0;
   }
 
   .hero-title {
-    font-size: 32px;
-    margin-bottom: 16px;
+    font-size: 22px;
+    margin-bottom: 10px;
   }
 
   .hero-subtitle {
-    font-size: 16px;
-    margin-bottom: 24px;
+    font-size: 12px;
+    margin-bottom: 14px;
   }
 
   .hero-actions {
     flex-direction: column;
-    gap: 12px;
+    gap: 8px;
   }
 
   .btn-primary-large,
   .btn-secondary-large {
     width: 100%;
     justify-content: center;
-    padding: 14px 24px;
-    font-size: 15px;
+    padding: 10px 18px;
+    font-size: 13px;
   }
 
   .section-title {
@@ -610,31 +643,41 @@
 }
 
 @media (max-width: 480px) {
-  .hero-banner {
-    padding: 32px 0 48px;
+  .hero-banner-img-wrap {
+    aspect-ratio: 16 / 10;
+  }
+
+  .hero-text {
+    padding: 10px 0;
   }
 
   .hero-title {
-    font-size: 26px;
+    font-size: 18px;
     line-height: 1.3;
+    margin-bottom: 6px;
   }
 
   .hero-subtitle {
-    font-size: 14px;
-    line-height: 1.5;
+    font-size: 11px;
+    line-height: 1.4;
+    margin-bottom: 10px;
+  }
+
+  .hero-actions {
+    gap: 6px;
   }
 
   .btn-primary-large,
   .btn-secondary-large {
-    padding: 12px 20px;
-    font-size: 14px;
-    gap: 8px;
+    padding: 8px 14px;
+    font-size: 12px;
+    gap: 6px;
   }
 
   .btn-primary-large svg,
   .btn-secondary-large svg {
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
   }
 
   .section-title {
@@ -735,17 +778,17 @@
 
 @media (max-width: 375px) {
   .hero-title {
-    font-size: 24px;
+    font-size: 18px;
   }
 
   .hero-subtitle {
-    font-size: 13px;
+    font-size: 11px;
   }
 
   .btn-primary-large,
   .btn-secondary-large {
-    padding: 12px 16px;
-    font-size: 13px;
+    padding: 8px 12px;
+    font-size: 11px;
   }
 
   .section-title {

@@ -29,6 +29,18 @@ const Products = () => {
     pincode: ''
   });
 
+  // Read URL query params (from header search or category links)
+  useEffect(() => {
+    if (!router.isReady) return;
+    const { search, category } = router.query;
+    if (search && typeof search === 'string') {
+      setSearchTerm(search);
+    }
+    if (category && typeof category === 'string') {
+      setFilters(prev => ({ ...prev, category }));
+    }
+  }, [router.isReady, router.query.search, router.query.category]);
+
   // Fetch categories once
   useEffect(() => {
     fetchCategories();

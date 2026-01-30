@@ -286,22 +286,19 @@ export default function Home() {
       <Header />
 
       <main className="modern-home-page">
-        {/* ✅ HERO BANNER WITH AUTO SLIDER */}
-        <section
-          className="hero-banner"
-          style={{
-            backgroundImage: `url(${bannerImages[currentBanner]})`,
-            backgroundSize: '100% auto',     // ✅ CHANGE: width 100%, height auto
-            backgroundRepeat: 'no-repeat',
-            backgroundPosition: 'center top', // ✅ CHANGE: top se align karega
-            backgroundColor: '#000',
-            transition: 'background-image 1s ease-in-out',
-            minHeight: 'auto',               // ✅ CHANGE: auto height
-            paddingBottom: '42.25%',         // ✅ ADD: 16:9 aspect ratio maintain karega
-            position: 'relative'
-          }}
-        >
-          <div className="hero-content" style={{ position: 'absolute', top: 200, left: 0, right: 900, bottom: 0 }}>
+        {/* HERO BANNER WITH AUTO SLIDER */}
+        <section className="hero-banner">
+          <div className="hero-banner-img-wrap">
+            {bannerImages.map((src, idx) => (
+              <img
+                key={src}
+                src={src}
+                alt={`BuildAdda Banner ${idx + 1}`}
+                className={`hero-banner-img${idx === currentBanner ? ' active' : ''}`}
+              />
+            ))}
+          </div>
+          <div className="hero-content">
             <div className="container">
               <div className="hero-text">
                 <h1 className="hero-title">
@@ -314,7 +311,6 @@ export default function Home() {
                   Compare prices and get the best deals.
                 </p>
 
-                {/* 🔒 BUTTONS UNCHANGED */}
                 <div className="hero-actions">
                   <button
                     className="btn-primary-large"
