@@ -361,6 +361,10 @@
   font-weight: 600;
   font-size: 1rem;
   transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
 .btn-add-cart:hover:not(:disabled) {

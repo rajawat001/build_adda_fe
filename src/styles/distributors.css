@@ -319,9 +319,9 @@
   border-radius: 20px;
   font-size: 0.85rem;
   font-weight: 600;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
+  gap: 4px;
   box-shadow: 0 2px 8px rgba(0, 200, 83, 0.3);
 }
 
@@ -349,13 +349,14 @@
 .info-row .icon {
   font-size: 1.2rem;
   flex-shrink: 0;
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #ffffff;
-  border-radius: 6px;
+  background: #f0f4ff;
+  border-radius: 8px;
+  color: #d97706;
 }
 
 .info-row span:last-child {
@@ -376,6 +377,10 @@
   font-weight: 600;
   font-size: 0.95rem;
   box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
 }
 
 /* Card Footer */
@@ -399,6 +404,10 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
 .btn-view-profile:hover {

@@ -195,10 +195,16 @@
 
 .in-stock {
   color: #4caf50;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .out-of-stock {
   color: #f44336;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .product-description {
@@ -337,6 +343,10 @@
   transition: all 0.3s;
   flex: 1;
   min-width: 150px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .btn-add-to-cart {

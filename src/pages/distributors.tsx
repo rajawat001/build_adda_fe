@@ -5,7 +5,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import api from '../services/api';
 import { getCurrentLocation } from '../utils/location';
-import { FiFilter, FiX, FiMapPin, FiSearch } from 'react-icons/fi';
+import { FiFilter, FiX, FiMapPin, FiSearch, FiMail, FiPhone, FiNavigation, FiStar, FiCheckCircle, FiArrowRight } from 'react-icons/fi';
 
 interface Distributor {
   _id: string;
@@ -168,11 +168,11 @@ const Distributors = () => {
 
     for (let i = 0; i < 5; i++) {
       if (i < fullStars) {
-        stars.push(<span key={i} className="star">★</span>);
+        stars.push(<span key={i} className="star"><FiStar size={14} fill="#f59e0b" color="#f59e0b" /></span>);
       } else if (i === fullStars && hasHalfStar) {
-        stars.push(<span key={i} className="star">★</span>);
+        stars.push(<span key={i} className="star"><FiStar size={14} fill="#f59e0b" color="#f59e0b" /></span>);
       } else {
-        stars.push(<span key={i} className="star empty">☆</span>);
+        stars.push(<span key={i} className="star empty"><FiStar size={14} color="#d1d5db" /></span>);
       }
     }
 
@@ -308,7 +308,7 @@ const Distributors = () => {
             <div className="search-by-location">
               <h3>Use Current Location</h3>
               <button onClick={searchByCurrentLocation} className="btn-location">
-                📍 Detect My Location
+                <FiMapPin size={18} /> Detect My Location
               </button>
             </div>
           </div>
@@ -347,47 +347,47 @@ const Distributors = () => {
                   <div className="card-header">
                     <h3>{distributor.businessName}</h3>
                     {distributor.isApproved && (
-                      <span className="verified-badge">✓ Verified</span>
+                      <span className="verified-badge"><FiCheckCircle size={12} /> Verified</span>
                     )}
                     {distributor.rating !== undefined && distributor.rating > 0 && (
                       renderRating(distributor.rating)
                     )}
                   </div>
-                  
+
                   <div className="card-body">
                     <div className="info-row">
-                      <span className="icon">📧</span>
+                      <span className="icon"><FiMail size={16} /></span>
                       <span>{distributor.email}</span>
                     </div>
-                    
+
                     <div className="info-row">
-                      <span className="icon">📞</span>
+                      <span className="icon"><FiPhone size={16} /></span>
                       <span>{distributor.phone}</span>
                     </div>
-                    
+
                     <div className="info-row">
-                      <span className="icon">📍</span>
+                      <span className="icon"><FiMapPin size={16} /></span>
                       <span>{distributor.address}, {distributor.city}</span>
                     </div>
-                    
+
                     <div className="info-row">
-                      <span className="icon">📮</span>
+                      <span className="icon"><FiNavigation size={16} /></span>
                       <span>{distributor.state} - {distributor.pincode}</span>
                     </div>
-                    
+
                     {distributor.distance && (
                       <div className="distance-badge">
-                        {distributor.distance.toFixed(1)} km away
+                        <FiMapPin size={14} /> {distributor.distance.toFixed(1)} km away
                       </div>
                     )}
                   </div>
-                  
+
                   <div className="card-footer">
-                    <button 
+                    <button
                       className="btn-view-profile"
                       onClick={() => viewDistributor(distributor._id)}
                     >
-                      View Profile & Products
+                      View Profile & Products <FiArrowRight size={16} />
                     </button>
                   </div>
                 </div>

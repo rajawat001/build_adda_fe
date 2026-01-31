@@ -14,7 +14,8 @@ import {
   FiHeadphones,
   FiArrowRight,
   FiMapPin,
-  FiStar
+  FiStar,
+  FiCheckCircle
 } from 'react-icons/fi';
 
 export default function Home() {
@@ -422,7 +423,7 @@ export default function Home() {
                       {distributor.businessName.charAt(0)}
                     </div>
                     {distributor.isApproved && (
-                      <span className="verified-badge-modern">✓ Verified</span>
+                      <span className="verified-badge-modern"><FiCheckCircle size={12} /> Verified</span>
                     )}
                   </div>
 

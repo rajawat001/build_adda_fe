@@ -345,6 +345,9 @@
   border-radius: 20px;
   font-size: 12px;
   font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
 }
 
 .distributor-name {

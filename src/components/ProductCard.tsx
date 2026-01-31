@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Product } from '../types';
 import { useCart } from '../context/CartContext';
 import productService from '../services/product.service';
+import { FiHeart, FiShoppingCart } from 'react-icons/fi';
 
 interface ProductCardProps {
   product: Product;
@@ -121,7 +122,7 @@ export default function ProductCard({ product, onAddToCart, onAddToWishlist, sho
                 handleToggleWishlist();
               }}
             >
-              {isInWishlist ? '❤' : '♥'}
+              <FiHeart size={16} fill={isInWishlist ? '#e74c3c' : 'none'} />
             </button>
           )}
         </div>
@@ -160,7 +161,7 @@ export default function ProductCard({ product, onAddToCart, onAddToWishlist, sho
           onClick={handleAddToCart}
           disabled={product.stock === 0}
         >
-          Add to Cart
+          <FiShoppingCart size={14} /> Add to Cart
         </button>
       </div>
     </div>

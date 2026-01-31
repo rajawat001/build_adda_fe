@@ -8,6 +8,7 @@ import ProductCard from '../../components/ProductCard';
 import productService from '../../services/product.service';
 import { Product } from '../../types';
 import { useCart } from '../../context/CartContext';
+import { FiHeart, FiCheckCircle, FiXCircle, FiShoppingCart, FiZap } from 'react-icons/fi';
 
 export default function ProductDetail() {
   const router = useRouter();
@@ -333,9 +334,9 @@ export default function ProductDetail() {
 
             <div className="product-stock">
               {inStock ? (
-                <span className="in-stock">✓ In Stock ({product.stock} available)</span>
+                <span className="in-stock"><FiCheckCircle size={16} /> In Stock ({product.stock} available)</span>
               ) : (
-                <span className="out-of-stock">✗ Out of Stock</span>
+                <span className="out-of-stock"><FiXCircle size={16} /> Out of Stock</span>
               )}
             </div>
 
@@ -432,14 +433,14 @@ export default function ProductDetail() {
                     disabled={addingToCart}
                     className="btn-add-to-cart"
                   >
-                    {addingToCart ? 'Adding...' : 'Add to Cart'}
+                    <FiShoppingCart size={18} /> {addingToCart ? 'Adding...' : 'Add to Cart'}
                   </button>
                   <button
                     onClick={handleBuyNow}
                     disabled={addingToCart}
                     className="btn-buy-now"
                   >
-                    Buy Now
+                    <FiZap size={18} /> Buy Now
                   </button>
                 </>
               ) : (
@@ -454,7 +455,7 @@ export default function ProductDetail() {
                 className={`btn-wishlist ${isInWishlist ? 'active' : ''}`}
                 title={isInWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'}
               >
-                {isInWishlist ? '❤️ In Wishlist' : '🤍 Add to Wishlist'}
+                <FiHeart size={18} fill={isInWishlist ? '#e74c3c' : 'none'} /> {isInWishlist ? 'In Wishlist' : 'Add to Wishlist'}
               </button>
             </div>
           </div>
