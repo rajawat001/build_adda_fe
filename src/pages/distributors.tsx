@@ -345,13 +345,20 @@ const Distributors = () => {
               {distributors.map((distributor) => (
                 <div key={distributor._id} className="distributor-card">
                   <div className="card-header">
-                    <h3>{distributor.businessName}</h3>
-                    {distributor.isApproved && (
-                      <span className="verified-badge"><FiCheckCircle size={12} /> Verified</span>
-                    )}
-                    {distributor.rating !== undefined && distributor.rating > 0 && (
-                      renderRating(distributor.rating)
-                    )}
+                    <span className="distributor-avatar">
+                      {distributor.businessName ? distributor.businessName.charAt(0).toUpperCase() : 'D'}
+                    </span>
+                    <div className="card-header-info">
+                      <h3>{distributor.businessName}</h3>
+                      <div className="card-header-meta">
+                        {distributor.isApproved && (
+                          <span className="verified-badge"><FiCheckCircle size={12} /> Verified</span>
+                        )}
+                        {distributor.rating !== undefined && distributor.rating > 0 && (
+                          renderRating(distributor.rating)
+                        )}
+                      </div>
+                    </div>
                   </div>
 
                   <div className="card-body">
