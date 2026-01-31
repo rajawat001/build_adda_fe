@@ -16,6 +16,7 @@ import {
   Legend,
   Filler,
 } from 'chart.js';
+import api from '../../services/api';
 import { toast } from 'react-toastify';
 import { format, subDays, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
 import * as XLSX from 'xlsx';
@@ -127,11 +128,15 @@ const Analytics = () => {
           endDate = now;
       }
 
-      // For demo purposes, generate mock data
-      // In production, replace with actual API call
-      const mockData: AnalyticsData = generateMockAnalytics(startDate, endDate);
+      const response = await api.get('/distributor/analytics', {
+        params: {
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString(),
+        },
+        signal,
+      });
 
-      setAnalyticsData(mockData);
+      setAnalyticsData(response.data.analytics);
     } catch (error: any) {
       // Ignore abort errors
       if (error.name === 'AbortError' || error.name === 'CanceledError') {
@@ -142,61 +147,6 @@ const Analytics = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const generateMockAnalytics = (startDate: Date, endDate: Date): AnalyticsData => {
-    const daysDiff = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-    const labels = [];
-    const revenue = [];
-
-    for (let i = 0; i <= Math.min(daysDiff, 30); i++) {
-      const date = new Date(startDate);
-      date.setDate(date.getDate() + i);
-      labels.push(format(date, 'MMM dd'));
-      revenue.push(Math.floor(Math.random() * 50000) + 20000);
-    }
-
-    return {
-      revenue: {
-        total: 2847650,
-        growth: 12.5,
-        trend: revenue,
-        labels: labels,
-      },
-      orders: {
-        total: 1543,
-        growth: 8.3,
-        byStatus: [
-          { status: 'Completed', count: 892, percentage: 57.8 },
-          { status: 'Processing', count: 324, percentage: 21.0 },
-          { status: 'Pending', count: 231, percentage: 15.0 },
-          { status: 'Cancelled', count: 96, percentage: 6.2 },
-        ],
-      },
-      products: {
-        total: 156,
-        topSelling: [
-          { id: 1, name: 'Premium Cement 50kg', sales: 1250, revenue: 625000 },
-          { id: 2, name: 'Steel TMT Bars 12mm', sales: 980, revenue: 490000 },
-          { id: 3, name: 'White Cement 50kg', sales: 856, revenue: 428000 },
-          { id: 4, name: 'Construction Sand (per ton)', sales: 745, revenue: 372500 },
-          { id: 5, name: 'Granite Tiles 60x60', sales: 623, revenue: 311500 },
-        ],
-        byCategory: [
-          { category: 'Cement', count: 45, revenue: 1250000 },
-          { category: 'Steel', count: 32, revenue: 980000 },
-          { category: 'Tiles', count: 28, revenue: 856000 },
-          { category: 'Sand & Aggregates', count: 21, revenue: 745000 },
-          { category: 'Paint', count: 18, revenue: 623000 },
-          { category: 'Others', count: 12, revenue: 392650 },
-        ],
-      },
-      customers: {
-        total: 428,
-        new: 87,
-        returning: 341,
-      },
-    };
   };
 
   const exportToExcel = () => {
