@@ -5,6 +5,52 @@
    ==================================== */
 
 /* ──────────────────────────────────────
+   GLOBAL: Force Light Theme on Mobile
+   Overrides dark mode CSS variables so
+   all pages have white/light backgrounds.
+   ────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  :root,
+  :root[data-theme='dark'],
+  :root[data-theme='light'] {
+    --bg-primary: #f8fafc !important;
+    --bg-secondary: #ffffff !important;
+    --bg-tertiary: #f1f5f9 !important;
+    --bg-card: #ffffff !important;
+    --bg-hover: #f8fafc !important;
+    --bg-sidebar: #ffffff !important;
+    --text-primary: #0f172a !important;
+    --text-secondary: #475569 !important;
+    --text-tertiary: #94a3b8 !important;
+    --text-white: #ffffff !important;
+    --border-primary: #e2e8f0 !important;
+    --border-secondary: #cbd5e1 !important;
+    --border-focus: #ff6b35 !important;
+    --primary-color: #ff6b35 !important;
+    --primary-dark: #e55a2b !important;
+    --primary-light: #ff8a5c !important;
+    --primary-gradient: linear-gradient(135deg, #ff6b35 0%, #f59e0b 100%) !important;
+    --glass-bg: rgba(255, 255, 255, 0.7) !important;
+    --glass-border: rgba(255, 255, 255, 0.18) !important;
+    --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15) !important;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1) !important;
+    --success: #10b981 !important;
+    --success-bg: #d1fae5 !important;
+    --warning: #f59e0b !important;
+    --warning-bg: #fef3c7 !important;
+    --error: #ef4444 !important;
+    --error-bg: #fee2e2 !important;
+    --info: #3b82f6 !important;
+    --info-bg: #dbeafe !important;
+  }
+}
+
+
+/* ──────────────────────────────────────
    PRODUCT CARDS — Mobile
    ────────────────────────────────────── */
 
@@ -887,119 +933,197 @@
     background: #111827 !important;
   }
 
-  /* 2-column grid for link sections, brand spans full width */
+  /*
+    3-column grid with EXPLICIT placement:
+    Row 1: Brand + Social (spans all 3)
+    Row 2: Quick Links | Categories | Support (3 equal columns)
+    Row 3: Contact Us + Newsletter (spans all 3, horizontal)
+  */
   .modern-footer .footer-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr 1fr !important;
+    grid-template-rows: auto auto auto !important;
+    gap: 14px 10px !important;
+  }
+
+  /* Row 1: Brand — spans all 3 columns */
+  .modern-footer .footer-column:nth-child(1) {
+    grid-column: 1 / 4 !important;
+    grid-row: 1 !important;
+    padding-bottom: 10px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    margin-bottom: 0 !important;
+  }
+
+  /* Row 2: Quick Links = col 1, Categories = col 2, Support = col 3 */
+  .modern-footer .footer-column:nth-child(2) {
+    grid-column: 1 / 2 !important;
+    grid-row: 2 !important;
+    min-width: 0 !important;
+    width: auto !important;
+  }
+
+  .modern-footer .footer-column:nth-child(3) {
+    grid-column: 2 / 3 !important;
+    grid-row: 2 !important;
+    min-width: 0 !important;
+    width: auto !important;
+  }
+
+  .modern-footer .footer-column:nth-child(4) {
+    grid-column: 3 / 4 !important;
+    grid-row: 2 !important;
+    min-width: 0 !important;
+    width: auto !important;
+  }
+
+  /* Row 3: Contact + Newsletter — spans all 3, ALWAYS horizontal */
+  .modern-footer .footer-column:nth-child(5) {
+    grid-column: 1 / 4 !important;
+    grid-row: 3 !important;
+    padding-top: 12px !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+    display: grid !important;
     grid-template-columns: 1fr 1fr !important;
-    gap: 16px 12px !important;
+    gap: 6px 16px !important;
+    align-items: start !important;
+    flex-direction: unset !important;
   }
 
-  /* Brand column — full width */
-  .modern-footer .footer-column:first-child {
-    grid-column: 1 / -1 !important;
-    padding-bottom: 12px !important;
-    border-bottom: 1px solid #1f2937 !important;
-    margin-bottom: 4px !important;
+  /* Contact heading — left column, row 1 */
+  .modern-footer .footer-column:nth-child(5) > .footer-heading {
+    grid-column: 1 / 2 !important;
+    grid-row: 1 !important;
   }
 
-  /* Contact/Newsletter column — full width */
-  .modern-footer .footer-column:last-child {
-    grid-column: 1 / -1 !important;
-    padding-top: 8px !important;
-    border-top: 1px solid #1f2937 !important;
+  /* Contact list — left column, row 2 */
+  .modern-footer .footer-column:nth-child(5) > .footer-contact {
+    grid-column: 1 / 2 !important;
+    grid-row: 2 !important;
+  }
+
+  /* Newsletter — right column, spans both rows */
+  .modern-footer .footer-column:nth-child(5) > .newsletter {
+    grid-column: 2 / 3 !important;
+    grid-row: 1 / 3 !important;
   }
 
   .modern-footer .footer-column {
-    gap: 8px !important;
+    gap: 6px !important;
   }
 
-  /* Brand section — compact, centered */
+  /* Brand — compact, centered */
   .modern-footer .footer-brand {
     margin-bottom: 0 !important;
     text-align: center !important;
   }
 
   .modern-footer .footer-logo {
-    height: 32px !important;
-    margin-bottom: 6px !important;
+    height: 28px !important;
+    margin-bottom: 4px !important;
+    display: block !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
   }
 
   .modern-footer .footer-description {
-    font-size: 12px !important;
-    line-height: 1.5 !important;
+    font-size: 11px !important;
+    line-height: 1.4 !important;
     text-align: center !important;
     color: #9ca3af !important;
-    max-width: 320px !important;
-    margin: 0 auto !important;
+    max-width: 300px !important;
+    margin: 0 auto 6px !important;
   }
 
-  /* Social links — compact inline row */
+  /* Social icons — small, tight row */
   .modern-footer .social-links {
-    gap: 8px !important;
+    gap: 6px !important;
     justify-content: center !important;
+    flex-wrap: wrap !important;
   }
 
   .modern-footer .social-link {
-    width: 34px !important;
-    height: 34px !important;
-    font-size: 15px !important;
+    width: 30px !important;
+    height: 30px !important;
+    font-size: 13px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .modern-footer .social-link svg {
+    width: 14px !important;
+    height: 14px !important;
   }
 
   .modern-footer .social-link:hover {
     transform: none !important;
   }
 
-  /* Column headings — smaller, left-aligned */
+  /* Column headings — compact, left-aligned */
   .modern-footer .footer-heading {
-    font-size: 13px !important;
-    margin-bottom: 6px !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    margin-bottom: 4px !important;
     text-align: left !important;
     color: #f9fafb !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
   }
 
-  /* Footer links — tight, left-aligned */
+  /* Footer links — very tight gaps */
   .modern-footer .footer-links {
-    gap: 4px !important;
+    gap: 0px !important;
     text-align: left !important;
+  }
+
+  .modern-footer .footer-links li {
+    width: auto !important;
   }
 
   .modern-footer .footer-links a {
     font-size: 12px !important;
-    padding: 2px 0 !important;
+    padding: 3px 0 !important;
     color: #9ca3af !important;
+    display: block !important;
+    line-height: 1.4 !important;
   }
 
   .modern-footer .footer-links a:hover {
     transform: none !important;
+    color: #d97706 !important;
   }
 
-  /* Contact info — compact */
+  /* Contact info — compact, stays in left column */
   .modern-footer .footer-contact {
-    gap: 6px !important;
+    gap: 4px !important;
   }
 
   .modern-footer .footer-contact li {
-    font-size: 12px !important;
-    gap: 8px !important;
+    font-size: 11px !important;
+    gap: 6px !important;
     justify-content: flex-start !important;
     flex-wrap: nowrap !important;
   }
 
   .modern-footer .footer-contact svg {
-    width: 14px !important;
-    height: 14px !important;
+    width: 12px !important;
+    height: 12px !important;
     flex-shrink: 0 !important;
   }
 
-  /* Newsletter — tight */
+  /* Newsletter — right column, aligned with contact */
   .modern-footer .newsletter {
-    margin-top: 8px !important;
+    margin-top: 0 !important;
     text-align: left !important;
   }
 
   .modern-footer .newsletter-title {
-    font-size: 13px !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
     margin-bottom: 6px !important;
     text-align: left !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    color: #f9fafb !important;
   }
 
   .modern-footer .newsletter-form {
@@ -1007,14 +1131,14 @@
   }
 
   .modern-footer .newsletter-form input {
-    min-height: 40px !important;
-    font-size: 13px !important;
-    padding: 8px 10px 8px 34px !important;
+    min-height: 36px !important;
+    font-size: 12px !important;
+    padding: 6px 8px 6px 30px !important;
   }
 
   .modern-footer .newsletter-icon {
-    font-size: 14px !important;
-    left: 10px !important;
+    font-size: 13px !important;
+    left: 8px !important;
   }
 
   .modern-footer .newsletter-btn {
@@ -1055,56 +1179,74 @@
 
 @media (max-width: 480px) {
   .modern-footer .footer-main {
-    padding: 20px 0 12px !important;
+    padding: 18px 0 10px !important;
   }
 
+  /* Keep 3-col but tighter gaps */
   .modern-footer .footer-grid {
-    gap: 12px 10px !important;
+    gap: 12px 8px !important;
   }
 
   .modern-footer .footer-logo {
-    height: 28px !important;
+    height: 24px !important;
   }
 
   .modern-footer .footer-description {
-    font-size: 11px !important;
+    font-size: 10px !important;
   }
 
   .modern-footer .social-link {
-    width: 30px !important;
-    height: 30px !important;
-    font-size: 13px !important;
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 12px !important;
+  }
+
+  .modern-footer .social-link svg {
+    width: 12px !important;
+    height: 12px !important;
   }
 
   .modern-footer .footer-heading {
-    font-size: 12px !important;
-    margin-bottom: 4px !important;
-  }
-
-  .modern-footer .footer-links {
-    gap: 2px !important;
+    font-size: 11px !important;
+    margin-bottom: 3px !important;
   }
 
   .modern-footer .footer-links a {
-    font-size: 11px !important;
+    font-size: 10px !important;
+    padding: 2px 0 !important;
   }
 
   .modern-footer .footer-contact li {
+    font-size: 10px !important;
+  }
+
+  .modern-footer .footer-contact svg {
+    width: 11px !important;
+    height: 11px !important;
+  }
+
+  /* Keep Contact+Newsletter horizontal even on small screens */
+  .modern-footer .footer-column:last-child {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 6px 10px !important;
+  }
+
+  .modern-footer .newsletter-title {
     font-size: 11px !important;
   }
 
   .modern-footer .newsletter-form input {
-    min-height: 36px !important;
-    font-size: 12px !important;
+    min-height: 34px !important;
+    font-size: 11px !important;
   }
 
   .modern-footer .newsletter-btn {
-    min-width: 36px !important;
-    padding: 6px 10px !important;
+    min-width: 34px !important;
+    padding: 6px 8px !important;
   }
 
   .modern-footer .footer-bottom {
-    padding: 10px 0 !important;
+    padding: 8px 0 !important;
   }
 
   .modern-footer .copyright,
@@ -1307,12 +1449,19 @@
 
 @media (max-width: 768px) {
 
-  /* Container — single column, tight padding */
+  /* Container — single column, no stretch */
   .profile-container {
     grid-template-columns: 1fr !important;
     gap: 12px !important;
     padding: 0 12px !important;
     margin: 12px auto !important;
+    min-height: auto !important;
+    align-content: start !important;
+  }
+
+  /* Content area — compact gap, no stretch */
+  .profile-content {
+    gap: 12px !important;
   }
 
   /* Sidebar — horizontal compact nav */
@@ -1427,13 +1576,17 @@
     margin-top: 10px !important;
   }
 
-  /* ── Address Card — compact, proper text layout ── */
+  /* ── Address Card — compact, no stretch ── */
   .address-card {
-    padding: 14px !important;
+    padding: 12px 14px !important;
     border-radius: 10px !important;
     border-width: 1.5px !important;
     animation: none !important;
     text-align: left !important;
+    height: auto !important;
+    min-height: auto !important;
+    max-height: none !important;
+    display: block !important;
   }
 
   .address-card:hover {
@@ -1441,57 +1594,67 @@
     box-shadow: 0 2px 10px rgba(0,0,0,0.08) !important;
   }
 
-  /* Default badge — inline on mobile */
+  /* Default badge — inline compact */
   .address-card .default-badge {
     position: static !important;
     display: inline-block !important;
-    margin-bottom: 8px !important;
+    margin-bottom: 6px !important;
     font-size: 10px !important;
-    padding: 3px 8px !important;
+    padding: 2px 8px !important;
+    border-radius: 4px !important;
   }
 
-  /* Address content — remove right padding (badge is inline) */
+  /* Address content — block layout, no stretch */
   .address-card .address-content {
     padding-right: 0 !important;
+    display: block !important;
+    height: auto !important;
   }
 
   .address-card .address-name {
-    font-size: 15px !important;
-    margin-bottom: 4px !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    margin: 0 0 2px 0 !important;
+    padding: 0 !important;
     text-align: left !important;
     word-break: normal !important;
     overflow-wrap: break-word !important;
-    color: #222 !important;
+    color: #1a1a1a !important;
+    line-height: 1.4 !important;
   }
 
   .address-card p {
     font-size: 13px !important;
-    line-height: 1.5 !important;
-    margin: 2px 0 !important;
+    line-height: 1.4 !important;
+    margin: 1px 0 !important;
+    padding: 0 !important;
     text-align: left !important;
     word-break: normal !important;
     overflow-wrap: break-word !important;
     color: #555 !important;
   }
 
-  /* Address action buttons — horizontal row, compact */
+  /* Address action buttons — horizontal row */
   .address-card .address-actions {
-    margin-top: 10px !important;
-    padding-top: 10px !important;
+    margin-top: 8px !important;
+    padding-top: 8px !important;
     gap: 6px !important;
     flex-direction: row !important;
-    flex-wrap: wrap !important;
+    flex-wrap: nowrap !important;
     border-top: 1px solid #eee !important;
+    display: flex !important;
   }
 
   .address-card .address-actions button {
     flex: 1 !important;
-    min-width: 70px !important;
-    padding: 8px 10px !important;
+    min-width: 0 !important;
+    padding: 8px 6px !important;
     font-size: 11px !important;
+    font-weight: 600 !important;
     border-radius: 6px !important;
     letter-spacing: 0 !important;
     width: auto !important;
+    text-transform: uppercase !important;
   }
 
   /* ── Address Form — compact ── */
@@ -1934,46 +2097,20 @@
 
 
 /* ──────────────────────────────────────
-   TEXT VISIBILITY — Global Mobile Fixes
-   Ensure readable contrast on all pages
+   TEXT VISIBILITY — Targeted Mobile Fixes
+   Only override elements that don't use
+   CSS variables or have special bg colors.
+   Global vars are forced light above.
    ────────────────────────────────────── */
 
 @media (max-width: 768px) {
 
-  /* Body text — ensure minimum contrast */
+  /* Body text — prevent zoom */
   body {
     -webkit-text-size-adjust: 100% !important;
   }
 
-  /* Headings — strong readable color */
-  h1, h2, h3, h4, h5, h6 {
-    color: #1a1a1a !important;
-  }
-
-  /* Paragraph text — darker than light gray */
-  p {
-    color: #333 !important;
-    line-height: 1.6 !important;
-  }
-
-  /* Muted/secondary text — ensure not too light */
-  .text-light,
-  .text-muted,
-  .text-secondary {
-    color: #666 !important;
-  }
-
-  /* Links — visible, not too light */
-  a {
-    color: inherit;
-  }
-
-  /* Labels and small text — ensure readability */
-  label {
-    color: #333 !important;
-  }
-
-  /* Input text — dark */
+  /* Input text — always dark on white inputs */
   input,
   textarea,
   select {
@@ -1985,38 +2122,7 @@
     color: #999 !important;
   }
 
-  /* ── Page-specific text fixes ── */
-
-  /* Products page text */
-  .products-page .results-count {
-    color: #666 !important;
-    font-size: 13px !important;
-  }
-
-  /* Distributors page text */
-  .distributors-page .no-distributors p {
-    color: #555 !important;
-    font-size: 14px !important;
-  }
-
-  /* Loading states */
-  .loading-spinner,
-  .products-container p,
-  .distributors-container p {
-    color: #666 !important;
-    font-size: 14px !important;
-  }
-
-  /* Error states */
-  .error-container h2 {
-    color: #1a1a1a !important;
-  }
-
-  .error-container p {
-    color: #555 !important;
-  }
-
-  /* ── Override footer text to stay light (dark bg) ── */
+  /* ── Footer text — MUST stay light (dark bg) ── */
   .modern-footer h1,
   .modern-footer h2,
   .modern-footer h3,
@@ -2080,38 +2186,12 @@
     text-shadow: 0 1px 2px rgba(0,0,0,0.2) !important;
   }
 
-  /* ── Feature cards text ── */
-  .feature-title {
-    color: #1a1a1a !important;
-  }
-
-  .feature-description {
-    color: #555 !important;
-  }
-
-  /* ── Product detail page text ── */
-  .product-title {
-    color: #1a1a1a !important;
-  }
-
-  .product-description p {
-    color: #444 !important;
-  }
-
-  .product-description h3 {
-    color: #1a1a1a !important;
-  }
-
-  .product-distributor .label {
-    color: #666 !important;
-  }
-
-  /* ── Distributor card header text (was white on dark) ── */
+  /* ── Distributor card header text ── */
   .distributor-card .card-header h3 {
     color: #222 !important;
   }
 
-  /* ── Search toggle text visibility ── */
+  /* ── Search toggle ── */
   .search-toggle-btn {
     color: #666 !important;
   }
@@ -2145,5 +2225,617 @@
   /* ── Category tag ── */
   .category-link {
     color: #d97706 !important;
+  }
+
+}
+
+
+/* ──────────────────────────────────────
+   CART PAGE — Text & Layout Fixes
+   ────────────────────────────────────── */
+
+@media (max-width: 768px) {
+
+  /* Cart item product name — force readable */
+  .cart-page .item-details h3,
+  .cart-page .item-details a {
+    color: #1a1a1a !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+  }
+
+  /* Shopping from section — compact */
+  .cart-distributor-info {
+    padding: 10px 12px !important;
+    margin-bottom: 8px !important;
+    border-radius: 8px !important;
+  }
+
+  .cart-distributor-info .distributor-label {
+    font-size: 12px !important;
+    color: #666 !important;
+  }
+
+  .cart-distributor-info .distributor-name {
+    font-size: 14px !important;
+    color: #1a1a1a !important;
+    font-weight: 600 !important;
+  }
+
+  .cart-distributor-info .btn-clear-cart {
+    font-size: 12px !important;
+    padding: 6px 12px !important;
+  }
+
+  /* Order summary text — ensure readable */
+  .cart-summary .summary-row,
+  .cart-summary .summary-row span,
+  .order-summary .summary-row,
+  .order-summary .summary-row span {
+    color: #333 !important;
+    font-size: 14px !important;
+  }
+
+  .cart-summary .summary-row.total,
+  .cart-summary .summary-row.total span,
+  .order-summary .summary-row.total,
+  .order-summary .summary-row.total span {
+    color: #1a1a1a !important;
+    font-weight: 700 !important;
+    font-size: 16px !important;
+  }
+
+  .cart-summary .summary-row.savings-row,
+  .cart-summary .summary-row.savings-row span {
+    color: #2e7d32 !important;
+  }
+
+  /* Quantity controls — fit content */
+  .cart-page .quantity-controls {
+    width: fit-content !important;
+  }
+
+  /* Item total price */
+  .cart-page .item-total {
+    font-size: 15px !important;
+    color: #1a1a1a !important;
+    font-weight: 700 !important;
+  }
+
+  /* Item distributor */
+  .cart-page .item-details .distributor {
+    font-size: 12px !important;
+    color: #666 !important;
+  }
+}
+
+
+/* ──────────────────────────────────────
+   CHECKOUT PAGE — Label & Text Fixes
+   ────────────────────────────────────── */
+
+@media (max-width: 768px) {
+
+  /* Form labels — high contrast */
+  .checkout-form label {
+    color: #333 !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+  }
+
+  /* Section headings */
+  .checkout-form h2,
+  .checkout-form h3 {
+    color: #1a1a1a !important;
+  }
+
+  /* Order summary text in checkout */
+  .checkout-page .order-summary h2 {
+    color: #1a1a1a !important;
+  }
+
+  .checkout-page .order-summary .summary-row,
+  .checkout-page .order-summary .summary-row span {
+    color: #333 !important;
+  }
+
+  .checkout-page .order-summary .summary-row.total,
+  .checkout-page .order-summary .summary-row.total span {
+    color: #1a1a1a !important;
+    font-weight: 700 !important;
+  }
+
+  /* Summary item names */
+  .checkout-page .summary-item,
+  .checkout-page .summary-item span {
+    color: #333 !important;
+  }
+
+  /* Delivery note */
+  .checkout-page .delivery-note,
+  .checkout-page .order-summary p {
+    color: #666 !important;
+  }
+
+  /* Place Order / Submit button — brand amber */
+  .checkout-page .btn-submit,
+  .checkout-page .btn-place-order,
+  .checkout-page button[type="submit"] {
+    background: linear-gradient(135deg, #ff6b35 0%, #f59e0b 100%) !important;
+    color: #fff !important;
+  }
+
+  /* Payment method labels */
+  .checkout-page .payment-method label,
+  .checkout-page .payment-options label {
+    color: #333 !important;
+  }
+}
+
+
+/* ──────────────────────────────────────
+   ORDERS PAGE — Override JSX Purple Gradient
+   ────────────────────────────────────── */
+
+@media (max-width: 768px) {
+
+  /* Override purple gradient bg */
+  .orders-page {
+    background: #f5f5f6 !important;
+    padding: 12px 8px !important;
+  }
+
+  .orders-page h1 {
+    font-size: 20px !important;
+    color: #1a1a1a !important;
+    margin-bottom: 12px !important;
+  }
+
+  /* Stat cards — compact 2x2 */
+  .orders-page .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+    margin-bottom: 12px !important;
+  }
+
+  .orders-page .stat-card {
+    padding: 12px !important;
+    border-radius: 10px !important;
+    background: #fff !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08) !important;
+  }
+
+  .orders-page .stat-card h3 {
+    font-size: 20px !important;
+    color: #1a1a1a !important;
+  }
+
+  .orders-page .stat-card p {
+    font-size: 11px !important;
+    color: #666 !important;
+  }
+
+  /* Filter tabs — horizontal scroll */
+  .orders-page .filter-tabs {
+    display: flex !important;
+    overflow-x: auto !important;
+    gap: 6px !important;
+    padding-bottom: 4px !important;
+    margin-bottom: 12px !important;
+    scrollbar-width: none !important;
+  }
+
+  .orders-page .filter-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .orders-page .filter-tab {
+    white-space: nowrap !important;
+    font-size: 12px !important;
+    padding: 6px 14px !important;
+    border-radius: 20px !important;
+    background: #fff !important;
+    color: #333 !important;
+    border: 1.5px solid #e0e0e0 !important;
+    flex-shrink: 0 !important;
+  }
+
+  .orders-page .filter-tab.active,
+  .orders-page .filter-tab:hover {
+    background: #ff6b35 !important;
+    color: #fff !important;
+    border-color: #ff6b35 !important;
+  }
+
+  /* Order cards — compact */
+  .orders-page .order-card {
+    padding: 14px !important;
+    border-radius: 10px !important;
+    margin-bottom: 8px !important;
+    background: #fff !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08) !important;
+    border: none !important;
+  }
+
+  .orders-page .order-card h3 {
+    font-size: 14px !important;
+    color: #1a1a1a !important;
+  }
+
+  .orders-page .order-card p,
+  .orders-page .order-card span {
+    color: #555 !important;
+  }
+
+  /* View Details / Cancel buttons */
+  .orders-page .order-card .btn-view,
+  .orders-page .order-card a {
+    color: #ff6b35 !important;
+    font-size: 13px !important;
+  }
+
+  .orders-page .order-card .btn-cancel {
+    color: #ef4444 !important;
+    font-size: 13px !important;
+  }
+}
+
+
+/* ──────────────────────────────────────
+   ORDER DETAILS PAGE — Compact Mobile
+   ────────────────────────────────────── */
+
+@media (max-width: 768px) {
+
+  .order-detail-page {
+    padding: 12px !important;
+    background: #f5f5f6 !important;
+  }
+
+  .order-detail-page h1 {
+    font-size: 18px !important;
+    color: #1a1a1a !important;
+  }
+
+  .order-detail-page h2,
+  .order-detail-page h3 {
+    color: #1a1a1a !important;
+  }
+
+  .order-detail-page p,
+  .order-detail-page span {
+    color: #555 !important;
+  }
+}
+
+
+/* ──────────────────────────────────────
+   ORDER SUCCESS PAGE — Override Purple Gradient
+   ────────────────────────────────────── */
+
+@media (max-width: 768px) {
+
+  .order-status-page {
+    background: #f5f5f6 !important;
+    padding: 20px 12px !important;
+  }
+
+  .order-status-page h1,
+  .order-status-page h2 {
+    color: #1a1a1a !important;
+  }
+
+  .order-status-page p {
+    color: #555 !important;
+  }
+
+  .order-status-page a,
+  .order-status-page button {
+    background: linear-gradient(135deg, #ff6b35 0%, #f59e0b 100%) !important;
+    color: #fff !important;
+  }
+}
+
+
+/* ──────────────────────────────────────
+   WISHLIST PAGE — Brand Colors
+   ────────────────────────────────────── */
+
+@media (max-width: 768px) {
+
+  .wishlist-container {
+    background: #f5f5f6 !important;
+    padding: 12px !important;
+  }
+
+  .wishlist-container h1,
+  .wishlist-container h2 {
+    color: #1a1a1a !important;
+    font-size: 20px !important;
+  }
+
+  /* Browse Products button — amber instead of purple */
+  .wishlist-container button {
+    background: linear-gradient(135deg, #ff6b35 0%, #f59e0b 100%) !important;
+    color: #fff !important;
+  }
+
+  .wishlist-container p {
+    color: #555 !important;
+  }
+}
+
+
+/* ──────────────────────────────────────
+   PROFILE PAGE — Pills, Labels, Buttons
+   ────────────────────────────────────── */
+
+@media (max-width: 768px) {
+
+  /* Sidebar heading */
+  .profile-sidebar h2 {
+    color: #1a1a1a !important;
+  }
+
+  /* Nav pills — white bg with dark text */
+  .profile-sidebar ul li {
+    background: #fff !important;
+    color: #333 !important;
+    border-color: #e0e0e0 !important;
+  }
+
+  .profile-sidebar ul li:hover {
+    border-color: #ff6b35 !important;
+    color: #ff6b35 !important;
+  }
+
+  .profile-sidebar ul li.active {
+    background: #ff6b35 !important;
+    color: #fff !important;
+    border-color: #ff6b35 !important;
+  }
+
+  /* Section headings */
+  .profile-section h2 {
+    color: #1a1a1a !important;
+  }
+
+  /* Info row labels */
+  .profile-info .info-row .label {
+    color: #888 !important;
+    font-size: 11px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.3px !important;
+  }
+
+  .profile-info .info-row .value {
+    color: #1a1a1a !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+  }
+
+  /* Edit button — amber brand color */
+  .profile-section .section-header button,
+  .profile-section .btn-edit {
+    background: #ff6b35 !important;
+    color: #fff !important;
+    border: none !important;
+    border-radius: 8px !important;
+  }
+
+  /* Address card text — ensure left-aligned, compact spacing */
+  .address-card .address-name {
+    color: #1a1a1a !important;
+    font-weight: 600 !important;
+  }
+
+  .address-card p {
+    color: #555 !important;
+    margin: 2px 0 !important;
+    line-height: 1.4 !important;
+  }
+
+  /* Address action buttons — brand colors */
+  .address-card .btn-edit,
+  .address-card .address-actions .btn-edit {
+    background: #ff6b35 !important;
+    color: #fff !important;
+    border: none !important;
+  }
+
+  .address-card .btn-delete,
+  .address-card .address-actions .btn-delete {
+    background: #fff !important;
+    color: #ef4444 !important;
+    border: 1.5px solid #ef4444 !important;
+  }
+
+  .address-card .btn-set-default,
+  .address-card .address-actions .btn-set-default {
+    background: #fff !important;
+    color: #ff6b35 !important;
+    border: 1.5px solid #ff6b35 !important;
+  }
+
+  /* Default badge */
+  .address-card .default-badge {
+    background: #d1fae5 !important;
+    color: #065f46 !important;
+  }
+}
+
+
+/* ──────────────────────────────────────
+   NOTIFICATIONS PAGE — Override Dark BG
+   ────────────────────────────────────── */
+
+@media (max-width: 768px) {
+
+  .notifications-page {
+    background: #f5f5f6 !important;
+    padding: 0 !important;
+  }
+
+  .notifications-page h1 {
+    color: #1a1a1a !important;
+    font-size: 20px !important;
+  }
+
+  .notifications-page p {
+    color: #555 !important;
+  }
+
+  /* Filter pills */
+  .notifications-page .filter-btn,
+  .notifications-page button {
+    background: #fff !important;
+    color: #333 !important;
+    border: 1.5px solid #e0e0e0 !important;
+    border-radius: 20px !important;
+  }
+
+  .notifications-page .filter-btn.active,
+  .notifications-page button.active {
+    background: #ff6b35 !important;
+    color: #fff !important;
+    border-color: #ff6b35 !important;
+  }
+
+  /* Notification cards */
+  .notifications-page .notification-card {
+    background: #fff !important;
+    border-radius: 10px !important;
+    padding: 14px !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08) !important;
+  }
+
+  .notifications-page .notification-card h3,
+  .notifications-page .notification-card h4 {
+    color: #1a1a1a !important;
+  }
+
+  .notifications-page .notification-card p {
+    color: #555 !important;
+  }
+}
+
+
+/* ──────────────────────────────────────
+   HOMEPAGE — Minor Spacing Tweaks
+   ────────────────────────────────────── */
+
+@media (max-width: 768px) {
+
+  /* Tighter toolbar */
+  .products-toolbar {
+    padding: 10px 12px !important;
+  }
+
+  /* Hero — remove bottom gap */
+  .hero-section,
+  .hero-banner-section {
+    margin-bottom: 0 !important;
+  }
+}
+
+
+/* ──────────────────────────────────────
+   MOBILE BOTTOM NAV — Badge & Visibility Fixes
+   Ensures bottom nav is fully visible and
+   badges display correctly without cutoff.
+   ────────────────────────────────────── */
+
+@media (max-width: 768px) {
+
+  /* Force light appearance on bottom nav (override prefers-color-scheme: dark) */
+  .mobile-bottom-nav {
+    background: #ffffff !important;
+    border-top: 1px solid #e5e7eb !important;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1) !important;
+    overflow: visible !important;
+  }
+
+  /* Ensure icon wrapper doesn't clip badges */
+  .mobile-nav-icon-wrapper {
+    overflow: visible !important;
+    position: relative !important;
+  }
+
+  /* Nav items must not clip overflow */
+  .mobile-nav-item {
+    overflow: visible !important;
+    color: #6b7280 !important;
+  }
+
+  .mobile-nav-item.active {
+    color: #d97706 !important;
+  }
+
+  /* Badge fixes — prevent cutoff/overlap */
+  .mobile-nav-badge {
+    position: absolute !important;
+    top: -6px !important;
+    right: -10px !important;
+    min-width: 18px !important;
+    height: 18px !important;
+    border-radius: 9px !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 4px !important;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+    color: white !important;
+    z-index: 10 !important;
+    box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4) !important;
+    line-height: 1 !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Footer clearance — ensure footer doesn't overlap bottom nav */
+  .modern-footer {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+  }
+}
+
+/* Override prefers-color-scheme: dark for bottom nav — keep light always */
+@media (prefers-color-scheme: dark) and (max-width: 768px) {
+  .mobile-bottom-nav {
+    background: #ffffff !important;
+    border-top: 1px solid #e5e7eb !important;
+  }
+
+  .mobile-nav-item {
+    color: #6b7280 !important;
+  }
+
+  .mobile-nav-item.active {
+    color: #d97706 !important;
+  }
+
+  .mobile-nav-item:hover {
+    background: rgba(217, 119, 6, 0.05) !important;
+  }
+}
+
+/* Larger phones (400-428px) — slightly bigger badges */
+@media (min-width: 400px) and (max-width: 428px) {
+  .mobile-nav-badge {
+    min-width: 20px !important;
+    height: 20px !important;
+    font-size: 11px !important;
+    border-radius: 10px !important;
+  }
+}
+
+/* Larger phones (428px+) — bigger badges */
+@media (min-width: 428px) and (max-width: 768px) {
+  .mobile-nav-badge {
+    min-width: 22px !important;
+    height: 22px !important;
+    font-size: 12px !important;
+    border-radius: 11px !important;
   }
 }

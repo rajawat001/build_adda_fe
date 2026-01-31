@@ -54,7 +54,6 @@ body {
   .modern-footer,
   .footer-main,
   .footer-grid,
-  .footer-column,
   .footer-brand,
   .footer-bottom {
     width: 100%;
@@ -63,16 +62,20 @@ body {
     box-sizing: border-box;
   }
 
+  .footer-column {
+    min-width: 0;
+    overflow-x: hidden;
+    box-sizing: border-box;
+  }
+
   .footer-grid {
     display: grid;
-    grid-template-columns: 1fr !important;
-    gap: 36px;
     padding: 0;
   }
 
   .footer-column {
-    width: 100%;
     padding: 0;
+    min-width: 0;
   }
 
   /* Text elements */
@@ -199,10 +202,6 @@ body {
     padding-right: 18px;
   }
 
-  .footer-grid {
-    gap: 32px;
-  }
-
   .footer-main {
     padding-left: 18px;
     padding-right: 18px;
@@ -230,10 +229,6 @@ body {
     padding-left: 14px;
     padding-right: 14px;
   }
-
-  .footer-grid {
-    gap: 28px;
-  }
 }
 
 /* Very small devices */
@@ -253,17 +248,13 @@ body {
     padding-right: 12px;
   }
 
-  .footer-grid {
-    gap: 24px;
-  }
-
   .footer-heading {
-    font-size: 14px;
+    font-size: 10px;
   }
 
   .footer-links a,
   .footer-contact li {
-    font-size: 13px;
+    font-size: 10px;
   }
 }
 

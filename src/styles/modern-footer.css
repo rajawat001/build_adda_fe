@@ -253,112 +253,185 @@
   }
 
   .footer-main {
-    padding: 48px 0 32px;
+    padding: 28px 0 20px;
     background: #1a1f2e;
     overflow-x: hidden;
     width: 100%;
   }
 
+  /*
+    3-column grid layout:
+    Row 1: Brand + Social (full width)
+    Row 2: Quick Links | Categories | Support  (3 equal columns)
+    Row 3: Contact Us + Newsletter (full width)
+  */
   .footer-grid {
-    grid-template-columns: 1fr !important;
-    gap: 36px;
+    grid-template-columns: 1fr 1fr 1fr !important;
+    grid-template-rows: auto auto auto !important;
+    gap: 14px 10px;
     width: 100%;
     max-width: 100%;
     padding: 0;
   }
 
+  /* Row 1: Brand — explicit placement */
+  .footer-column:nth-child(1) {
+    grid-column: 1 / 4 !important;
+    grid-row: 1 !important;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* Row 2: Quick Links | Categories | Support — explicit placement */
+  .footer-column:nth-child(2) {
+    grid-column: 1 / 2 !important;
+    grid-row: 2 !important;
+  }
+
+  .footer-column:nth-child(3) {
+    grid-column: 2 / 3 !important;
+    grid-row: 2 !important;
+  }
+
+  .footer-column:nth-child(4) {
+    grid-column: 3 / 4 !important;
+    grid-row: 2 !important;
+  }
+
+  /* Row 3: Contact + Newsletter — ALWAYS horizontal, side by side */
+  .footer-column:nth-child(5) {
+    grid-column: 1 / 4 !important;
+    grid-row: 3 !important;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 6px 16px !important;
+    align-items: start;
+    flex-direction: unset !important;
+  }
+
+  /* Contact heading — left column */
+  .footer-column:nth-child(5) > .footer-heading {
+    grid-column: 1 / 2 !important;
+    grid-row: 1 !important;
+  }
+
+  /* Contact list — left column */
+  .footer-column:nth-child(5) > .footer-contact {
+    grid-column: 1 / 2 !important;
+    grid-row: 2 !important;
+  }
+
+  /* Newsletter — right column, spans both rows */
+  .footer-column:nth-child(5) > .newsletter {
+    grid-column: 2 / 3 !important;
+    grid-row: 1 / 3 !important;
+  }
+
   .footer-column {
-    gap: 16px;
-    width: 100%;
-    max-width: 100%;
-    overflow-x: hidden;
+    gap: 4px;
+    min-width: 0;
+    width: auto !important;
   }
 
   .footer-brand {
     text-align: center;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
     width: 100%;
   }
 
   .footer-logo {
-    height: 44px;
-    margin: 0 auto 16px;
+    height: 32px;
+    margin: 0 auto 8px;
     display: block;
   }
 
   .footer-description {
-    font-size: 14px;
-    line-height: 1.7;
+    font-size: 12px;
+    line-height: 1.5;
     text-align: center;
-    width: 100%;
-    max-width: 100%;
+    max-width: 320px;
+    margin: 0 auto 8px;
     word-wrap: break-word;
   }
 
+  /* Headings — left-aligned for 2-col link sections */
   .footer-heading {
-    font-size: 16px;
-    margin-bottom: 16px;
-    text-align: center;
-    width: 100%;
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    text-align: left;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
   }
 
+  /* Links — left-aligned, tight, compact */
   .footer-links {
-    text-align: center;
-    width: 100%;
+    text-align: left;
+    gap: 0 !important;
   }
 
   .footer-links li {
-    width: 100%;
+    width: auto;
   }
 
-  .footer-links a,
+  .footer-links a {
+    font-size: 12px;
+    padding: 2px 0;
+    display: block;
+    line-height: 1.4;
+    word-wrap: break-word;
+  }
+
   .footer-contact li {
-    font-size: 14px;
+    font-size: 12px;
     word-wrap: break-word;
   }
 
   .footer-contact {
-    gap: 14px;
-    width: 100%;
-    max-width: 100%;
+    gap: 6px;
   }
 
   .footer-contact li {
-    justify-content: center;
-    width: 100%;
-    max-width: 100%;
-    flex-wrap: wrap;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
   }
 
   .social-links {
     justify-content: center;
-    gap: 14px;
+    gap: 6px;
     flex-wrap: wrap;
   }
 
   .social-link {
-    width: 48px;
-    height: 48px;
-    font-size: 20px;
+    width: 30px !important;
+    height: 30px !important;
+    font-size: 13px !important;
     flex-shrink: 0;
   }
 
+  .social-link svg {
+    width: 14px;
+    height: 14px;
+  }
+
   .newsletter {
-    text-align: center;
-    margin-top: 16px;
+    text-align: left;
+    margin-top: 8px;
     width: 100%;
     max-width: 100%;
   }
 
   .newsletter-title {
-    text-align: center;
-    margin-bottom: 14px;
+    text-align: left;
+    margin-bottom: 6px;
+    font-size: 13px;
   }
 
   .newsletter-form {
     max-width: 100%;
     width: 100%;
-    margin: 0 auto;
     display: flex;
   }
 
@@ -368,25 +441,25 @@
   }
 
   .newsletter-form input {
-    font-size: 14px;
-    padding: 12px 12px 12px 40px;
-    min-height: 52px;
+    font-size: 13px;
+    padding: 8px 8px 8px 34px;
+    min-height: 40px;
     width: 100%;
     box-sizing: border-box;
   }
 
   .newsletter-icon {
-    left: 14px;
+    left: 10px;
   }
 
   .newsletter-btn {
-    padding: 12px 16px;
-    min-width: 52px;
+    padding: 8px 14px;
+    min-width: 44px;
     flex-shrink: 0;
   }
 
   .footer-bottom {
-    padding: 24px 0;
+    padding: 14px 0;
     background: #0d1117;
     width: 100%;
     overflow-x: hidden;
@@ -394,7 +467,7 @@
 
   .footer-bottom-content {
     flex-direction: column;
-    gap: 16px;
+    gap: 8px;
     text-align: center;
     width: 100%;
   }
@@ -402,195 +475,144 @@
   .footer-bottom-links {
     flex-wrap: wrap;
     justify-content: center;
-    gap: 16px;
+    gap: 10px;
     width: 100%;
   }
 
   .copyright {
-    font-size: 14px;
+    font-size: 12px;
   }
 
   .footer-bottom-links a {
-    font-size: 14px;
+    font-size: 12px;
   }
 }
 
 /* OnePlus Nord and similar (400-428px) */
 @media (min-width: 400px) and (max-width: 428px) {
-  .footer-main {
-    padding: 44px 0 32px;
-  }
-
   .footer-grid {
-    gap: 32px;
-  }
-
-  .footer-logo {
-    height: 42px;
-  }
-
-  .footer-description {
-    font-size: 14px;
-  }
-
-  .footer-heading {
-    font-size: 16px;
+    gap: 18px 14px;
   }
 
   .social-link {
-    width: 46px;
-    height: 46px;
-  }
-
-  .newsletter-form input {
-    font-size: 15px;
-  }
-
-  .footer-bottom {
-    padding: 22px 0;
+    width: 34px;
+    height: 34px;
   }
 }
 
 /* Small screens (below 400px) */
 @media (max-width: 400px) {
   .footer-main {
-    padding: 36px 0 28px;
+    padding: 24px 0 16px;
   }
 
   .footer-grid {
-    gap: 28px;
+    gap: 14px 10px;
   }
 
   .footer-logo {
-    height: 38px;
-    margin-bottom: 14px;
+    height: 28px;
+    margin-bottom: 6px;
   }
 
   .footer-description {
-    font-size: 13px;
-    line-height: 1.6;
+    font-size: 11px;
+    line-height: 1.4;
   }
 
   .footer-heading {
-    font-size: 15px;
-    margin-bottom: 14px;
-  }
-
-  .footer-links {
-    gap: 10px;
+    font-size: 12px;
+    margin-bottom: 4px;
   }
 
   .footer-links a {
-    font-size: 13px;
-    padding: 6px 0;
-  }
-
-  .footer-contact {
-    gap: 12px;
+    font-size: 11px;
+    padding: 2px 0;
   }
 
   .footer-contact li {
-    font-size: 13px;
-    gap: 10px;
-  }
-
-  .footer-contact svg {
-    width: 16px;
-    height: 16px;
-  }
-
-  .social-links {
-    gap: 12px;
+    font-size: 11px;
   }
 
   .social-link {
-    width: 44px;
-    height: 44px;
-    font-size: 18px;
+    width: 30px;
+    height: 30px;
+    font-size: 13px;
   }
 
   .newsletter-title {
-    font-size: 14px;
-    margin-bottom: 12px;
+    font-size: 12px;
+    margin-bottom: 4px;
   }
 
   .newsletter-form input {
-    font-size: 13px;
-    padding: 11px 11px 11px 36px;
-    min-height: 48px;
-  }
-
-  .newsletter-icon {
-    font-size: 15px;
-    left: 12px;
+    font-size: 12px;
+    padding: 6px 6px 6px 30px;
+    min-height: 36px;
   }
 
   .newsletter-btn {
-    padding: 11px 14px;
-    min-width: 48px;
-  }
-
-  .newsletter-btn svg {
-    width: 18px;
-    height: 18px;
+    padding: 6px 10px;
+    min-width: 36px;
   }
 
   .footer-bottom {
-    padding: 20px 0;
+    padding: 10px 0;
   }
 
   .copyright,
   .footer-bottom-links a {
-    font-size: 13px;
+    font-size: 10px;
   }
 
   .footer-bottom-links {
-    gap: 12px;
+    gap: 6px;
   }
 }
 
 /* Very small screens */
 @media (max-width: 360px) {
+  .footer-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 12px 6px;
+  }
+
   .footer-logo {
-    height: 34px;
+    height: 24px;
   }
 
   .footer-description {
-    font-size: 12px;
+    font-size: 10px;
   }
 
   .footer-heading {
-    font-size: 14px;
+    font-size: 10px;
   }
 
   .footer-links a,
   .footer-contact li {
-    font-size: 12px;
+    font-size: 10px;
+    padding: 1px 0;
   }
 
   .social-link {
-    width: 40px;
-    height: 40px;
-    font-size: 16px;
-  }
-
-  .newsletter-form {
-    flex-direction: column;
-    gap: 10px;
+    width: 26px;
+    height: 26px;
+    font-size: 12px;
   }
 
   .newsletter-form input {
-    font-size: 14px;
+    font-size: 11px;
+    min-height: 32px;
   }
 
   .newsletter-btn {
-    width: 100%;
-    padding: 12px;
-    justify-content: center;
+    padding: 6px 8px;
+    min-width: 32px;
   }
 
   .copyright,
   .footer-bottom-links a {
-    font-size: 12px;
+    font-size: 9px;
   }
 }
