@@ -136,10 +136,10 @@ const ContactPage: React.FC = () => {
               <div className="social-links">
                 <h3>Follow Us</h3>
                 <div className="social-icons">
-                  <a href="https://www.facebook.com/himmat.s.rajput.1" aria-label="Facebook">📘</a>
-                  <a href="https://x.com/himmat_singh_14" aria-label="Twitter">🐦</a>
-                  <a href="https://www.instagram.com/h.s.rajawat/" aria-label="Instagram">📷</a>
-                  <a href="https://www.linkedin.com/in/himmat-singh-rajawat" aria-label="LinkedIn">💼</a>
+                  <a href="https://www.facebook.com/share/16z1jBrpVs/" aria-label="Facebook">📘</a>
+                  <a href="https://x.com/buildadda14" aria-label="Twitter">🐦</a>
+                  <a href="https://www.instagram.com/build_adda?igsh=OTd6aXRoeWszb3hr/" aria-label="Instagram">📷</a>
+                  <a href="https://www.linkedin.com/company/buildadda/" aria-label="LinkedIn">💼</a>
                 </div>
               </div>
             </div>

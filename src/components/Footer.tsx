@@ -39,19 +39,19 @@ export default function Footer() {
               </div>
 
               <div className="social-links">
-                <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="social-link">
+                <a href="https://www.facebook.com/share/16z1jBrpVs/" target="_blank" rel="noopener noreferrer" className="social-link">
                   <FiFacebook />
                 </a>
-                <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="social-link">
+                <a href="https://x.com/buildadda14" target="_blank" rel="noopener noreferrer" className="social-link">
                   <FiTwitter />
                 </a>
-                <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="social-link">
+                <a href="https://www.instagram.com/build_adda?igsh=OTd6aXRoeWszb3hr/" target="_blank" rel="noopener noreferrer" className="social-link">
                   <FiInstagram />
                 </a>
-                <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="social-link">
+                <a href="https://www.linkedin.com/company/buildadda/" target="_blank" rel="noopener noreferrer" className="social-link">
                   <FiLinkedin />
                 </a>
-                <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" className="social-link">
+                <a href="https://www.youtube.com/@BuildAdda" target="_blank" rel="noopener noreferrer" className="social-link">
                   <FiYoutube />
                 </a>
               </div>
