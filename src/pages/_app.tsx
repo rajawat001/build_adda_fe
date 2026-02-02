@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import type { AppProps} from 'next/app';
 import Head from 'next/head';
 import { ThemeProvider } from '../contexts/ThemeContext';
@@ -43,6 +44,19 @@ import '../styles/email-auth.css';
 import '../styles/mobile-cards.css';
 
 export default function App({ Component, pageProps }: AppProps) {
+  // PWA auto-update: reload page when a new service worker takes over
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) {
+          refreshing = true;
+          window.location.reload();
+        }
+      });
+    }
+  }, []);
+
   return (
     <>
     <Head>
