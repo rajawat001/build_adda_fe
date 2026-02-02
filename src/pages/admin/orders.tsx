@@ -75,6 +75,7 @@ const OrdersManagement: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
   const [filters, setFilters] = useState<Record<string, any>>({});
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled'>('all');
@@ -113,6 +114,7 @@ const OrdersManagement: React.FC = () => {
       const response = await api.get(`/admin/orders?${queryParams}`);
       setOrders(response.data.orders || []);
       setTotalPages(response.data.pagination?.pages || 1);
+      setTotalItems(response.data.pagination?.total || 0);
     } catch (error) {
       console.error('Error fetching orders:', error);
     } finally {
@@ -640,6 +642,12 @@ const OrdersManagement: React.FC = () => {
             columns={columns}
             data={orders}
             loading={loading}
+            pagination={{
+              page: currentPage,
+              limit: 20,
+              total: totalItems,
+              onPageChange: setCurrentPage,
+            }}
           />
         </motion.div>
 

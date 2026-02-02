@@ -52,6 +52,7 @@ const ProductsManagement: React.FC = () => {
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
   const [filters, setFilters] = useState<Record<string, any>>({});
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
@@ -100,6 +101,7 @@ const ProductsManagement: React.FC = () => {
       const response = await api.get(`/admin/products?${queryParams}`);
       setProducts(response.data.products || []);
       setTotalPages(response.data.pagination?.pages || 1);
+      setTotalItems(response.data.pagination?.total || 0);
     } catch (error) {
       console.error('Error fetching products:', error);
     } finally {
@@ -613,6 +615,14 @@ const ProductsManagement: React.FC = () => {
               data={products}
               loading={loading}
               selectable
+              selectedIds={selectedProducts}
+              onSelect={setSelectedProducts}
+              pagination={{
+                page: currentPage,
+                limit: 20,
+                total: totalItems,
+                onPageChange: setCurrentPage,
+              }}
             />
           </motion.div>
         ) : (

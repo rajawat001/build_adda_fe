@@ -138,13 +138,13 @@ const Sidebar = ({ onLogout, isOpen = false, onClose, isMobile = false }: Sideba
         <style jsx>{`
           .distributor-sidebar {
             width: 260px;
-            min-height: 100vh;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             display: flex;
             flex-direction: column;
-            position: sticky;
+            position: fixed;
             top: 0;
+            left: 0;
             height: 100vh;
             overflow-y: auto;
             box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);

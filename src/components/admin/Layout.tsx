@@ -78,6 +78,8 @@ const AdminLayout = ({ children, title = 'Admin Panel' }: LayoutProps) => {
           overflow-x: hidden;
           display: flex;
           flex-direction: column;
+          margin-left: 260px;
+          min-height: 100vh;
         }
 
         .header-bar {
@@ -186,6 +188,10 @@ const AdminLayout = ({ children, title = 'Admin Panel' }: LayoutProps) => {
         }
 
         @media (max-width: 768px) {
+          .admin-main {
+            margin-left: 80px;
+          }
+
           .header-content {
             padding: 1rem;
           }

@@ -81,13 +81,15 @@ const Sidebar = ({ onLogout }: SidebarProps) => {
       <style jsx>{`
         .sidebar {
           width: 260px;
-          min-height: 100vh;
+          height: 100vh;
           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
           color: white;
           display: flex;
           flex-direction: column;
-          position: sticky;
+          position: fixed;
           top: 0;
+          left: 0;
+          z-index: 50;
           box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
         }
 

@@ -60,6 +60,7 @@ const ReviewsManagement: React.FC = () => {
   const [selectedReviews, setSelectedReviews] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
   const [filters, setFilters] = useState<Record<string, any>>({});
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'approved' | 'rejected' | 'flagged'>('all');
@@ -99,6 +100,7 @@ const ReviewsManagement: React.FC = () => {
       const response = await api.get(`/admin/reviews?${queryParams}`);
       setReviews(response.data.reviews || []);
       setTotalPages(response.data.pagination?.pages || 1);
+      setTotalItems(response.data.pagination?.total || 0);
     } catch (error) {
       console.error('Error fetching reviews:', error);
     } finally {
@@ -689,6 +691,14 @@ const ReviewsManagement: React.FC = () => {
             data={reviews}
             loading={loading}
             selectable
+            selectedIds={selectedReviews}
+            onSelect={setSelectedReviews}
+            pagination={{
+              page: currentPage,
+              limit: 20,
+              total: totalItems,
+              onPageChange: setCurrentPage,
+            }}
           />
         </motion.div>
 

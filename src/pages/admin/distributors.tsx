@@ -50,6 +50,7 @@ const DistributorsManagement: React.FC = () => {
   const [selectedDistributors, setSelectedDistributors] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
   const [filters, setFilters] = useState<Record<string, any>>({});
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'approved'>('all');
@@ -102,6 +103,7 @@ const DistributorsManagement: React.FC = () => {
       const response = await api.get(`/admin/distributors?${queryParams}`);
       setDistributors(response.data.distributors || []);
       setTotalPages(response.data.pagination?.pages || 1);
+      setTotalItems(response.data.pagination?.total || 0);
     } catch (error) {
       console.error('Error fetching distributors:', error);
     } finally {
@@ -647,6 +649,14 @@ const DistributorsManagement: React.FC = () => {
             data={distributors}
             loading={loading}
             selectable
+            selectedIds={selectedDistributors}
+            onSelect={setSelectedDistributors}
+            pagination={{
+              page: currentPage,
+              limit: 20,
+              total: totalItems,
+              onPageChange: setCurrentPage,
+            }}
           />
         </motion.div>
 

@@ -53,6 +53,7 @@ const UsersManagement: React.FC = () => {
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
   const [filters, setFilters] = useState<Record<string, any>>({});
   const [searchTerm, setSearchTerm] = useState('');
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -101,6 +102,7 @@ const UsersManagement: React.FC = () => {
 
       setUsers(response.data.users || []);
       setTotalPages(response.data.pagination?.pages || 1);
+      setTotalItems(response.data.pagination?.total || 0);
     } catch (error) {
       console.error('Error fetching users:', error);
     } finally {
@@ -565,6 +567,14 @@ const UsersManagement: React.FC = () => {
             data={users}
             loading={loading}
             selectable
+            selectedIds={selectedUsers}
+            onSelect={setSelectedUsers}
+            pagination={{
+              page: currentPage,
+              limit: 20,
+              total: totalItems,
+              onPageChange: setCurrentPage,
+            }}
           />
         </motion.div>
 

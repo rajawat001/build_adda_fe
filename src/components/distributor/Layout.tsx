@@ -197,6 +197,8 @@ const DistributorLayout = ({ children, title = 'Distributor Panel' }: LayoutProp
           display: flex;
           flex-direction: column;
           min-width: 0;
+          margin-left: 260px;
+          min-height: 100vh;
         }
 
         .header-bar {
@@ -304,6 +306,10 @@ const DistributorLayout = ({ children, title = 'Distributor Panel' }: LayoutProp
 
         /* Mobile Styles */
         @media (max-width: 768px) {
+          .distributor-main {
+            margin-left: 0;
+          }
+
           .header-content {
             padding: 0.875rem 1rem;
           }
