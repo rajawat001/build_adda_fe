@@ -21,12 +21,6 @@ import { toast } from 'react-toastify';
 import subscriptionService from '../../services/subscription.service';
 import { format, differenceInDays } from 'date-fns';
 
-declare global {
-  interface Window {
-    Razorpay: any;
-  }
-}
-
 interface SubscriptionPlan {
   _id: string;
   name: string;
@@ -91,15 +85,7 @@ const SubscriptionPage = () => {
 
   useEffect(() => {
     fetchData();
-    loadRazorpayScript();
   }, []);
-
-  const loadRazorpayScript = () => {
-    const script = document.createElement('script');
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-    script.async = true;
-    document.body.appendChild(script);
-  };
 
   const fetchData = async () => {
     try {
@@ -167,57 +153,24 @@ const SubscriptionPage = () => {
       const orderResult = await subscriptionService.createOrder(
         selectedPlan._id,
         appliedCoupon?.coupon.code
-      );  
+      );
 
       // If it's a free subscription (coupon with 100% discount or free months)
       if (orderResult.isFree) {
         toast.success('Subscription activated successfully! Redirecting to dashboard...');
         setShowCheckoutModal(false);
-        // Redirect to dashboard after a brief delay
         setTimeout(() => {
           router.push('/distributor/dashboard');
         }, 1500);
         return;
       }
 
-      // Open Razorpay checkout
-      const options = {
-        key: orderResult.razorpayKeyId,
-        amount: orderResult.order.amount,
-        currency: orderResult.order.currency,
-        name: 'BuildAdda',
-        description: `${selectedPlan.name} Subscription`,
-        order_id: orderResult.order.id,
-        handler: async (response: any) => {
-          try {
-            await subscriptionService.verifyPayment({
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-              subscriptionId: orderResult.subscription
-            });
-            toast.success('Payment successful! Subscription activated. Redirecting to dashboard...');
-            setShowCheckoutModal(false);
-            // Redirect to dashboard after a brief delay
-            setTimeout(() => {
-              router.push('/distributor/dashboard');
-            }, 1500);
-          } catch (error: any) {
-            toast.error('Payment verification failed. Please contact support.');
-          }
-        },
-        prefill: {
-          name: '',
-          email: '',
-          contact: ''
-        },
-        theme: {
-          color: '#F97316'
-        }
-      };
-
-      const razorpay = new window.Razorpay(options);
-      razorpay.open();
+      // Redirect to PhonePe payment page
+      if (orderResult.paymentUrl) {
+        window.location.href = orderResult.paymentUrl;
+      } else {
+        toast.error('Failed to get payment URL. Please try again.');
+      }
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to process subscription');
     } finally {

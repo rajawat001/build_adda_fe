@@ -16,7 +16,7 @@ const faqData: FAQItem[] = [
     id: 1,
     category: 'General',
     question: 'What is BuildAdda?',
-    answer: 'BuildAdda is an e-commerce platform specializing in construction materials and building supplies. We connect verified distributors with customers, offering a wide range of quality products at competitive prices.'
+    answer: 'BuildAdda is a technology platform that connects verified distributors/sellers of construction materials and building supplies with customers. BuildAdda acts solely as an intermediary facilitator and does not itself sell, manufacture, store, or deliver any products.'
   },
   {
     id: 2,
@@ -36,25 +36,25 @@ const faqData: FAQItem[] = [
     id: 4,
     category: 'Orders',
     question: 'How do I place an order?',
-    answer: 'Browse products, select the item you want, choose quantity, and click "Add to Cart". Review your cart, proceed to checkout, select delivery address, choose payment method, and confirm your order.'
+    answer: 'Browse products, select the item you want, choose quantity, and click "Add to Cart". Review your cart, proceed to checkout, select delivery address, choose payment method, and confirm your order. Your order will be placed with the respective distributor/seller.'
   },
   {
     id: 5,
     category: 'Orders',
     question: 'Can I modify or cancel my order?',
-    answer: 'Yes, you can cancel your order before it\'s shipped from your order details page. Once shipped, cancellation is not possible, but you can initiate a return after delivery.'
+    answer: 'You can cancel your order before it\'s shipped by the distributor from your order details page. Once shipped, cancellation is not possible. For any post-delivery issues, please contact the distributor/seller directly.'
   },
   {
     id: 6,
     category: 'Orders',
     question: 'How do I track my order?',
-    answer: 'Go to "My Orders" in your profile, click on the order you want to track. You\'ll see the current status and tracking information if the order has been shipped.'
+    answer: 'Go to "My Orders" in your profile, click on the order you want to track. You\'ll see the current status and tracking information provided by the distributor.'
   },
   {
     id: 7,
     category: 'Orders',
     question: 'What if I receive a damaged or incorrect product?',
-    answer: 'Contact our customer support immediately with photos of the product. We\'ll arrange for a replacement or refund within 7 days of delivery.'
+    answer: 'Please contact the distributor/seller directly with photos of the product within 24 hours of delivery. All product quality, damage, and replacement issues are handled by the respective distributor/seller. BuildAdda is an intermediary platform and is not responsible for product quality or condition.'
   },
 
   // Payment
@@ -62,25 +62,25 @@ const faqData: FAQItem[] = [
     id: 8,
     category: 'Payment',
     question: 'What payment methods do you accept?',
-    answer: 'We accept Cash on Delivery (COD), Credit/Debit Cards, UPI, Net Banking, and Digital Wallets through Razorpay\'s secure payment gateway.'
+    answer: 'We support Cash on Delivery (COD) and online payments (Credit/Debit Cards, UPI, Net Banking, Digital Wallets) processed securely through PhonePe\'s payment gateway. Payment availability may vary by distributor.'
   },
   {
     id: 9,
     category: 'Payment',
-    question: 'Is it safe to use my card on BuildAdda?',
-    answer: 'Yes, absolutely. We use Razorpay\'s secure payment gateway with SSL encryption. We never store your card details on our servers.'
+    question: 'Is it safe to make online payments on BuildAdda?',
+    answer: 'Yes. Online payments are processed through PhonePe\'s secure payment gateway with industry-standard encryption. BuildAdda does not store your card details, bank account numbers, or UPI PINs on its servers.'
   },
   {
     id: 10,
     category: 'Payment',
     question: 'Are there any additional charges?',
-    answer: 'Delivery charges may apply based on your location and order value. There are no hidden charges - all costs are shown clearly before you confirm your order.'
+    answer: 'Delivery charges may apply based on your location and the distributor\'s policies. There are no hidden charges from BuildAdda — all costs are shown clearly before you confirm your order. Product pricing and delivery charges are set by the distributor/seller.'
   },
   {
     id: 11,
     category: 'Payment',
     question: 'Can I get an invoice for my order?',
-    answer: 'Yes, a GST invoice is automatically generated for every order. You can download it from your order details page after the order is confirmed.'
+    answer: 'Invoices are generated based on order details. You can view your order information from the order details page. For GST invoices, please contact the distributor/seller directly as they are the selling party.'
   },
 
   // Delivery & Shipping
@@ -88,25 +88,25 @@ const faqData: FAQItem[] = [
     id: 12,
     category: 'Delivery',
     question: 'How long does delivery take?',
-    answer: 'Delivery typically takes 5-7 business days depending on your location. For bulk orders, delivery time may vary. You\'ll receive estimated delivery dates during checkout.'
+    answer: 'Delivery timelines are determined by the respective distributor/seller and typically range from 3-10 business days depending on your location and product availability. BuildAdda does not control or guarantee delivery timelines.'
   },
   {
     id: 13,
     category: 'Delivery',
     question: 'Do you deliver to my area?',
-    answer: 'We deliver to most locations across India. Enter your pincode during checkout to check if we deliver to your area.'
+    answer: 'Delivery areas depend on the distributor/seller. During checkout, you can check if the distributor delivers to your location. BuildAdda does not directly handle logistics or delivery.'
   },
   {
     id: 14,
     category: 'Delivery',
     question: 'Can I change my delivery address?',
-    answer: 'You can change the delivery address before the order is shipped. Contact customer support or modify it from your order details page.'
+    answer: 'You may request a delivery address change before the order is shipped. Contact the distributor or use the order details page. Address changes after shipment are subject to the distributor\'s policies.'
   },
   {
     id: 15,
     category: 'Delivery',
     question: 'What if I\'m not available during delivery?',
-    answer: 'Our delivery partner will attempt delivery 2-3 times. If unsuccessful, the order will be returned. Please provide a reliable contact number and address.'
+    answer: 'Delivery attempts and rescheduling are managed by the distributor/seller or their logistics partner. Please provide a reliable contact number to coordinate delivery.'
   },
 
   // Returns & Refunds
@@ -114,25 +114,25 @@ const faqData: FAQItem[] = [
     id: 16,
     category: 'Returns',
     question: 'What is your return policy?',
-    answer: 'We offer a 7-day return policy for most products. Items must be unused, in original packaging with tags intact. See our Returns Policy page for complete details.'
+    answer: 'BuildAdda is an intermediary platform. All return policies are determined by the respective distributor/seller. Generally, products may be eligible for return within 7 days of delivery if unused and in original packaging. Please contact the distributor directly for their specific return terms. See our Returns & Refunds Policy page for full details.'
   },
   {
     id: 17,
     category: 'Returns',
     question: 'How do I return a product?',
-    answer: 'Go to your order details, click "Return Order", select items to return, choose return reason, and submit. Our team will arrange pickup within 2-3 business days.'
+    answer: 'Contact the distributor/seller directly to initiate a return. Provide your order number and reason for return. The distributor will handle the return process including pickup arrangements, if applicable.'
   },
   {
     id: 18,
     category: 'Returns',
     question: 'When will I get my refund?',
-    answer: 'Refunds are processed within 5-7 business days after we receive and verify the returned product. The amount will be credited to your original payment method.'
+    answer: 'For cancelled online orders (pre-shipment), an automated refund may be initiated through PhonePe, typically taking 5-10 business days. For product returns, refund processing is handled by the distributor/seller. BuildAdda does not guarantee refund timelines or amounts — these are the distributor\'s responsibility.'
   },
   {
     id: 19,
     category: 'Returns',
     question: 'Are there any products that cannot be returned?',
-    answer: 'Yes, customized products, bulk orders, and certain categories like electrical items may not be eligible for return. Check product details before purchasing.'
+    answer: 'Return eligibility is determined by each distributor/seller. Generally, customized products, used/installed items, opened cement bags, cut materials, and clearance items may not be returnable. Check with the distributor before purchasing.'
   },
 
   // Distributors
@@ -140,19 +140,19 @@ const faqData: FAQItem[] = [
     id: 20,
     category: 'Distributors',
     question: 'How can I become a distributor?',
-    answer: 'Register as a distributor during sign-up by selecting "Distributor" as your role. Provide your business details, GST number, and wait for admin approval (typically 1-2 business days).'
+    answer: 'Register as a distributor during sign-up by selecting "Distributor" as your role. Provide your business details, GST number, and subscribe to a plan. Your account will be reviewed and activated upon subscription.'
   },
   {
     id: 21,
     category: 'Distributors',
     question: 'What are the requirements to sell on BuildAdda?',
-    answer: 'You need a valid business registration, GST number, quality certifications for products, and ability to maintain inventory and timely deliveries.'
+    answer: 'You need a valid business registration, GST number, and an active subscription plan. Distributors are solely responsible for product quality, accurate listings, order fulfillment, delivery, and customer service.'
   },
   {
     id: 22,
     category: 'Distributors',
     question: 'What commission does BuildAdda charge?',
-    answer: 'Our commission structure varies by product category. Contact our distributor support team for detailed information about fees and commissions.'
+    answer: 'BuildAdda operates on a subscription model for distributors. Contact our support team for detailed information about subscription plans and fees.'
   },
 
   // Account & Security
@@ -178,7 +178,7 @@ const faqData: FAQItem[] = [
     id: 26,
     category: 'Account',
     question: 'How do I delete my account?',
-    answer: 'Contact our customer support team with your request to delete your account. Please note this action is irreversible and all your data will be permanently deleted.'
+    answer: 'Contact our support team with your request to delete your account. Please note this action is irreversible and all your data will be permanently deleted.'
   }
 ];
 
@@ -278,7 +278,7 @@ const FAQPage: React.FC = () => {
 
           <div className="faq-cta">
             <h2>Still have questions?</h2>
-            <p>Can't find the answer you're looking for? Our customer support team is here to help.</p>
+            <p>Can't find the answer you're looking for? Our support team is here to help.</p>
             <a href="/contact" className="btn-primary">Contact Support</a>
           </div>
         </div>

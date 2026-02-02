@@ -3,15 +3,9 @@ import { useRouter } from 'next/router';
 import SEO from '../components/SEO';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import { createOrder, verifyPayment } from '../services/order.service';
+import { createOrder, initiatePhonepePayment } from '../services/order.service';
 import authService from '../services/auth.service';
 import { useCart } from '../context/CartContext';
-
-declare global {
-  interface Window {
-    Razorpay: any;
-  }
-}
 
 interface Address {
   _id?: string;
@@ -99,11 +93,7 @@ export default function Checkout() {
     // Fetch user profile to get saved addresses
     fetchUserProfile();
 
-    // Load Razorpay script
-    const script = document.createElement('script');
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-    script.async = true;
-    document.body.appendChild(script);
+    // No external payment scripts needed — PhonePe uses redirect
   }, [cartItems.length]);
 
   const fetchUserProfile = async () => {
@@ -368,42 +358,18 @@ export default function Checkout() {
     }
   };
 
-  const handleRazorpayPayment = async (orderId: string, amount: number) => {
-    const options = {
-      key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-      amount: amount * 100,
-      currency: 'INR',
-      name: 'BuildAdda',
-      description: 'Building Materials Purchase',
-      order_id: orderId,
-      handler: async (response: any) => {
-        try {
-          await verifyPayment({
-            orderId,
-            razorpayOrderId: response.razorpay_order_id,
-            razorpayPaymentId: response.razorpay_payment_id,
-            razorpaySignature: response.razorpay_signature
-          });
-
-          // Set flag to prevent redirect to cart page
-          setOrderPlaced(true);
-          clearCart();
-          router.push('/order-success');
-        } catch (error) {
-          router.push('/order-failure');
-        }
-      },
-      prefill: {
-        email: localStorage.getItem('userEmail'),
-        contact: formData.shippingAddress.phone
-      },
-      theme: {
-        color: '#3399cc'
+  const handlePhonepePayment = async (orderId: string) => {
+    try {
+      const response = await initiatePhonepePayment(orderId);
+      if (response.success && response.paymentUrl) {
+        // Redirect to PhonePe payment page
+        window.location.href = response.paymentUrl;
+      } else {
+        alert('Failed to initiate payment. Please try again.');
       }
-    };
-
-    const razorpay = new window.Razorpay(options);
-    razorpay.open();
+    } catch (error) {
+      router.push('/order-failure');
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -471,7 +437,8 @@ export default function Checkout() {
       const response = await createOrder(orderData);
 
       if (formData.paymentMethod === 'Online') {
-        await handleRazorpayPayment(response.orderId, response.amount);
+        await handlePhonepePayment(response.order._id);
+        return; // User will be redirected to PhonePe
       } else {
         // Set flag to prevent redirect to cart page
         setOrderPlaced(true);
@@ -767,7 +734,7 @@ export default function Checkout() {
                   onChange={handleChange}
                 >
                   {getAvailablePaymentMethods().includes('Online') && (
-                    <option value="Online">Razorpay (Online Payment)</option>
+                    <option value="Online">Online Payment (PhonePe)</option>
                   )}
                   {getAvailablePaymentMethods().includes('COD') && (
                     <option value="COD">Cash on Delivery</option>

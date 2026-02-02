@@ -19,7 +19,7 @@ const subscriptionService = {
     return response.data;
   },
 
-  // Create Razorpay order
+  // Create payment order
   createOrder: async (planId: string, couponCode?: string) => {
     const response = await api.post('/subscriptions/create-order', { planId, couponCode });
     return response.data;

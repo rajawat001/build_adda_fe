@@ -31,8 +31,10 @@ interface Settings {
   favicon: string;
 
   // Payment
-  razorpayKeyId: string;
-  razorpayKeySecret: string;
+  phonepeMerchantId: string;
+  phonepeSaltKey: string;
+  phonepeSaltIndex: string;
+  phonepeEnv: string;
   codEnabled: boolean;
   minOrderAmount: number;
 
@@ -94,8 +96,10 @@ const AdminSettings: React.FC = () => {
     favicon: '',
 
     // Payment
-    razorpayKeyId: '',
-    razorpayKeySecret: '',
+    phonepeMerchantId: '',
+    phonepeSaltKey: '',
+    phonepeSaltIndex: '1',
+    phonepeEnv: 'sandbox',
     codEnabled: true,
     minOrderAmount: 500,
 
@@ -357,10 +361,12 @@ const AdminSettings: React.FC = () => {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
         <div>
           <h4 style={{ fontSize: '1rem', fontWeight: 500, marginBottom: '1rem', color: 'var(--admin-text-secondary)' }}>
-            Razorpay Configuration
+            PhonePe Configuration
           </h4>
-          {renderInputField('razorpayKeyId', 'Razorpay Key ID', 'text', 'rzp_test_xxxxx')}
-          {renderInputField('razorpayKeySecret', 'Razorpay Key Secret', 'password', 'Enter secret key')}
+          {renderInputField('phonepeMerchantId', 'PhonePe Merchant ID', 'text', 'PGTESTPAYUAT')}
+          {renderInputField('phonepeSaltKey', 'PhonePe Salt Key', 'password', 'Enter salt key')}
+          {renderInputField('phonepeSaltIndex', 'PhonePe Salt Index', 'text', '1')}
+          {renderInputField('phonepeEnv', 'PhonePe Environment', 'text', 'sandbox or production')}
         </div>
         <div>
           <h4 style={{ fontSize: '1rem', fontWeight: 500, marginBottom: '1rem', color: 'var(--admin-text-secondary)' }}>

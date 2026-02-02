@@ -6,362 +6,299 @@ export default function ShippingPolicy() {
   return (
     <>
       <SEO
-        title="Shipping & Delivery Policy"
-        description="Shipping and Delivery Policy for BuildAdda"
+        title="Shipping & Delivery Policy - BuildAdda"
+        description="Shipping and Delivery Policy for BuildAdda platform. Learn about delivery timelines, shipping charges, and delivery process for building materials."
+        keywords="BuildAdda shipping policy, delivery policy, building materials delivery, construction materials shipping"
+        canonicalUrl="https://www.buildadda.in/shipping"
       />
       <Header />
 
       <div className="legal-page">
         <div className="legal-container">
           <h1>Shipping & Delivery Policy</h1>
-          <p className="last-updated">Last Updated: December 31, 2025</p>
+          <p className="last-updated">Last Updated: February 2, 2026</p>
 
           <div className="legal-content">
             <section>
-              <h2>1. Shipping Policy Overview</h2>
+              <h2>1. Important Disclaimer</h2>
               <p>
-                At BuildAdda, we are committed to delivering your construction materials safely and on time. This policy outlines our shipping and delivery procedures, timelines, and guidelines.
+                <strong>BuildAdda is an intermediary technology platform</strong> operated by Himmat Singh Rajawat that connects independent distributors/sellers with customers for the purchase of building materials and construction supplies. BuildAdda does NOT itself ship, transport, deliver, or handle any products.
+              </p>
+              <p>
+                <strong>All shipping, logistics, and delivery are the sole responsibility of the respective distributor/seller.</strong> BuildAdda does not control, manage, or guarantee any aspect of the delivery process. Users engage in transactions and rely on delivery services entirely at their own risk.
               </p>
             </section>
 
             <section>
-              <h2>2. Delivery Areas</h2>
-
-              <h3>2.1 Service Coverage</h3>
+              <h2>2. Delivery Responsibility</h2>
               <p>
-                We currently deliver to the following areas:
+                Each distributor/seller on BuildAdda is independently responsible for:
               </p>
               <ul>
-                <li>Jaipur and surrounding areas within 50 km radius</li>
-                <li>Major cities in Rajasthan (Jodhpur, Udaipur, Kota, Ajmer)</li>
-                <li>Pin code availability can be checked at checkout</li>
+                <li>Arranging shipping and delivery of products to the customer</li>
+                <li>Setting delivery areas, timelines, and shipping charges</li>
+                <li>Packaging products securely for transport</li>
+                <li>Selecting logistics partners or arranging their own delivery</li>
+                <li>Providing tracking information, where available</li>
+                <li>Handling all delivery-related complaints and issues</li>
+                <li>Ensuring compliance with applicable transport and safety regulations</li>
               </ul>
+            </section>
 
-              <h3>2.2 Remote Area Delivery</h3>
+            <section>
+              <h2>3. Delivery Areas</h2>
+
+              <h3>3.1 Service Coverage</h3>
               <p>
-                For remote or hard-to-reach areas, additional shipping charges may apply. Delivery timelines may also be extended for such locations.
+                Delivery areas are determined by each distributor/seller independently. During checkout, customers can check if the distributor delivers to their location. Common service areas may include:
+              </p>
+              <ul>
+                <li>Jaipur and surrounding areas</li>
+                <li>Major cities in Rajasthan</li>
+                <li>Other areas as specified by individual distributors</li>
+              </ul>
+              <p>
+                BuildAdda does not guarantee delivery to any specific location. Pin code availability depends entirely on the distributor/seller.
+              </p>
+
+              <h3>3.2 Remote Area Delivery</h3>
+              <p>
+                For remote or hard-to-reach areas, distributors may charge additional shipping fees or may not offer delivery. Delivery timelines may also be extended. Contact the distributor directly for details.
               </p>
             </section>
 
             <section>
-              <h2>3. Delivery Timeline</h2>
+              <h2>4. Delivery Timelines</h2>
 
-              <h3>3.1 Standard Delivery</h3>
-              <ul>
-                <li><strong>Within Jaipur:</strong> 1-2 business days</li>
-                <li><strong>Rajasthan (other cities):</strong> 3-5 business days</li>
-                <li><strong>Remote areas:</strong> 5-7 business days</li>
-              </ul>
-
-              <h3>3.2 Express Delivery</h3>
+              <h3>4.1 Estimated Timelines</h3>
               <p>
-                Express delivery available for select products within Jaipur city limits:
+                Delivery timelines are set by each distributor/seller and may vary. Typical estimates provided by distributors are:
               </p>
               <ul>
-                <li>Same-day delivery (Order before 12 PM)</li>
-                <li>Next-day delivery (Order before 6 PM)</li>
-                <li>Additional charges apply</li>
+                <li><strong>Local delivery:</strong> 1-3 business days</li>
+                <li><strong>State-wide delivery:</strong> 3-7 business days</li>
+                <li><strong>Remote areas:</strong> 5-10 business days</li>
+                <li><strong>Bulk orders:</strong> Timeline communicated by distributor during order confirmation</li>
               </ul>
-
-              <h3>3.3 Bulk Orders</h3>
               <p>
-                Large or bulk orders may require additional time for processing and delivery. Timeline will be communicated during order confirmation.
+                <strong>BuildAdda does not control or guarantee any delivery timelines.</strong> These are estimates provided by distributors and may vary based on product availability, location, weather, and other factors.
               </p>
 
-              <h3>3.4 Factors Affecting Delivery</h3>
-              <p>Delivery may be delayed due to:</p>
+              <h3>4.2 Factors Affecting Delivery</h3>
+              <p>Delivery may be delayed due to factors beyond the distributor's control, including:</p>
               <ul>
                 <li>Natural disasters or extreme weather conditions</li>
-                <li>Political unrest or strikes</li>
-                <li>Incorrect or incomplete delivery address</li>
-                <li>Unavailability of recipient at delivery location</li>
+                <li>Political unrest, strikes, or curfews</li>
+                <li>Incorrect or incomplete delivery address provided by the customer</li>
+                <li>Unavailability of recipient at the delivery location</li>
                 <li>Public holidays</li>
+                <li>Stock availability or supply chain disruptions</li>
+              </ul>
+              <p>
+                BuildAdda is not responsible for any delivery delays or failures.
+              </p>
+            </section>
+
+            <section>
+              <h2>5. Shipping Charges</h2>
+
+              <h3>5.1 Charges Set by Distributors</h3>
+              <p>
+                Shipping and delivery charges are determined solely by the respective distributor/seller. Charges may vary based on:
+              </p>
+              <ul>
+                <li>Order value and product weight/volume</li>
+                <li>Delivery distance from the distributor's location</li>
+                <li>Type of product and handling requirements</li>
+                <li>Delivery speed requested by the customer</li>
+              </ul>
+              <p>
+                All applicable shipping charges will be displayed during checkout before order confirmation. BuildAdda does not set, control, or profit from delivery charges.
+              </p>
+
+              <h3>5.2 Special Handling</h3>
+              <p>
+                Additional charges may be applied by the distributor for:
+              </p>
+              <ul>
+                <li>Heavy or oversized construction materials</li>
+                <li>Delivery requiring special vehicles or equipment</li>
+                <li>Delivery beyond ground floor or to restricted access areas</li>
+                <li>Weekend or holiday delivery requests</li>
               </ul>
             </section>
 
             <section>
-              <h2>4. Shipping Charges</h2>
+              <h2>6. Order Processing</h2>
 
-              <h3>4.1 Standard Shipping Rates</h3>
-              <ul>
-                <li><strong>Orders above ₹5,000:</strong> Free shipping within Jaipur</li>
-                <li><strong>Orders above ₹10,000:</strong> Free shipping across Rajasthan</li>
-                <li><strong>Orders below minimum:</strong> Shipping charges calculated at checkout</li>
-              </ul>
-
-              <h3>4.2 Weight-Based Charges</h3>
+              <h3>6.1 Order Confirmation</h3>
               <p>
-                For heavy materials (cement, steel, aggregates), shipping charges are calculated based on:
+                After placing an order, you will receive an order confirmation through the Platform. Order processing and dispatch are handled by the distributor/seller. For online payments processed through <strong>PhonePe payment gateway</strong>, order processing begins after payment confirmation.
+              </p>
+
+              <h3>6.2 Order Tracking</h3>
+              <p>
+                Where available, distributors may provide order tracking information through the Platform. You can check your order status in the "My Orders" section of your account. Tracking availability depends on the distributor and their logistics partner.
+              </p>
+            </section>
+
+            <section>
+              <h2>7. Delivery Process</h2>
+
+              <h3>7.1 Delivery Attempt</h3>
+              <p>
+                Delivery logistics are managed by the distributor/seller or their chosen logistics partner. Customers should:
               </p>
               <ul>
-                <li>Total weight of the order</li>
-                <li>Delivery distance from warehouse</li>
-                <li>Type of vehicle required for transportation</li>
+                <li>Ensure someone is available at the delivery address to receive the order</li>
+                <li>Provide a reliable contact number for delivery coordination</li>
+                <li>Keep valid ID proof available for verification, if required by the distributor</li>
               </ul>
 
-              <h3>4.3 Special Handling Charges</h3>
+              <h3>7.2 Failed Delivery</h3>
               <p>
-                Additional charges may apply for:
+                If delivery fails due to customer unavailability or incorrect address, re-delivery attempts and associated charges are determined by the distributor/seller. BuildAdda is not responsible for failed delivery attempts or any resulting costs.
+              </p>
+
+              <h3>7.3 Delivery Inspection</h3>
+              <p>
+                Customers are strongly advised to:
               </p>
               <ul>
-                <li>Stair climbing or elevator not available</li>
-                <li>Delivery beyond ground floor</li>
-                <li>Products requiring special handling equipment</li>
-                <li>Weekend or holiday delivery</li>
+                <li>Inspect products immediately upon delivery</li>
+                <li>Check quantity and condition of all items</li>
+                <li>Document any visible damage with photographs before accepting delivery</li>
+                <li>Note any damages or discrepancies on the delivery receipt</li>
+                <li>Report any issues to the distributor/seller within 24 hours of delivery</li>
               </ul>
             </section>
 
             <section>
-              <h2>5. Order Processing</h2>
-
-              <h3>5.1 Order Confirmation</h3>
-              <ul>
-                <li>You will receive order confirmation via email/SMS</li>
-                <li>Order processing begins after payment confirmation</li>
-                <li>You'll receive tracking details once order is dispatched</li>
-              </ul>
-
-              <h3>5.2 Order Tracking</h3>
+              <h2>8. Product-Specific Shipping Notes</h2>
               <p>
-                Track your order through:
+                Distributors may have specific shipping requirements for different product categories:
               </p>
+
+              <h3>8.1 Heavy Materials (Cement, Steel, Aggregates)</h3>
               <ul>
-                <li>Your BuildAdda account dashboard</li>
-                <li>Tracking link sent via email/SMS</li>
-                <li>Contact customer support with order ID</li>
+                <li>May require special vehicles for transport</li>
+                <li>Minimum order quantities may apply</li>
+                <li>Customer may need to arrange unloading equipment or labour</li>
+                <li>Adequate unloading space must be available at the delivery site</li>
               </ul>
 
-              <h3>5.3 Dispatch Notification</h3>
-              <p>
-                Once your order is dispatched, you will receive:
-              </p>
+              <h3>8.2 Fragile Materials (Tiles, Ceramics, Glass)</h3>
               <ul>
-                <li>Dispatch confirmation email/SMS</li>
-                <li>Expected delivery date</li>
-                <li>Delivery partner contact details</li>
-                <li>Live tracking link (if available)</li>
-              </ul>
-            </section>
-
-            <section>
-              <h2>6. Delivery Process</h2>
-
-              <h3>6.1 Delivery Attempt</h3>
-              <ul>
-                <li>Delivery partner will contact you before arrival</li>
-                <li>Please ensure someone is available to receive the order</li>
-                <li>Valid ID proof may be required for verification</li>
+                <li>Check for cracks or damage immediately upon delivery</li>
+                <li>Do not accept visibly damaged packages without noting on receipt</li>
+                <li>Report breakage to the distributor within 24 hours</li>
               </ul>
 
-              <h3>6.2 Failed Delivery</h3>
-              <p>
-                If delivery attempt fails due to recipient unavailability:
-              </p>
+              <h3>8.3 Paints, Chemicals & Hazardous Materials</h3>
               <ul>
-                <li>Second delivery attempt will be made next business day</li>
-                <li>You'll be notified via SMS/email</li>
-                <li>After 2 failed attempts, order may be returned to warehouse</li>
-                <li>Re-delivery charges may apply</li>
-              </ul>
-
-              <h3>6.3 Delivery Inspection</h3>
-              <p>
-                Upon delivery, please:
-              </p>
-              <ul>
-                <li>Check quantity and condition of products</li>
-                <li>Inspect packaging for any damage</li>
-                <li>Sign delivery receipt only after inspection</li>
-                <li>Note any damages or discrepancies on delivery receipt</li>
-                <li>Take photos if products appear damaged</li>
-              </ul>
-            </section>
-
-            <section>
-              <h2>7. Unloading & Installation</h2>
-
-              <h3>7.1 Standard Delivery</h3>
-              <p>
-                Our standard delivery includes:
-              </p>
-              <ul>
-                <li>Delivery to your doorstep/ground floor</li>
-                <li>Unloading from vehicle</li>
-                <li>Counting and verification of items</li>
-              </ul>
-
-              <h3>7.2 Additional Services</h3>
-              <p>
-                The following are NOT included in standard delivery:
-              </p>
-              <ul>
-                <li>Installation or assembly of products</li>
-                <li>Movement to upper floors (charges apply)</li>
-                <li>Unpacking or debris removal</li>
-                <li>Product demonstration</li>
-              </ul>
-
-              <h3>7.3 Heavy Goods</h3>
-              <p>
-                For heavy construction materials:
-              </p>
-              <ul>
-                <li>Crane or special equipment may be required (customer's responsibility)</li>
-                <li>Ensure adequate space for delivery vehicle</li>
-                <li>Arrange for labor if needed for unloading</li>
-              </ul>
-            </section>
-
-            <section>
-              <h2>8. Product-Specific Shipping</h2>
-
-              <h3>8.1 Cement & Aggregate</h3>
-              <ul>
-                <li>Delivered in bulk quantities</li>
-                <li>Minimum order quantity may apply</li>
-                <li>Delivered in covered trucks to prevent moisture</li>
-                <li>Requires adequate unloading space</li>
-              </ul>
-
-              <h3>8.2 Steel & TMT Bars</h3>
-              <ul>
-                <li>Delivered on specialized vehicles</li>
-                <li>Requires open space for unloading</li>
-                <li>Crane may be required for large quantities</li>
-              </ul>
-
-              <h3>8.3 Tiles & Ceramics</h3>
-              <ul>
-                <li>Delivered in original packaging</li>
-                <li>Fragile - handle with care</li>
-                <li>Check for cracks/damages immediately upon delivery</li>
-                <li>Report damages within 24 hours</li>
-              </ul>
-
-              <h3>8.4 Paints & Chemicals</h3>
-              <ul>
-                <li>Sealed containers to prevent spillage</li>
+                <li>Subject to transport regulations</li>
                 <li>Check expiry dates upon delivery</li>
-                <li>Store in cool, dry place immediately</li>
-              </ul>
-
-              <h3>8.5 Electrical & Plumbing</h3>
-              <ul>
-                <li>Delivered in protective packaging</li>
-                <li>Check for all components and accessories</li>
-                <li>Verify warranty cards and manuals</li>
+                <li>Ensure proper storage conditions upon receipt</li>
               </ul>
             </section>
 
             <section>
               <h2>9. Cash on Delivery (COD)</h2>
-
-              <h3>9.1 COD Availability</h3>
-              <ul>
-                <li>Available for orders up to ₹50,000</li>
-                <li>May not be available for certain pin codes</li>
-                <li>Additional COD charges may apply</li>
-              </ul>
-
-              <h3>9.2 Payment at Delivery</h3>
-              <ul>
-                <li>Pay exact amount to delivery partner</li>
-                <li>Cash payment preferred</li>
-                <li>Request proper receipt</li>
-                <li>Check product before making payment</li>
-              </ul>
-            </section>
-
-            <section>
-              <h2>10. Safety & Handling</h2>
               <p>
-                To ensure safe delivery:
+                Cash on Delivery availability is determined by each distributor/seller. Where offered:
               </p>
               <ul>
-                <li>Provide clear and complete delivery address</li>
-                <li>Ensure delivery location is accessible</li>
-                <li>Inform about any access restrictions (gates, security)</li>
-                <li>Clear pathway for moving large/heavy items</li>
-                <li>Inform about stairs, elevators, or narrow passages</li>
+                <li>COD availability may vary by location and order value</li>
+                <li>Additional COD handling charges may apply as set by the distributor</li>
+                <li>Payment must be made to the delivery person at the time of delivery</li>
+                <li>Inspect products before making payment</li>
               </ul>
-            </section>
-
-            <section>
-              <h2>11. Damaged or Missing Items</h2>
-
-              <h3>11.1 Reporting Issues</h3>
               <p>
-                If you receive damaged or incorrect products:
-              </p>
-              <ul>
-                <li>Report within 24 hours of delivery</li>
-                <li>Provide photos of damaged items and packaging</li>
-                <li>Keep all packaging materials</li>
-                <li>Do not use or install the product</li>
-              </ul>
-
-              <h3>11.2 Resolution</h3>
-              <p>
-                We will:
-              </p>
-              <ul>
-                <li>Investigate the issue within 48 hours</li>
-                <li>Arrange replacement or refund</li>
-                <li>Schedule free pickup of damaged items</li>
-                <li>Provide compensation for any inconvenience (if applicable)</li>
-              </ul>
-            </section>
-
-            <section>
-              <h2>12. International Shipping</h2>
-              <p>
-                Currently, we do not offer international shipping. We only deliver within India, specifically in Rajasthan and nearby regions.
+                For online payments, BuildAdda uses <strong>PhonePe's secure payment gateway</strong>. See our <a href="/refund_policy">Refund Policy</a> for details on online payment refunds.
               </p>
             </section>
 
             <section>
-              <h2>13. Holidays & Working Days</h2>
+              <h2>10. Damaged or Missing Items During Delivery</h2>
+              <p>
+                If you receive damaged, defective, or incorrect products:
+              </p>
               <ul>
-                <li>No deliveries on national holidays</li>
-                <li>Sunday deliveries may be available (charges apply)</li>
-                <li>Processing and delivery timelines exclude public holidays</li>
-                <li>Check our holiday schedule for specific dates</li>
+                <li>Document the damage with photographs immediately</li>
+                <li>Contact the distributor/seller directly within 24 hours of delivery</li>
+                <li>Do not use or install the damaged product</li>
+                <li>Keep all original packaging materials</li>
+              </ul>
+              <p>
+                Resolution of delivery damage claims (replacement, refund, or credit) is entirely at the discretion of the distributor/seller. <strong>BuildAdda is not responsible for product damage during transit, delivery errors, missing items, or any losses arising therefrom.</strong>
+              </p>
+            </section>
+
+            <section>
+              <h2>11. Limitation of Liability</h2>
+              <p>
+                BuildAdda and its owner, Himmat Singh Rajawat, shall NOT be liable for:
+              </p>
+              <ul>
+                <li>Any delivery delays, failures, or non-delivery by distributors or their logistics partners</li>
+                <li>Any product damage occurring during shipping or transit</li>
+                <li>Any loss, injury, or damage arising from the delivery process</li>
+                <li>Any incorrect or incomplete delivery by distributors</li>
+                <li>Any shipping charges, fees, or costs imposed by distributors</li>
+                <li>Any issues arising from delivery to incorrect addresses provided by customers</li>
+              </ul>
+              <p>
+                Users acknowledge that all shipping and delivery services are provided by the distributor/seller, and BuildAdda acts solely as a technology intermediary to facilitate the connection between parties.
+              </p>
+            </section>
+
+            <section>
+              <h2>12. Customer Responsibilities</h2>
+              <p>
+                Customers are responsible for:
+              </p>
+              <ul>
+                <li>Providing accurate and complete delivery address and contact information</li>
+                <li>Being available at the delivery location or arranging someone to receive the order</li>
+                <li>Inspecting products thoroughly upon delivery</li>
+                <li>Reporting any delivery issues to the distributor/seller within the specified timeframe</li>
+                <li>Arranging necessary equipment or labour for unloading heavy construction materials</li>
+                <li>Ensuring safe and appropriate storage of delivered materials</li>
               </ul>
             </section>
 
             <section>
-              <h2>14. Customer Responsibilities</h2>
+              <h2>13. International Shipping</h2>
               <p>
-                As a customer, you are responsible for:
+                BuildAdda currently operates within India only. International shipping is not available. Delivery coverage depends on individual distributors and is primarily focused on Rajasthan and nearby regions.
               </p>
-              <ul>
-                <li>Providing accurate delivery address and contact information</li>
-                <li>Being available at delivery time or arranging someone to receive</li>
-                <li>Inspecting products upon delivery</li>
-                <li>Reporting issues within specified timeframes</li>
-                <li>Arranging necessary equipment for unloading heavy items</li>
-                <li>Ensuring safe storage of delivered materials</li>
-              </ul>
             </section>
 
             <section>
-              <h2>15. Contact for Shipping Queries</h2>
+              <h2>14. Policy Modifications</h2>
               <p>
-                For shipping and delivery-related queries:
+                BuildAdda reserves the right to modify this Shipping & Delivery Policy at any time without prior notice. Changes shall be effective immediately upon posting on the Platform with an updated "Last Updated" date. It is your responsibility to review this policy periodically.
+              </p>
+            </section>
+
+            <section>
+              <h2>15. Governing Law</h2>
+              <p>
+                This Shipping & Delivery Policy is governed by the laws of India. Any disputes arising from this policy shall be subject to the exclusive jurisdiction of the courts in Jaipur, Rajasthan, India.
+              </p>
+            </section>
+
+            <section>
+              <h2>16. Contact Information</h2>
+              <p>
+                For queries related to this Shipping & Delivery Policy:
               </p>
               <ul>
-                <li>Email: delivery@buildadda.in</li>
+                <li>Owner: Himmat Singh Rajawat</li>
+                <li>Email: support@buildadda.in</li>
                 <li>Phone: +91 6377845721</li>
-                <li>WhatsApp: +91 6377845721</li>
-                <li>Support Hours: Monday-Saturday, 9 AM - 6 PM IST</li>
+                <li>Address: Plot 42, Bhuvneshwari Vatika Vistar 3rd, Vaishali West Road, Jaipur, Rajasthan, India - 302034</li>
               </ul>
-            </section>
-
-            <section>
-              <h2>16. Policy Updates</h2>
-              <p>
-                We reserve the right to modify this Shipping & Delivery Policy at any time. Changes will be effective immediately upon posting on our website. Please review this policy periodically for updates.
-              </p>
             </section>
           </div>
         </div>

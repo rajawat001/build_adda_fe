@@ -30,13 +30,13 @@ export const cancelOrder = async (id: string) => {
   return response.data;
 };
 
-export const verifyPayment = async (data: any) => {
-  const response = await api.post('/orders/razorpay/verify', data);
+export const initiatePhonepePayment = async (orderId: string) => {
+  const response = await api.post('/orders/phonepe/initiate', { orderId });
   return response.data;
 };
 
-export const createRazorpayOrder = async (orderId: string) => {
-  const response = await api.post('/orders/razorpay/create', { orderId });
+export const checkPaymentStatus = async (merchantTransactionId: string, orderId: string) => {
+  const response = await api.post('/orders/phonepe/status', { merchantTransactionId, orderId });
   return response.data;
 };
 
@@ -58,8 +58,8 @@ const orderService = {
   getOrderById,
   updateOrderStatus,
   cancelOrder,
-  verifyPayment,
-  createRazorpayOrder,
+  initiatePhonepePayment,
+  checkPaymentStatus,
   confirmCOD,
   applyCoupon
 };

@@ -341,7 +341,7 @@ const OrdersManagement: React.FC = () => {
       label: 'Payment Method',
       type: 'select',
       options: [
-        { value: 'razorpay', label: 'Razorpay' },
+        { value: 'phonepe', label: 'PhonePe' },
         { value: 'cod', label: 'Cash on Delivery' }
       ]
     },
