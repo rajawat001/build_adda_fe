@@ -214,11 +214,11 @@ export default function Home() {
           "availableLanguage": ["English", "Hindi"]
         },
         "sameAs": [
-          "https://www.facebook.com/buildadda",
-          "https://twitter.com/buildadda",
-          "https://www.instagram.com/buildadda",
-          "https://www.linkedin.com/company/buildadda",
-          "https://www.youtube.com/buildadda"
+          "https://www.facebook.com/share/16z1jBrpVs/",
+          "https://x.com/buildadda14",
+          "https://www.instagram.com/build_adda?igsh=OTd6aXRoeWszb3hr",
+          "https://www.linkedin.com/company/buildadda/",
+          "https://www.youtube.com/@BuildAdda"
         ]
       },
       {

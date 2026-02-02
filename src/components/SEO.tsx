@@ -79,8 +79,8 @@ export default function SEO({
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={fullOgImage} />
-      <meta name="twitter:creator" content="@BuildAdda" />
-      <meta name="twitter:site" content="@BuildAdda" />
+      <meta name="twitter:creator" content="@buildadda14" />
+      <meta name="twitter:site" content="@buildadda14" />
 
       {/* Geographic Meta Tags for India/Jaipur */}
       <meta name="geo.region" content="IN-RJ" />

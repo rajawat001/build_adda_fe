@@ -3,6 +3,8 @@ import Head from 'next/head';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import api from '../services/api';
+import { FiFacebook, FiInstagram, FiLinkedin, FiYoutube } from 'react-icons/fi';
+import { FaXTwitter } from 'react-icons/fa6';
 
 interface ContactForm {
   name: string;
@@ -136,10 +138,11 @@ const ContactPage: React.FC = () => {
               <div className="social-links">
                 <h3>Follow Us</h3>
                 <div className="social-icons">
-                  <a href="https://www.facebook.com/share/16z1jBrpVs/" aria-label="Facebook">📘</a>
-                  <a href="https://x.com/buildadda14" aria-label="Twitter">🐦</a>
-                  <a href="https://www.instagram.com/build_adda?igsh=OTd6aXRoeWszb3hr/" aria-label="Instagram">📷</a>
-                  <a href="https://www.linkedin.com/company/buildadda/" aria-label="LinkedIn">💼</a>
+                  <a href="https://www.facebook.com/share/16z1jBrpVs/" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><FiFacebook /></a>
+                  <a href="https://x.com/buildadda14" target="_blank" rel="noopener noreferrer" aria-label="X (Twitter)"><FaXTwitter /></a>
+                  <a href="https://www.instagram.com/build_adda?igsh=OTd6aXRoeWszb3hr" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><FiInstagram /></a>
+                  <a href="https://www.linkedin.com/company/buildadda/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><FiLinkedin /></a>
+                  <a href="https://www.youtube.com/@BuildAdda" target="_blank" rel="noopener noreferrer" aria-label="YouTube"><FiYoutube /></a>
                 </div>
               </div>
             </div>
