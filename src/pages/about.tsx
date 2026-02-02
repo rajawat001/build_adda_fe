@@ -1,15 +1,58 @@
 import React from 'react';
-import Head from 'next/head';
+import SEO from '../components/SEO';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+
+const aboutJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'AboutPage',
+  mainEntity: {
+    '@type': 'Organization',
+    name: 'BuildAdda',
+    url: 'https://www.buildadda.in',
+    logo: 'https://www.buildadda.in/buildAddaBrandImage.png',
+    description: 'BuildAdda is India\'s leading e-commerce platform for construction materials and building supplies. We connect verified manufacturers and distributors with builders, contractors, and homeowners across India.',
+    foundingDate: '2023',
+    founder: {
+      '@type': 'Organization',
+      name: 'BuildAdda',
+    },
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: 'Bhuvneshwari vatika vistar 3rd, vaishali west road',
+      addressLocality: 'Jaipur',
+      addressRegion: 'Rajasthan',
+      postalCode: '302034',
+      addressCountry: 'IN',
+    },
+    contactPoint: {
+      '@type': 'ContactPoint',
+      telephone: '+91-6377845721',
+      contactType: 'Customer Service',
+      email: 'contact@buildadda.in',
+      areaServed: 'IN',
+      availableLanguage: ['English', 'Hindi'],
+    },
+    sameAs: [
+      'https://www.facebook.com/share/16z1jBrpVs/',
+      'https://x.com/buildadda14',
+      'https://www.instagram.com/build_adda?igsh=OTd6aXRoeWszb3hr',
+      'https://www.linkedin.com/company/buildadda/',
+      'https://www.youtube.com/@BuildAdda',
+    ],
+  },
+};
 
 const AboutPage: React.FC = () => {
   return (
     <>
-      <Head>
-        <title>About Us - BuildAdda E-commerce</title>
-        <meta name="description" content="Learn about BuildAdda - Your trusted partner for quality construction materials and building supplies." />
-      </Head>
+      <SEO
+        title="About Us - BuildAdda | India's Leading Building Materials Marketplace"
+        description="Learn about BuildAdda - India's premier online marketplace for construction materials. We connect verified distributors with builders, contractors & homeowners in Jaipur, Rajasthan. 10,000+ happy customers, 500+ verified distributors."
+        keywords="about BuildAdda, building materials marketplace India, construction supplies Jaipur, verified distributors Rajasthan, online building materials, cement steel bricks sand paint tiles supplier"
+        canonicalUrl="https://www.buildadda.in/about"
+        jsonLd={aboutJsonLd}
+      />
 
       <Header />
 

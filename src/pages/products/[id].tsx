@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import SEO from '../../components/SEO';
@@ -237,11 +237,54 @@ export default function ProductDetail() {
   const category = typeof product.category === 'object' ? product.category?.name : product.category;
   const distributor = typeof product.distributor === 'object' ? product.distributor : null;
 
+  const productJsonLd = useMemo(() => ({
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'Product',
+        name: product.name,
+        description: product.description,
+        image: product.image ? (product.image.startsWith('http') ? product.image : `https://www.buildadda.in${product.image}`) : undefined,
+        url: `https://www.buildadda.in/products/${product._id}`,
+        brand: {
+          '@type': 'Organization',
+          name: distributor?.businessName || 'BuildAdda',
+        },
+        category: category || undefined,
+        offers: {
+          '@type': 'Offer',
+          price: product.price,
+          priceCurrency: 'INR',
+          availability: inStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+          seller: {
+            '@type': 'Organization',
+            name: distributor?.businessName || 'BuildAdda',
+          },
+          url: `https://www.buildadda.in/products/${product._id}`,
+        },
+      },
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.buildadda.in' },
+          { '@type': 'ListItem', position: 2, name: 'Products', item: 'https://www.buildadda.in/products' },
+          ...(category ? [{ '@type': 'ListItem', position: 3, name: category, item: `https://www.buildadda.in/products?category=${category}` }] : []),
+          { '@type': 'ListItem', position: category ? 4 : 3, name: product.name, item: `https://www.buildadda.in/products/${product._id}` },
+        ],
+      },
+    ],
+  }), [product, inStock, category, distributor]);
+
   return (
     <>
       <SEO
-        title={product.name}
-        description={product.description}
+        title={`${product.name} - Buy Online at Best Price | BuildAdda`}
+        description={`Buy ${product.name} online at ₹${product.price.toLocaleString('en-IN')}${category ? ` in ${category} category` : ''}. ${inStock ? 'In stock' : 'Out of stock'}. ${product.description?.substring(0, 120) || ''}`}
+        keywords={`${product.name}, buy ${product.name} online, ${product.name} price, ${category ? category + ' ' : ''}building materials`}
+        canonicalUrl={`https://www.buildadda.in/products/${product._id}`}
+        ogImage={product.image || undefined}
+        ogType="product"
+        jsonLd={productJsonLd}
       />
       <Header />
 

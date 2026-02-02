@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/router';
-import Head from 'next/head';
+import SEO from '../../components/SEO';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import ProductCard from '../../components/ProductCard';
@@ -160,12 +160,35 @@ const CategoryPage: React.FC = () => {
     }
   };
 
+  const categoryJsonLd = useMemo(() => {
+    if (!category) return undefined;
+    return {
+      '@context': 'https://schema.org',
+      '@graph': [
+        {
+          '@type': 'CollectionPage',
+          name: `${category.name} - Building Materials`,
+          description: category.description || `Browse ${category.name} products at BuildAdda`,
+          url: `https://www.buildadda.in/category/${slug}`,
+          isPartOf: { '@type': 'WebSite', name: 'BuildAdda', url: 'https://www.buildadda.in' },
+          numberOfItems: products.length,
+        },
+        {
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.buildadda.in' },
+            { '@type': 'ListItem', position: 2, name: 'Products', item: 'https://www.buildadda.in/products' },
+            { '@type': 'ListItem', position: 3, name: category.name, item: `https://www.buildadda.in/category/${slug}` },
+          ],
+        },
+      ],
+    };
+  }, [category, slug, products.length]);
+
   if (loading) {
     return (
       <>
-        <Head>
-          <title>Loading Category... - BuildAdda</title>
-        </Head>
+        <SEO title="Loading Category..." noindex />
         <Header />
         <div className="category-page">
           <div className="category-container">
@@ -180,9 +203,7 @@ const CategoryPage: React.FC = () => {
   if (error || !category) {
     return (
       <>
-        <Head>
-          <title>Category Not Found - BuildAdda</title>
-        </Head>
+        <SEO title="Category Not Found" noindex />
         <Header />
         <div className="category-page">
           <div className="category-container">
@@ -202,10 +223,13 @@ const CategoryPage: React.FC = () => {
 
   return (
     <>
-      <Head>
-        <title>{category.name} - BuildAdda</title>
-        <meta name="description" content={category.description || `Browse ${category.name} products at BuildAdda`} />
-      </Head>
+      <SEO
+        title={`${category.name} - Buy ${category.name} Online at Best Prices | BuildAdda`}
+        description={category.description || `Buy ${category.name} online at best prices from verified distributors in Jaipur, Rajasthan. Quality assured ${category.name.toLowerCase()} with fast delivery. ${products.length} products available at BuildAdda.`}
+        keywords={`${category.name.toLowerCase()}, buy ${category.name.toLowerCase()} online, ${category.name.toLowerCase()} price, ${category.name.toLowerCase()} suppliers Jaipur, building materials ${category.name.toLowerCase()}`}
+        canonicalUrl={`https://www.buildadda.in/category/${slug}`}
+        jsonLd={categoryJsonLd}
+      />
 
       <Header />
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import Head from 'next/head';
+import SEO from '../components/SEO';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 
@@ -182,6 +182,19 @@ const faqData: FAQItem[] = [
   }
 ];
 
+const faqJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqData.map(faq => ({
+    '@type': 'Question',
+    name: faq.question,
+    acceptedAnswer: {
+      '@type': 'Answer',
+      text: faq.answer,
+    },
+  })),
+};
+
 const FAQPage: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
@@ -203,10 +216,13 @@ const FAQPage: React.FC = () => {
 
   return (
     <>
-      <Head>
-        <title>Frequently Asked Questions - BuildAdda</title>
-        <meta name="description" content="Find answers to common questions about BuildAdda products, orders, delivery, returns, and more." />
-      </Head>
+      <SEO
+        title="FAQ - BuildAdda | Frequently Asked Questions About Building Materials"
+        description="Find answers to common questions about BuildAdda - orders, delivery, payments, returns, refunds & more. Learn how to buy building materials online, track orders, and become a distributor."
+        keywords="BuildAdda FAQ, building materials questions, how to order construction materials, BuildAdda delivery, BuildAdda returns, BuildAdda payment methods, become a distributor"
+        canonicalUrl="https://www.buildadda.in/faq"
+        jsonLd={faqJsonLd}
+      />
 
       <Header />
 

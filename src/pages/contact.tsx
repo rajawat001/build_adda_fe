@@ -1,10 +1,53 @@
 import React, { useState } from 'react';
-import Head from 'next/head';
+import SEO from '../components/SEO';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import api from '../services/api';
 import { FiFacebook, FiInstagram, FiLinkedin, FiYoutube } from 'react-icons/fi';
 import { FaXTwitter } from 'react-icons/fa6';
+
+const contactJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'ContactPage',
+  mainEntity: {
+    '@type': 'LocalBusiness',
+    name: 'BuildAdda',
+    url: 'https://www.buildadda.in',
+    logo: 'https://www.buildadda.in/buildAddaBrandImage.png',
+    image: 'https://www.buildadda.in/buildAddaBrandImage.png',
+    telephone: '+91-6377845721',
+    email: 'contact@buildadda.in',
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: 'Bhuvneshwari vatika vistar 3rd, vaishali west road',
+      addressLocality: 'Jaipur',
+      addressRegion: 'Rajasthan',
+      postalCode: '302034',
+      addressCountry: 'IN',
+    },
+    openingHoursSpecification: [
+      {
+        '@type': 'OpeningHoursSpecification',
+        dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+        opens: '09:00',
+        closes: '18:00',
+      },
+      {
+        '@type': 'OpeningHoursSpecification',
+        dayOfWeek: 'Saturday',
+        opens: '10:00',
+        closes: '16:00',
+      },
+    ],
+    sameAs: [
+      'https://www.facebook.com/share/16z1jBrpVs/',
+      'https://x.com/buildadda14',
+      'https://www.instagram.com/build_adda?igsh=OTd6aXRoeWszb3hr',
+      'https://www.linkedin.com/company/buildadda/',
+      'https://www.youtube.com/@BuildAdda',
+    ],
+  },
+};
 
 interface ContactForm {
   name: string;
@@ -80,10 +123,13 @@ const ContactPage: React.FC = () => {
 
   return (
     <>
-      <Head>
-        <title>Contact Us - BuildAdda E-commerce</title>
-        <meta name="description" content="Get in touch with BuildAdda. We're here to help with your construction material needs." />
-      </Head>
+      <SEO
+        title="Contact Us - BuildAdda | Get Help with Building Materials Orders"
+        description="Contact BuildAdda for building materials inquiries, order support, delivery questions & partnership opportunities. Call +91 6377845721 or email contact@buildadda.in. Located in Jaipur, Rajasthan."
+        keywords="contact BuildAdda, building materials support, construction supplies help, BuildAdda phone number, BuildAdda email, BuildAdda address Jaipur"
+        canonicalUrl="https://www.buildadda.in/contact"
+        jsonLd={contactJsonLd}
+      />
 
       <Header />
 
