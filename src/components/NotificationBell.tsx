@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { useNotifications } from '../contexts/NotificationContext';
 import { formatDistanceToNow } from 'date-fns';
@@ -31,6 +31,8 @@ export const NotificationBell: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, right: 0 });
 
   // Get user role
   useEffect(() => {
@@ -38,22 +40,41 @@ export const NotificationBell: React.FC = () => {
     setUserRole(role);
   }, []);
 
+  // Compute dropdown position from button
+  const updateDropdownPos = useCallback(() => {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setDropdownPos({
+        top: rect.bottom + 8,
+        right: Math.max(8, window.innerWidth - rect.right),
+      });
+    }
+  }, []);
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current && !dropdownRef.current.contains(event.target as Node) &&
+        buttonRef.current && !buttonRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
 
     if (isOpen) {
+      updateDropdownPos();
       document.addEventListener('mousedown', handleClickOutside);
+      window.addEventListener('resize', updateDropdownPos);
+      window.addEventListener('scroll', updateDropdownPos, true);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('resize', updateDropdownPos);
+      window.removeEventListener('scroll', updateDropdownPos, true);
     };
-  }, [isOpen]);
+  }, [isOpen, updateDropdownPos]);
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
@@ -91,16 +112,44 @@ export const NotificationBell: React.FC = () => {
   };
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div style={{ position: 'relative' }}>
       {/* Bell Icon Button */}
       <button
+        ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 rounded-lg hover:bg-[var(--bg-secondary)] transition-colors"
+        style={{
+          position: 'relative',
+          padding: '8px',
+          borderRadius: '8px',
+          background: 'transparent',
+          border: 'none',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          transition: 'background 0.2s',
+          color: 'var(--text-primary, #1a202c)',
+        }}
         aria-label="Notifications"
       >
-        <FiBell className="w-6 h-6 text-[var(--text-primary)]" />
+        <FiBell style={{ width: '24px', height: '24px' }} />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[20px] h-5 px-1 text-xs font-bold text-white bg-red-500 rounded-full animate-pulse">
+          <span style={{
+            position: 'absolute',
+            top: '-2px',
+            right: '-2px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minWidth: '20px',
+            height: '20px',
+            padding: '0 4px',
+            fontSize: '12px',
+            fontWeight: 700,
+            color: 'white',
+            backgroundColor: '#ef4444',
+            borderRadius: '9999px',
+          }}>
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
@@ -109,8 +158,22 @@ export const NotificationBell: React.FC = () => {
       {/* Dropdown Panel */}
       {isOpen && (
         <div
-          className="absolute right-0 mt-2 w-96 bg-[var(--bg-card)] rounded-xl shadow-2xl border border-[var(--border-primary)] z-50 overflow-hidden"
-          style={{ animation: 'fadeIn 0.2s ease-in-out' }}
+          ref={dropdownRef}
+          style={{
+            position: 'fixed',
+            top: `${dropdownPos.top}px`,
+            right: `${dropdownPos.right}px`,
+            width: '384px',
+            maxWidth: 'calc(100vw - 1rem)',
+            maxHeight: 'calc(100vh - 100px)',
+            overflowY: 'auto',
+            backgroundColor: 'var(--bg-card, #ffffff)',
+            borderRadius: '12px',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+            border: '1px solid var(--border-primary, #e5e7eb)',
+            zIndex: 9999,
+            animation: 'notifFadeIn 0.2s ease-in-out',
+          }}
         >
           {/* Header */}
           <div className="px-4 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white">
@@ -267,8 +330,8 @@ export const NotificationBell: React.FC = () => {
         </div>
       )}
 
-      <style jsx>{`
-        @keyframes fadeIn {
+      <style jsx global>{`
+        @keyframes notifFadeIn {
           from {
             opacity: 0;
             transform: translateY(-10px);
@@ -277,13 +340,6 @@ export const NotificationBell: React.FC = () => {
             opacity: 1;
             transform: translateY(0);
           }
-        }
-
-        .line-clamp-2 {
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
         }
       `}</style>
     </div>

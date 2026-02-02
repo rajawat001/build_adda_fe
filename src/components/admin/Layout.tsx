@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import Sidebar from './Sidebar';
 import SEO from '../SEO';
 import { NotificationBell } from '../NotificationBell';
+import Link from 'next/link';
 import { FiUser, FiSearch } from 'react-icons/fi';
 
 interface LayoutProps {
@@ -53,9 +54,9 @@ const AdminLayout = ({ children, title = 'Admin Panel' }: LayoutProps) => {
                   />
                 </div>
                 <NotificationBell />
-                <div className="user-avatar">
+                <Link href="/admin/settings" className="user-avatar">
                   <FiUser className="avatar-icon" />
-                </div>
+                </Link>
               </div>
             </div>
           </div>
@@ -86,14 +87,14 @@ const AdminLayout = ({ children, title = 'Admin Panel' }: LayoutProps) => {
           position: sticky;
           top: 0;
           z-index: 40;
-          background: var(--bg-card, #ffffff);
+          background: #ffffff;
           border-bottom: 1px solid var(--border-primary, #e5e7eb);
           backdrop-filter: blur(10px);
-          background: rgba(255, 255, 255, 0.95);
         }
 
         :global([data-theme='dark']) .header-bar {
-          background: rgba(26, 32, 44, 0.95);
+          background: #1e293b;
+          border-bottom-color: #334155;
         }
 
         .header-content {
@@ -157,7 +158,7 @@ const AdminLayout = ({ children, title = 'Admin Panel' }: LayoutProps) => {
           width: 300px;
         }
 
-        .user-avatar {
+        :global(.user-avatar) {
           width: 40px;
           height: 40px;
           border-radius: 50%;
@@ -168,9 +169,11 @@ const AdminLayout = ({ children, title = 'Admin Panel' }: LayoutProps) => {
           color: white;
           cursor: pointer;
           transition: transform 0.2s;
+          text-decoration: none;
+          flex-shrink: 0;
         }
 
-        .user-avatar:hover {
+        :global(.user-avatar:hover) {
           transform: scale(1.05);
         }
 
@@ -204,7 +207,7 @@ const AdminLayout = ({ children, title = 'Admin Panel' }: LayoutProps) => {
             padding: 20px 15px;
           }
 
-          .user-avatar {
+          :global(.user-avatar) {
             width: 35px;
             height: 35px;
           }

@@ -183,7 +183,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https: blob:",
               "font-src 'self' data:",
-              "connect-src 'self' http://localhost:5000 https: wss:",
+              "connect-src 'self' http://192.168.1.3:5000 https: wss:",
               "frame-src 'self' https://api.razorpay.com https://checkout.razorpay.com",
               "frame-ancestors 'self'"
             ].join('; ')

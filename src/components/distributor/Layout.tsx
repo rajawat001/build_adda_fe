@@ -3,7 +3,9 @@ import { useRouter } from 'next/router';
 import Sidebar from './Sidebar';
 import SEO from '../SEO';
 import { NotificationBell } from '../NotificationBell';
-import { FiUser, FiMenu } from 'react-icons/fi';
+import Link from 'next/link';
+import { FiUser, FiMenu, FiBell } from 'react-icons/fi';
+import { useNotifications } from '../../contexts/NotificationContext';
 import api from '../../services/api';
 
 interface LayoutProps {
@@ -23,6 +25,52 @@ const useIsMobile = () => {
   }, []);
 
   return isMobile;
+};
+
+const MobileNotificationBell = () => {
+  const router = useRouter();
+  const { unreadCount } = useNotifications();
+
+  return (
+    <button
+      onClick={() => router.push('/distributor/notifications')}
+      aria-label="Notifications"
+      style={{
+        position: 'relative',
+        padding: '8px',
+        borderRadius: '8px',
+        background: 'transparent',
+        border: 'none',
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: '#1a202c',
+      }}
+    >
+      <FiBell style={{ width: '22px', height: '22px' }} />
+      {unreadCount > 0 && (
+        <span style={{
+          position: 'absolute',
+          top: '0',
+          right: '0',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minWidth: '18px',
+          height: '18px',
+          padding: '0 4px',
+          fontSize: '11px',
+          fontWeight: 700,
+          color: 'white',
+          backgroundColor: '#ef4444',
+          borderRadius: '9999px',
+        }}>
+          {unreadCount > 9 ? '9+' : unreadCount}
+        </span>
+      )}
+    </button>
+  );
 };
 
 const DistributorLayout = ({ children, title = 'Distributor Panel' }: LayoutProps) => {
@@ -154,26 +202,86 @@ const DistributorLayout = ({ children, title = 'Distributor Panel' }: LayoutProp
 
         <main className="distributor-main">
           {/* Header Bar */}
-          <div className="header-bar">
-            <div className="header-content">
+          <div style={{
+            position: 'sticky',
+            top: 0,
+            zIndex: 30,
+            background: '#ffffff',
+            borderBottom: '1px solid #e5e7eb',
+          }}>
+            <div style={{
+              display: 'flex',
+              flexDirection: 'row',
+              flexWrap: 'nowrap',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: isMobile ? '0.75rem 1rem' : '1rem 2rem',
+              maxWidth: '1400px',
+              margin: '0 auto',
+              gap: '0.75rem',
+            }}>
               {/* Hamburger Menu - Mobile Only */}
               {isMobile && (
                 <button
                   onClick={openSidebar}
-                  className="hamburger-btn"
                   aria-label="Open menu"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '40px',
+                    height: '40px',
+                    background: 'transparent',
+                    border: 'none',
+                    borderRadius: '8px',
+                    color: '#1a202c',
+                    cursor: 'pointer',
+                    flexShrink: 0,
+                  }}
                 >
-                  <FiMenu />
+                  <FiMenu style={{ width: '24px', height: '24px' }} />
                 </button>
               )}
 
-              <h1 className="page-title">{title}</h1>
+              <h1 style={{
+                fontSize: isMobile ? '1.125rem' : '1.5rem',
+                fontWeight: 700,
+                color: '#1a202c',
+                margin: 0,
+                flex: 1,
+                minWidth: 0,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                textAlign: isMobile ? 'center' : 'left',
+              }}>{title}</h1>
 
-              <div className="header-actions">
-                <NotificationBell />
-                <div className="user-avatar">
-                  <FiUser className="avatar-icon" />
-                </div>
+              <div style={{
+                display: 'flex',
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: '0.5rem',
+                flexShrink: 0,
+              }}>
+                {isMobile ? (
+                  <MobileNotificationBell />
+                ) : (
+                  <NotificationBell />
+                )}
+                <Link href="/distributor/profile" style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'white',
+                  textDecoration: 'none',
+                  flexShrink: 0,
+                }}>
+                  <FiUser style={{ width: '20px', height: '20px' }} />
+                </Link>
               </div>
             </div>
           </div>
@@ -201,101 +309,6 @@ const DistributorLayout = ({ children, title = 'Distributor Panel' }: LayoutProp
           min-height: 100vh;
         }
 
-        .header-bar {
-          position: sticky;
-          top: 0;
-          z-index: 30;
-          background: var(--bg-card, #ffffff);
-          border-bottom: 1px solid var(--border-primary, #e5e7eb);
-          backdrop-filter: blur(10px);
-          background: rgba(255, 255, 255, 0.95);
-        }
-
-        :global([data-theme='dark']) .header-bar {
-          background: rgba(26, 32, 44, 0.95);
-        }
-
-        .header-content {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 1rem 2rem;
-          max-width: 1400px;
-          margin: 0 auto;
-          gap: 1rem;
-        }
-
-        .hamburger-btn {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 44px;
-          height: 44px;
-          background: transparent;
-          border: none;
-          border-radius: 10px;
-          color: var(--text-primary, #1a202c);
-          cursor: pointer;
-          transition: background 0.2s;
-          margin-left: -8px;
-          flex-shrink: 0;
-        }
-
-        .hamburger-btn:hover {
-          background: var(--bg-hover, #f3f4f6);
-        }
-
-        .hamburger-btn:active {
-          background: var(--bg-tertiary, #e5e7eb);
-        }
-
-        .hamburger-btn :global(svg) {
-          width: 24px;
-          height: 24px;
-        }
-
-        .page-title {
-          font-size: 1.5rem;
-          font-weight: 700;
-          color: var(--text-primary, #1a202c);
-          margin: 0;
-          flex: 1;
-          min-width: 0;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-
-        .header-actions {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-          flex-shrink: 0;
-        }
-
-        .user-avatar {
-          width: 40px;
-          height: 40px;
-          border-radius: 50%;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: white;
-          cursor: pointer;
-          transition: transform 0.2s;
-          flex-shrink: 0;
-        }
-
-        .user-avatar:hover {
-          transform: scale(1.05);
-        }
-
-        :global(.avatar-icon) {
-          width: 20px;
-          height: 20px;
-        }
-
         .main-content {
           flex: 1;
           padding: 30px 40px;
@@ -304,51 +317,17 @@ const DistributorLayout = ({ children, title = 'Distributor Panel' }: LayoutProp
           width: 100%;
         }
 
-        /* Mobile Styles */
         @media (max-width: 768px) {
           .distributor-main {
             margin-left: 0;
           }
 
-          .header-content {
-            padding: 0.875rem 1rem;
-          }
-
-          .page-title {
-            font-size: 1.125rem;
-            text-align: center;
-          }
-
           .main-content {
             padding: 1rem;
           }
-
-          .user-avatar {
-            width: 36px;
-            height: 36px;
-          }
-
-          :global(.avatar-icon) {
-            width: 18px;
-            height: 18px;
-          }
         }
 
-        /* Small Mobile */
         @media (max-width: 375px) {
-          .header-content {
-            padding: 0.75rem;
-            gap: 0.5rem;
-          }
-
-          .page-title {
-            font-size: 1rem;
-          }
-
-          .header-actions {
-            gap: 0.5rem;
-          }
-
           .main-content {
             padding: 0.875rem;
           }
