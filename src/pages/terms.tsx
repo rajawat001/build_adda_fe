@@ -87,7 +87,7 @@ export default function TermsAndConditions() {
 
               <h3>4.4 Payment</h3>
               <p>
-                Payments are processed through PhonePe's secure payment gateway for online transactions. Cash on Delivery (COD) is also available where offered by the distributor. BuildAdda facilitates payment processing but does not hold, manage, or guarantee funds beyond the scope of payment gateway facilitation.
+                Payments are processed through Online's secure payment gateway for online transactions. Cash on Delivery (COD) is also available where offered by the distributor. BuildAdda facilitates payment processing but does not hold, manage, or guarantee funds beyond the scope of payment gateway facilitation.
               </p>
             </section>
 
@@ -200,7 +200,7 @@ export default function TermsAndConditions() {
             <section>
               <h2>12. Governing Law and Jurisdiction</h2>
               <p>
-                These Terms shall be governed by and construed in accordance with the laws of India. Any disputes arising out of or in connection with these Terms shall be subject to the exclusive jurisdiction of the courts in Jaipur, Rajasthan, India.
+                These Terms shall be governed by and construed in accordance with the laws of India. Any disputes arising out of or in connection with these Terms shall be subject to the exclusive jurisdiction of the courts in Gangapur City, Rajasthan, India.
               </p>
             </section>
 
@@ -234,7 +234,7 @@ export default function TermsAndConditions() {
                 <li>Owner: Himmat Singh Rajawat</li>
                 <li>Email: support@buildadda.in</li>
                 <li>Phone: +91 6377845721</li>
-                <li>Address: Plot 42, Bhuvneshwari Vatika Vistar 3rd, Vaishali West Road, Jaipur, Rajasthan, India - 302034</li>
+                <li>Address: Saini Colony, mirzapur, Rajasthan, India - 322201</li>
               </ul>
             </section>
           </div>

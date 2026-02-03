@@ -19,10 +19,10 @@ const aboutJsonLd = {
     },
     address: {
       '@type': 'PostalAddress',
-      streetAddress: 'Bhuvneshwari vatika vistar 3rd, vaishali west road',
-      addressLocality: 'Jaipur',
+      streetAddress: 'Saini Colony, mirzapur',
+      addressLocality: 'Gangapur City',
       addressRegion: 'Rajasthan',
-      postalCode: '302034',
+      postalCode: '322201',
       addressCountry: 'IN',
     },
     contactPoint: {
@@ -48,8 +48,8 @@ const AboutPage: React.FC = () => {
     <>
       <SEO
         title="About Us - BuildAdda | India's Leading Building Materials Marketplace"
-        description="Learn about BuildAdda - India's premier online marketplace for construction materials. We connect verified distributors with builders, contractors & homeowners in Jaipur, Rajasthan. 10,000+ happy customers, 500+ verified distributors."
-        keywords="about BuildAdda, building materials marketplace India, construction supplies Jaipur, verified distributors Rajasthan, online building materials, cement steel bricks sand paint tiles supplier"
+        description="Learn about BuildAdda - India's premier online marketplace for construction materials. We connect verified distributors with builders, contractors & homeowners in Gangapur City, Rajasthan. 10,000+ happy customers, 500+ verified distributors."
+        keywords="about BuildAdda, building materials marketplace India, construction supplies Gangapur City, verified distributors Rajasthan, online building materials, cement steel bricks sand paint tiles supplier"
         canonicalUrl="https://www.buildadda.in/about"
         jsonLd={aboutJsonLd}
       />

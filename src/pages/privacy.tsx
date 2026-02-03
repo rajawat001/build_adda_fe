@@ -34,7 +34,7 @@ export default function PrivacyPolicy() {
               <ul>
                 <li>Name and contact information (email, phone number)</li>
                 <li>Delivery address</li>
-                <li>Payment transaction details (processed via PhonePe; we do not store card/bank details)</li>
+                <li>Payment transaction details (processed via Online; we do not store card/bank details)</li>
                 <li>Account credentials</li>
               </ul>
 
@@ -80,7 +80,7 @@ export default function PrivacyPolicy() {
 
               <h3>4.2 Service Providers</h3>
               <p>
-                We work with third-party service providers for payment processing (PhonePe), cloud storage (Cloudinary, MongoDB), and communication services. These providers are bound by their own privacy policies and data protection obligations.
+                We work with third-party service providers for payment processing (Online), cloud storage (Cloudinary, MongoDB), and communication services. These providers are bound by their own privacy policies and data protection obligations.
               </p>
 
               <h3>4.3 Legal Requirements</h3>
@@ -183,7 +183,7 @@ export default function PrivacyPolicy() {
             <section>
               <h2>13. Governing Law</h2>
               <p>
-                This Privacy Policy is governed by the laws of India. Any disputes arising from this policy shall be subject to the exclusive jurisdiction of the courts in Jaipur, Rajasthan, India.
+                This Privacy Policy is governed by the laws of India. Any disputes arising from this policy shall be subject to the exclusive jurisdiction of the courts in Gangapur City, Rajasthan, India.
               </p>
             </section>
 
@@ -196,7 +196,7 @@ export default function PrivacyPolicy() {
                 <li>Owner: Himmat Singh Rajawat</li>
                 <li>Email: info@buildadda.in</li>
                 <li>Phone: +91 6377845721</li>
-                <li>Address: Plot 42, Bhuvneshwari Vatika Vistar 3rd, Vaishali West Road, Jaipur, Rajasthan, India - 302034</li>
+                <li>Address: Saini Colony, mirzapur, Rajasthan, India - 322201</li>
               </ul>
             </section>
           </div>

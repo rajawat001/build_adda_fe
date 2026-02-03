@@ -19,10 +19,10 @@ const contactJsonLd = {
     email: 'contact@buildadda.in',
     address: {
       '@type': 'PostalAddress',
-      streetAddress: 'Bhuvneshwari vatika vistar 3rd, vaishali west road',
-      addressLocality: 'Jaipur',
+      streetAddress: 'Saini Colony, mirzapur',
+      addressLocality: 'Gangapur City',
       addressRegion: 'Rajasthan',
-      postalCode: '302034',
+      postalCode: '322201',
       addressCountry: 'IN',
     },
     openingHoursSpecification: [
@@ -125,8 +125,8 @@ const ContactPage: React.FC = () => {
     <>
       <SEO
         title="Contact Us - BuildAdda | Get Help with Building Materials Orders"
-        description="Contact BuildAdda for building materials inquiries, order support, delivery questions & partnership opportunities. Call +91 6377845721 or email contact@buildadda.in. Located in Jaipur, Rajasthan."
-        keywords="contact BuildAdda, building materials support, construction supplies help, BuildAdda phone number, BuildAdda email, BuildAdda address Jaipur"
+        description="Contact BuildAdda for building materials inquiries, order support, delivery questions & partnership opportunities. Call +91 6377845721 or email contact@buildadda.in. Located in Gangapur City, Rajasthan."
+        keywords="contact BuildAdda, building materials support, construction supplies help, BuildAdda phone number, BuildAdda email, BuildAdda address Gangapur City"
         canonicalUrl="https://www.buildadda.in/contact"
         jsonLd={contactJsonLd}
       />
@@ -165,8 +165,8 @@ const ContactPage: React.FC = () => {
                 <div className="contact-details">
                   <h3>Address</h3>
                   <p>BuildAdda Headquarters</p>
-                  <p>Bhuvneshwari vatika vistar 3rd,vaishali west road</p>
-                  <p> Jaipur ,Rajasthan (302034)</p>
+                  <p>Saini Colony, mirzapur</p>
+                  <p> Gangapur City, Rajasthan (322201)</p>
                   <p>India</p>
                 </div>
               </div>

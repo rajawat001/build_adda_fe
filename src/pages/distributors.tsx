@@ -202,7 +202,7 @@ const Distributors = () => {
     "@context": "https://schema.org",
     "@type": "ItemList",
     "name": "Verified Building Materials Distributors",
-    "description": "Find verified and trusted building materials distributors in Jaipur and across Rajasthan",
+    "description": "Find verified and trusted building materials distributors in Gangapur City and across Rajasthan",
     "url": "https://www.buildadda.in/distributors",
     "numberOfItems": distributors.length,
     "breadcrumb": {
@@ -226,10 +226,10 @@ const Distributors = () => {
       "@type": "LocalBusiness",
       "position": index + 1,
       "name": distributor.businessName,
-      "description": `Verified building materials distributor in ${distributor.city || 'Jaipur'}`,
+      "description": `Verified building materials distributor in ${distributor.city || 'Gangapur City'}`,
       "address": {
         "@type": "PostalAddress",
-        "addressLocality": distributor.city || "Jaipur",
+        "addressLocality": distributor.city || "Gangapur City",
         "addressRegion": distributor.state || "Rajasthan",
         "postalCode": distributor.pincode || "",
         "addressCountry": "IN"
@@ -247,9 +247,9 @@ const Distributors = () => {
   return (
     <>
       <SEO
-        title="Find Verified Building Materials Distributors Near You in Jaipur, Rajasthan"
-        description="Connect with 500+ verified building materials distributors in Jaipur, Rajasthan. Find trusted cement suppliers, steel distributors, bricks dealers, sand suppliers, paint sellers, and tiles shops near you. Compare prices, check ratings, and get best deals on construction materials. Search by location and pincode."
-        keywords="building materials distributors Jaipur, cement suppliers near me, steel distributors Rajasthan, verified distributors India, bricks dealers Jaipur, sand suppliers Rajasthan, paint distributors, tiles dealers, construction materials suppliers, wholesale distributors Jaipur, building supplies near me, distributors by pincode, local building materials sellers"
+        title="Find Verified Building Materials Distributors Near You in Gangapur City, Rajasthan"
+        description="Connect with 500+ verified building materials distributors in Gangapur City, Rajasthan. Find trusted cement suppliers, steel distributors, bricks dealers, sand suppliers, paint sellers, and tiles shops near you. Compare prices, check ratings, and get best deals on construction materials. Search by location and pincode."
+        keywords="building materials distributors Gangapur City, cement suppliers near me, steel distributors Rajasthan, verified distributors India, bricks dealers Gangapur City, sand suppliers Rajasthan, paint distributors, tiles dealers, construction materials suppliers, wholesale distributors Gangapur City, building supplies near me, distributors by pincode, local building materials sellers"
         canonicalUrl="https://www.buildadda.in/distributors"
         ogImage="https://www.buildadda.in/buildAddaBrandImage.png"
         jsonLd={distributorsStructuredData}

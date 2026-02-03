@@ -109,7 +109,7 @@ export default function Footer() {
                 </li>
                 <li>
                   <FiMapPin />
-                  <span>Jaipur, Rajasthan, India</span>
+                  <span>Gangapur City, Rajasthan, India</span>
                 </li>
               </ul>
 

@@ -53,7 +53,7 @@ export default function ShippingPolicy() {
                 Delivery areas are determined by each distributor/seller independently. During checkout, customers can check if the distributor delivers to their location. Common service areas may include:
               </p>
               <ul>
-                <li>Jaipur and surrounding areas</li>
+                <li>Gangapur City and surrounding areas</li>
                 <li>Major cities in Rajasthan</li>
                 <li>Other areas as specified by individual distributors</li>
               </ul>
@@ -133,7 +133,7 @@ export default function ShippingPolicy() {
 
               <h3>6.1 Order Confirmation</h3>
               <p>
-                After placing an order, you will receive an order confirmation through the Platform. Order processing and dispatch are handled by the distributor/seller. For online payments processed through <strong>PhonePe payment gateway</strong>, order processing begins after payment confirmation.
+                After placing an order, you will receive an order confirmation through the Platform. Order processing and dispatch are handled by the distributor/seller. For online payments processed through <strong>Online payment gateway</strong>, order processing begins after payment confirmation.
               </p>
 
               <h3>6.2 Order Tracking</h3>
@@ -214,7 +214,7 @@ export default function ShippingPolicy() {
                 <li>Inspect products before making payment</li>
               </ul>
               <p>
-                For online payments, BuildAdda uses <strong>PhonePe's secure payment gateway</strong>. See our <a href="/refund_policy">Refund Policy</a> for details on online payment refunds.
+                For online payments, BuildAdda uses <strong>Online's secure payment gateway</strong>. See our <a href="/refund_policy">Refund Policy</a> for details on online payment refunds.
               </p>
             </section>
 
@@ -284,7 +284,7 @@ export default function ShippingPolicy() {
             <section>
               <h2>15. Governing Law</h2>
               <p>
-                This Shipping & Delivery Policy is governed by the laws of India. Any disputes arising from this policy shall be subject to the exclusive jurisdiction of the courts in Jaipur, Rajasthan, India.
+                This Shipping & Delivery Policy is governed by the laws of India. Any disputes arising from this policy shall be subject to the exclusive jurisdiction of the courts in Gangapur City, Rajasthan, India.
               </p>
             </section>
 
@@ -297,7 +297,7 @@ export default function ShippingPolicy() {
                 <li>Owner: Himmat Singh Rajawat</li>
                 <li>Email: support@buildadda.in</li>
                 <li>Phone: +91 6377845721</li>
-                <li>Address: Plot 42, Bhuvneshwari Vatika Vistar 3rd, Vaishali West Road, Jaipur, Rajasthan, India - 302034</li>
+                <li>Address: Saini Colony, mirzapur, Rajasthan, India - 322201</li>
               </ul>
             </section>
           </div>
