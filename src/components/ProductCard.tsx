@@ -138,18 +138,31 @@ export default function ProductCard({ product, onAddToCart, onAddToWishlist, sho
             {product.distributor.businessName}
           </Link>
         </p>
+        {product.brand && (
+          <p className="brand" style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', fontWeight: 500, marginBottom: '0.25rem' }}>
+            {product.brand}
+          </p>
+        )}
         <div className="product-footer">
           <span className="price">
             {product.realPrice && product.realPrice > product.price ? (
               <>
                 <span className="real-price">₹{product.realPrice.toLocaleString('en-IN')}</span>
                 <span className="offer-price">₹{product.price.toLocaleString('en-IN')}</span>
+                {(product.unitType && product.unitType !== 'unit') && (
+                  <span style={{ fontSize: '0.75em', color: 'var(--text-secondary)' }}>/{product.unitType}</span>
+                )}
                 <span className="discount-badge">
                   {Math.round(((product.realPrice - product.price) / product.realPrice) * 100)}% OFF
                 </span>
               </>
             ) : (
-              <>₹{product.price.toLocaleString('en-IN')}</>
+              <>
+                ₹{product.price.toLocaleString('en-IN')}
+                {(product.unitType && product.unitType !== 'unit') && (
+                  <span style={{ fontSize: '0.75em', color: 'var(--text-secondary)' }}>/{product.unitType}</span>
+                )}
+              </>
             )}
           </span>
           <span className={`stock ${product.stock > 0 ? 'in-stock' : 'out-of-stock'}`}>
