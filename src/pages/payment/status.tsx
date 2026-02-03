@@ -11,28 +11,31 @@ type PaymentState = 'checking' | 'success' | 'pending' | 'failed';
 
 export default function PaymentStatus() {
   const router = useRouter();
-  const { merchantTransactionId, type, orderId, subscriptionId } = router.query;
+  const { merchantOrderId, merchantTransactionId, type, orderId, subscriptionId } = router.query;
   const { clearCart } = useCart();
   const [status, setStatus] = useState<PaymentState>('checking');
   const [message, setMessage] = useState('Verifying your payment...');
   const retryCount = useRef(0);
   const maxRetries = 5;
 
+  // Support both v2 (merchantOrderId) and v1 (merchantTransactionId) query params
+  const txnId = (merchantOrderId || merchantTransactionId) as string;
+
   useEffect(() => {
     if (!router.isReady) return;
-    if (!merchantTransactionId || !type) {
+    if (!txnId || !type) {
       setStatus('failed');
       setMessage('Invalid payment callback. Missing parameters.');
       return;
     }
     verifyPayment();
-  }, [router.isReady, merchantTransactionId, type]);
+  }, [router.isReady, txnId, type]);
 
   const verifyPayment = async () => {
     try {
       if (type === 'order' && orderId) {
         const result = await checkPaymentStatus(
-          merchantTransactionId as string,
+          txnId,
           orderId as string
         );
 
@@ -55,7 +58,7 @@ export default function PaymentStatus() {
 
       } else if (type === 'subscription' && subscriptionId) {
         const result = await subscriptionService.verifyPayment({
-          merchantTransactionId: merchantTransactionId as string,
+          merchantOrderId: txnId,
           subscriptionId: subscriptionId as string
         });
 

@@ -35,8 +35,8 @@ export const initiatePhonepePayment = async (orderId: string) => {
   return response.data;
 };
 
-export const checkPaymentStatus = async (merchantTransactionId: string, orderId: string) => {
-  const response = await api.post('/orders/phonepe/status', { merchantTransactionId, orderId });
+export const checkPaymentStatus = async (merchantOrderId: string, orderId: string) => {
+  const response = await api.post('/orders/phonepe/status', { merchantOrderId, orderId });
   return response.data;
 };
 
