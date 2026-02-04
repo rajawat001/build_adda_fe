@@ -54,17 +54,7 @@ export default function Filter({ categories, filters, onFilterChange }: FilterPr
         </div>
       </div>
       
-      <div className="filter-group">
-        <label>Availability</label>
-        <select
-          value={filters.availability}
-          onChange={(e) => onFilterChange('availability', e.target.value)}
-        >
-          <option key="all" value="all">All</option>
-          <option key="inStock" value="inStock">In Stock</option>
-          <option key="outOfStock" value="outOfStock">Out of Stock</option>
-        </select>
-      </div>
+      {/* Availability filter removed — out-of-stock products are hidden server-side */}
 
       <div className="filter-group">
         <label>Filter by Pincode</label>

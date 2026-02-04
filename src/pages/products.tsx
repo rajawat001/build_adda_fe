@@ -92,13 +92,8 @@ const Products = () => {
         totalCount = response.data.total || response.data.products.length;
       }
 
-      // Filter by availability and pincode on client side
+      // Filter by pincode on client side (stock filtering done server-side)
       let filtered = productsList;
-      if (filters.availability === 'inStock') {
-        filtered = filtered.filter(p => p.stock > 0);
-      } else if (filters.availability === 'outOfStock') {
-        filtered = filtered.filter(p => p.stock === 0);
-      }
 
       if (filters.pincode && filters.pincode.trim()) {
         filtered = filtered.filter(product => {

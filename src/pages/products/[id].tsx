@@ -307,7 +307,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
           description: (product.description || '').substring(0, 200),
           image,
           category,
-          inStock: (product.stock || 0) > 0,
+          inStock: (product.stock || 0) >= (product.minQuantity || 1),
           id: product._id || id || '',
         } as SSRProductMeta,
       },
@@ -469,7 +469,7 @@ export default function ProductDetail({ ssrMeta }: { ssrMeta: SSRProductMeta | n
   };
 
   const selectedImage = allImages[selectedImageIndex] || product?.image || '/placeholder-product.png';
-  const inStock = product ? product.stock > 0 : false;
+  const inStock = product ? product.stock >= (product.minQuantity || 1) : false;
   const category = product ? (typeof product.category === 'object' ? product.category?.name : product.category) : null;
   const distributor = product ? (typeof product.distributor === 'object' ? product.distributor : null) : null;
 

@@ -165,16 +165,16 @@ export default function ProductCard({ product, onAddToCart, onAddToWishlist, sho
               </>
             )}
           </span>
-          <span className={`stock ${product.stock > 0 ? 'in-stock' : 'out-of-stock'}`}>
-            {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
+          <span className={`stock ${product.stock >= (product.minQuantity || 1) ? 'in-stock' : 'out-of-stock'}`}>
+            {product.stock >= (product.minQuantity || 1) ? `${product.stock} in stock` : 'Out of stock'}
           </span>
         </div>
         <button
           className="btn-add-cart"
           onClick={handleAddToCart}
-          disabled={product.stock === 0}
+          disabled={product.stock < (product.minQuantity || 1)}
         >
-          <FiShoppingCart size={14} /> Add to Cart
+          <FiShoppingCart size={14} /> {product.stock < (product.minQuantity || 1) ? 'Out of Stock' : 'Add to Cart'}
         </button>
       </div>
     </div>
