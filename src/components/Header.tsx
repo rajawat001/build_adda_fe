@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import authService from '../services/auth.service';
+import { getProductsByCategory } from '../services/product.service';
 import AnnouncementBar from './AnnouncementBar';
 import MobileBottomNav from './MobileBottomNav';
 import {
@@ -15,6 +16,14 @@ import {
   FiMapPin,
   FiBell
 } from 'react-icons/fi';
+import {
+  GiBrickWall,
+  GiSteelClaws,
+  GiClayBrick,
+  GiSandCastle,
+  GiPaintBucket,
+  GiDominoTiles
+} from 'react-icons/gi';
 
 export default function Header() {
   const router = useRouter();
@@ -168,13 +177,70 @@ export default function Header() {
   }, [showMobileMenu]);
 
   const categories = [
-    { id: 'Cement', name: 'Cement', icon: '🏗️' },
-    { id: 'Steel', name: 'Steel', icon: '🔩' },
-    { id: 'Bricks', name: 'Bricks', icon: '🧱' },
-    { id: 'Sand', name: 'Sand', icon: '⏳' },
-    { id: 'Paint', name: 'Paint', icon: '🎨' },
-    { id: 'Tiles', name: 'Tiles', icon: '◽' }
+    { id: 'Cement', name: 'Cement', icon: <GiBrickWall size={20} /> },
+    { id: 'Steel', name: 'Steel', icon: <GiSteelClaws size={20} /> },
+    { id: 'Bricks', name: 'Bricks', icon: <GiClayBrick size={20} /> },
+    { id: 'Sand', name: 'Sand', icon: <GiSandCastle size={20} /> },
+    { id: 'Paint', name: 'Paint', icon: <GiPaintBucket size={20} /> },
+    { id: 'Tiles', name: 'Tiles', icon: <GiDominoTiles size={20} /> }
   ];
+
+  // Mega-menu state
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [megaMenuLoading, setMegaMenuLoading] = useState(false);
+  const categoryCache = useRef<Record<string, any>>({});
+  const [categoryProducts, setCategoryProducts] = useState<Record<string, any>>({});
+
+  const handleCategoryHover = useCallback(async (categoryId: string) => {
+    setActiveCategory(categoryId);
+
+    if (categoryCache.current[categoryId]) {
+      setCategoryProducts((prev) => ({ ...prev, [categoryId]: categoryCache.current[categoryId] }));
+      return;
+    }
+
+    setMegaMenuLoading(true);
+    try {
+      const data = await getProductsByCategory(categoryId);
+      const products = Array.isArray(data) ? data : data.products || [];
+      const grouped: Record<string, { distributorId: string; businessName: string; city: string; products: any[] }> = {};
+
+      products.forEach((p: any) => {
+        const dist = p.distributor;
+        if (!dist) return;
+        const name = dist.businessName || dist.name || 'Unknown';
+        if (!grouped[name]) {
+          grouped[name] = {
+            distributorId: dist._id || '',
+            businessName: name,
+            city: dist.city || dist.address?.city || '',
+            products: []
+          };
+        }
+        grouped[name].products.push({
+          _id: p._id,
+          name: p.name,
+          price: p.price,
+          image: p.image || p.images?.[0] || ''
+        });
+      });
+
+      categoryCache.current[categoryId] = grouped;
+      setCategoryProducts((prev) => ({ ...prev, [categoryId]: grouped }));
+    } catch (err) {
+      console.error('Failed to fetch category products:', err);
+    } finally {
+      setMegaMenuLoading(false);
+    }
+  }, []);
+
+  const handleMegaMenuOpen = useCallback(() => {
+    setShowCategoryMenu(true);
+    // Auto-select first category
+    if (!activeCategory) {
+      handleCategoryHover('Cement');
+    }
+  }, [activeCategory, handleCategoryHover]);
 
   const searchPlaceholders: Record<string, string> = {
     products: 'Search products by name...',
@@ -204,6 +270,12 @@ export default function Header() {
   const handleCategoryClick = (categoryId: string) => {
     router.push(`/products?category=${categoryId}`);
     setShowCategoryMenu(false);
+    setActiveCategory(null);
+  };
+
+  const handleMegaMenuClose = () => {
+    setShowCategoryMenu(false);
+    setActiveCategory(null);
   };
 
   return (
@@ -361,8 +433,8 @@ export default function Header() {
             <nav className="main-nav">
               <div
                 className="nav-item categories-dropdown"
-                onMouseEnter={() => setShowCategoryMenu(true)}
-                onMouseLeave={() => setShowCategoryMenu(false)}
+                onMouseEnter={handleMegaMenuOpen}
+                onMouseLeave={handleMegaMenuClose}
               >
                 <button className="categories-btn">
                   <FiMenu />
@@ -370,17 +442,74 @@ export default function Header() {
                 </button>
 
                 {showCategoryMenu && (
-                  <div className="categories-menu">
-                    {categories.map((category) => (
-                      <button
-                        key={category.id}
-                        className="category-menu-item"
-                        onClick={() => handleCategoryClick(category.id)}
-                      >
-                        <span className="category-icon">{category.icon}</span>
-                        <span>{category.name}</span>
-                      </button>
-                    ))}
+                  <div className="mega-menu-container">
+                    <div className="mega-menu-left">
+                      {categories.map((category) => (
+                        <button
+                          key={category.id}
+                          className={`mega-menu-category-item${activeCategory === category.id ? ' active' : ''}`}
+                          onMouseEnter={() => handleCategoryHover(category.id)}
+                          onClick={() => handleCategoryClick(category.id)}
+                        >
+                          <span className="mega-menu-category-icon">{category.icon}</span>
+                          <span>{category.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                    <div className="mega-menu-right">
+                      {megaMenuLoading && !categoryProducts[activeCategory || ''] ? (
+                        <div className="mega-menu-skeleton-grid">
+                          {[1, 2, 3].map((i) => (
+                            <div key={i} className="mega-menu-skeleton-group">
+                              <div className="mega-menu-skeleton-heading" />
+                              <div className="mega-menu-skeleton-line" />
+                              <div className="mega-menu-skeleton-line short" />
+                              <div className="mega-menu-skeleton-line" />
+                            </div>
+                          ))}
+                        </div>
+                      ) : activeCategory && categoryProducts[activeCategory] ? (
+                        Object.keys(categoryProducts[activeCategory]).length > 0 ? (
+                          <div className="mega-menu-distributors-grid">
+                            {Object.values(categoryProducts[activeCategory]).map((group: any) => (
+                              <div key={group.distributorId} className="mega-menu-distributor-group">
+                                <h4 className="distributor-name">
+                                  <Link
+                                    href={`/distributor/${group.distributorId}`}
+                                    onClick={handleMegaMenuClose}
+                                  >
+                                    {group.businessName}
+                                  </Link>
+                                  {group.city && <span className="distributor-city">{group.city}</span>}
+                                </h4>
+                                <ul className="distributor-products">
+                                  {group.products.slice(0, 5).map((product: any) => (
+                                    <li key={product._id}>
+                                      <Link
+                                        href={`/products/${product._id}`}
+                                        className="mega-menu-product-link"
+                                        onClick={handleMegaMenuClose}
+                                      >
+                                        {product.name}
+                                        {product.price > 0 && (
+                                          <span className="mega-menu-product-price">
+                                            ₹{product.price}
+                                          </span>
+                                        )}
+                                      </Link>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="mega-menu-empty">
+                            No products found in this category yet.
+                          </div>
+                        )
+                      ) : null}
+                    </div>
                   </div>
                 )}
               </div>
@@ -479,7 +608,7 @@ export default function Header() {
                       setShowMobileMenu(false);
                     }}
                   >
-                    {category.icon} {category.name}
+                    <span className="mega-menu-category-icon">{category.icon}</span> {category.name}
                   </button>
                 ))}
               </div>
