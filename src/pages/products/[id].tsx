@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/router';
+import { GetServerSideProps } from 'next';
 import Link from 'next/link';
+import axios from 'axios';
 import SEO from '../../components/SEO';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
@@ -271,8 +273,52 @@ function MobileImageCarousel({
   );
 }
 
+// ─── SSR: Fetch minimal product data for OG meta tags ───
+interface SSRProductMeta {
+  name: string;
+  price: number;
+  description: string;
+  image: string;
+  category: string;
+  inStock: boolean;
+  id: string;
+}
+
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  const { id } = context.params || {};
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+
+  try {
+    const res = await axios.get(`${API_URL}/products/${id}`, { timeout: 5000 });
+    const data = res.data;
+    const product = data.product || data.data?.product || data;
+
+    const category = typeof product.category === 'object'
+      ? product.category?.name || ''
+      : product.category || '';
+
+    const image = product.images?.[0] || product.image || '';
+
+    return {
+      props: {
+        ssrMeta: {
+          name: product.name || '',
+          price: product.price || 0,
+          description: (product.description || '').substring(0, 200),
+          image,
+          category,
+          inStock: (product.stock || 0) > 0,
+          id: product._id || id || '',
+        } as SSRProductMeta,
+      },
+    };
+  } catch {
+    return { props: { ssrMeta: null } };
+  }
+};
+
 // ─── Main Page Component ───
-export default function ProductDetail() {
+export default function ProductDetail({ ssrMeta }: { ssrMeta: SSRProductMeta | null }) {
   const router = useRouter();
   const { id } = router.query;
   const { addToCart } = useCart();
@@ -495,7 +541,13 @@ export default function ProductDetail() {
   if (loading) {
     return (
       <>
-        <SEO title="Loading..." />
+        <SEO
+          title={ssrMeta ? `${ssrMeta.name} - Buy Online at Best Price | BuildAdda` : 'Loading...'}
+          description={ssrMeta ? `Buy ${ssrMeta.name} online at ₹${ssrMeta.price.toLocaleString('en-IN')}${ssrMeta.category ? ` in ${ssrMeta.category} category` : ''}. ${ssrMeta.inStock ? 'In stock' : 'Out of stock'}. ${ssrMeta.description}` : undefined}
+          ogImage={ssrMeta?.image || undefined}
+          ogType="product"
+          canonicalUrl={ssrMeta ? `https://www.buildadda.in/products/${ssrMeta.id}` : undefined}
+        />
         <Header />
         <div className="pdp-page">
           <div className="pdp-skeleton">
@@ -516,7 +568,12 @@ export default function ProductDetail() {
   if (error || !product) {
     return (
       <>
-        <SEO title="Product Not Found" />
+        <SEO
+          title={ssrMeta ? `${ssrMeta.name} | BuildAdda` : 'Product Not Found'}
+          description={ssrMeta ? `Buy ${ssrMeta.name} online at ₹${ssrMeta.price.toLocaleString('en-IN')} on BuildAdda` : undefined}
+          ogImage={ssrMeta?.image || undefined}
+          canonicalUrl={ssrMeta ? `https://www.buildadda.in/products/${ssrMeta.id}` : undefined}
+        />
         <Header />
         <div className="pdp-page">
           <div className="pdp-error">

@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import { GetServerSideProps } from 'next';
+import axios from 'axios';
 import SEO from '../../components/SEO';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
@@ -29,7 +31,41 @@ interface Distributor {
   isApproved: boolean;
 }
 
-const DistributorProfile = () => {
+interface SSRDistributorMeta {
+  businessName: string;
+  description: string;
+  city: string;
+  state: string;
+  profileImage: string;
+  id: string;
+}
+
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  const { id } = context.params || {};
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+
+  try {
+    const res = await axios.get(`${API_URL}/users/distributors/${id}`, { timeout: 5000 });
+    const dist = res.data.distributor || res.data;
+
+    return {
+      props: {
+        ssrMeta: {
+          businessName: dist.businessName || dist.name || '',
+          description: (dist.description || '').substring(0, 200),
+          city: dist.city || '',
+          state: dist.state || '',
+          profileImage: dist.profileImage || '',
+          id: dist._id || id || '',
+        } as SSRDistributorMeta,
+      },
+    };
+  } catch {
+    return { props: { ssrMeta: null } };
+  }
+};
+
+const DistributorProfile = ({ ssrMeta }: { ssrMeta: SSRDistributorMeta | null }) => {
   const router = useRouter();
   const { id } = router.query;
 
@@ -105,7 +141,12 @@ const DistributorProfile = () => {
   if (loading) {
     return (
       <>
-        <SEO title="Loading..." description="Loading distributor profile" />
+        <SEO
+          title={ssrMeta ? `${ssrMeta.businessName} - Building Materials Distributor in ${ssrMeta.city}` : 'Loading...'}
+          description={ssrMeta ? `Shop building materials from ${ssrMeta.businessName} in ${ssrMeta.city}, ${ssrMeta.state}. Verified distributor on BuildAdda.` : 'Loading distributor profile'}
+          ogImage={ssrMeta?.profileImage || undefined}
+          canonicalUrl={ssrMeta ? `https://www.buildadda.in/distributor/${ssrMeta.id}` : undefined}
+        />
         <Header />
         <div className={styles.loadingContainer}>
           <div className={styles.loader}></div>
@@ -119,7 +160,12 @@ const DistributorProfile = () => {
   if (!distributor) {
     return (
       <>
-        <SEO title="Not Found" description="Distributor not found" />
+        <SEO
+          title={ssrMeta ? `${ssrMeta.businessName} | BuildAdda` : 'Not Found'}
+          description={ssrMeta ? `${ssrMeta.businessName} - Building Materials Distributor in ${ssrMeta.city}` : 'Distributor not found'}
+          ogImage={ssrMeta?.profileImage || undefined}
+          canonicalUrl={ssrMeta ? `https://www.buildadda.in/distributor/${ssrMeta.id}` : undefined}
+        />
         <Header />
         <div className={styles.errorContainer}>
           <h1>Distributor Not Found</h1>
