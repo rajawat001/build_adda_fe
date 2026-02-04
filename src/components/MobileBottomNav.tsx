@@ -7,20 +7,28 @@ export default function MobileBottomNav() {
   const [cartCount, setCartCount] = useState(0);
   const [wishlistCount, setWishlistCount] = useState(0);
 
-  useEffect(() => {
-    // Update cart count
-    const updateCounts = () => {
-      const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-      const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
-      setCartCount(cart.length);
-      setWishlistCount(wishlist.length);
-    };
+  const updateCounts = () => {
+    try {
+      const cartData = localStorage.getItem('cart');
+      const cart = cartData && cartData !== 'undefined' && cartData !== 'null'
+        ? JSON.parse(cartData) : [];
+      setCartCount(Array.isArray(cart) ? cart.length : 0);
 
+      const wishlistData = localStorage.getItem('wishlist');
+      const wishlist = wishlistData && wishlistData !== 'undefined' && wishlistData !== 'null'
+        ? JSON.parse(wishlistData) : [];
+      setWishlistCount(Array.isArray(wishlist) ? wishlist.filter(Boolean).length : 0);
+    } catch {
+      setCartCount(0);
+      setWishlistCount(0);
+    }
+  };
+
+  // Re-read counts on mount, route change, and storage events
+  useEffect(() => {
     updateCounts();
 
-    // Listen for storage changes
     window.addEventListener('storage', updateCounts);
-    // Custom event for cart/wishlist updates
     window.addEventListener('cartUpdated', updateCounts);
     window.addEventListener('wishlistUpdated', updateCounts);
 
@@ -29,7 +37,7 @@ export default function MobileBottomNav() {
       window.removeEventListener('cartUpdated', updateCounts);
       window.removeEventListener('wishlistUpdated', updateCounts);
     };
-  }, []);
+  }, [router.pathname]);
 
   const isActive = (path: string) => {
     return router.pathname === path;

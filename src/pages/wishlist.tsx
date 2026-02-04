@@ -31,6 +31,9 @@ const Wishlist = () => {
       window.dispatchEvent(new Event('storage'));
     } catch (error: any) {
       console.error('Error fetching wishlist:', error);
+      // Clear stale localStorage on error so badge count resets
+      localStorage.setItem('wishlist', '[]');
+      window.dispatchEvent(new Event('storage'));
       // If unauthorized (401), redirect to login
       if (error.response?.status === 401) {
         router.push('/login');

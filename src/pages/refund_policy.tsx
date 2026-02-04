@@ -112,7 +112,6 @@ export default function RefundPolicy() {
                 <li>Cement bags that have been opened</li>
                 <li>Cut or modified materials (tiles, pipes, wood, etc.)</li>
                 <li>Products purchased on clearance or final sale</li>
-                <li>Perishable or hazardous materials</li>
               </ul>
             </section>
 

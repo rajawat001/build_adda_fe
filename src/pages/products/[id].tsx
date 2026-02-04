@@ -9,10 +9,15 @@ import productService from '../../services/product.service';
 import { Product } from '../../types';
 import { useCart } from '../../context/CartContext';
 import ShareSheet from '../../components/ShareSheet';
+import Toast from '../../components/Toast';
 import {
   FiHeart, FiCheckCircle, FiXCircle, FiShoppingCart, FiZap,
   FiChevronLeft, FiChevronRight, FiX, FiZoomIn, FiShare2, FiTruck, FiShield, FiPackage,
 } from 'react-icons/fi';
+
+function showToast(message: string, type: 'success' | 'error' | 'info' | 'warning' = 'info') {
+  window.dispatchEvent(new CustomEvent('showToast', { detail: { message, type } }));
+}
 
 // ─── Image Zoom Modal (Desktop fullscreen + Mobile pinch-zoom) ───
 function ImageZoomModal({
@@ -363,9 +368,9 @@ export default function ProductDetail() {
     if (!product) return;
     const user = localStorage.getItem('user');
     if (!user) { router.push('/login'); return; }
-    if (quantity < minQty) { alert(`Minimum quantity is ${minQty}`); return; }
+    if (quantity < minQty) { showToast(`Minimum quantity is ${minQty}`, 'warning'); return; }
     const effectiveMax = Math.min(maxQty, product.stock);
-    if (quantity > effectiveMax) { alert(`Maximum quantity is ${effectiveMax}`); return; }
+    if (quantity > effectiveMax) { showToast(`Maximum quantity is ${effectiveMax}`, 'warning'); return; }
     setAddingToCart(true);
     addToCart(product, quantity);
     setTimeout(() => setAddingToCart(false), 600);
@@ -378,22 +383,23 @@ export default function ProductDetail() {
       setAddingToWishlist(true);
 
       if (isInWishlist) {
-        try { await productService.removeFromWishlist(product!._id); } catch {}
+        await productService.removeFromWishlist(product!._id);
         const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
         localStorage.setItem('wishlist', JSON.stringify(wishlist.filter((item: any) => item._id !== product!._id)));
         setIsInWishlist(false);
-        alert('Removed from wishlist');
+        window.dispatchEvent(new Event('storage'));
+        showToast('Removed from wishlist', 'info');
       } else {
-        try { await productService.addToWishlist(product!._id); } catch {}
+        await productService.addToWishlist(product!._id);
         const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
         if (!wishlist.find((item: any) => item._id === product!._id)) wishlist.push(product);
         localStorage.setItem('wishlist', JSON.stringify(wishlist));
         setIsInWishlist(true);
-        alert('Added to wishlist!');
+        window.dispatchEvent(new Event('storage'));
+        showToast('Added to wishlist!', 'success');
       }
-      window.dispatchEvent(new Event('storage'));
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Error updating wishlist');
+      showToast(err.response?.data?.message || 'Error updating wishlist', 'error');
     } finally {
       setAddingToWishlist(false);
     }
@@ -875,6 +881,7 @@ export default function ProductDetail() {
         image={allImages[0] || product.image}
       />
 
+      <Toast />
       <Footer />
     </>
   );
