@@ -41,7 +41,7 @@ api.interceptors.response.use(
         // 1. Already on login/register page
         // 2. On public pages (home, products, product details)
         // 3. User was never authenticated
-        const publicPaths = ['/', '/login', '/register', '/products', '/about', '/contact'];
+        const publicPaths = ['/', '/login', '/register', '/products', '/about', '/contact', '/checkout', '/cart', '/order-success'];
         const isPublicPath = publicPaths.includes(currentPath) || currentPath.startsWith('/products/');
 
         if (!isPublicPath && wasAuthenticated && currentPath !== '/login') {

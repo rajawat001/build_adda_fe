@@ -5,7 +5,8 @@ import SEO from '../components/SEO';
 
 export default function OrderSuccess() {
   const router = useRouter();
-  const { orderId, orderNumber } = router.query;
+  const { orderId, orderNumber, guest, email } = router.query;
+  const isGuest = guest === 'true';
 
   useEffect(() => {
     // Clear cart after successful order
@@ -39,28 +40,52 @@ export default function OrderSuccess() {
           <div className="status-info">
             <div className="info-item">
               <span className="icon">📧</span>
-              <p>Confirmation email sent to your registered email address</p>
+              <p>
+                {isGuest && email
+                  ? `Order confirmation sent to ${email}`
+                  : 'Confirmation email sent to your registered email address'}
+              </p>
             </div>
-            
+
             <div className="info-item">
               <span className="icon">📦</span>
               <p>Your order will be processed and shipped soon</p>
             </div>
-            
+
             <div className="info-item">
               <span className="icon">🔔</span>
               <p>You will receive updates about your order status</p>
             </div>
+
+            {isGuest && (
+              <div className="info-item" style={{ background: '#e8f5e9', border: '1px solid #a5d6a7' }}>
+                <span className="icon">👤</span>
+                <p>
+                  <Link href={`/register?email=${encodeURIComponent(email as string || '')}`}>
+                    <strong style={{ color: '#2e7d32', cursor: 'pointer' }}>Create an account</strong>
+                  </Link>
+                  {' '}to track all your orders and get faster checkout next time.
+                </p>
+              </div>
+            )}
           </div>
-          
+
           <div className="action-buttons">
-            <Link href={`/orders`}>
-              <button className="btn-primary">View My Orders</button>
-            </Link>
-            
+            {!isGuest && (
+              <Link href={`/orders`}>
+                <button className="btn-primary">View My Orders</button>
+              </Link>
+            )}
+
             <Link href="/">
               <button className="btn-secondary">Continue Shopping</button>
             </Link>
+
+            {isGuest && (
+              <Link href={`/register?email=${encodeURIComponent(email as string || '')}`}>
+                <button className="btn-primary">Create Account</button>
+              </Link>
+            )}
           </div>
         </div>
       </div>

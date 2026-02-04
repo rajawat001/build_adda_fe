@@ -30,8 +30,8 @@ export const cancelOrder = async (id: string) => {
   return response.data;
 };
 
-export const initiatePhonepePayment = async (orderId: string) => {
-  const response = await api.post('/orders/phonepe/initiate', { orderId });
+export const initiatePhonepePayment = async (orderId: string, guestEmail?: string) => {
+  const response = await api.post('/orders/phonepe/initiate', { orderId, ...(guestEmail ? { guestEmail } : {}) });
   return response.data;
 };
 
@@ -40,8 +40,13 @@ export const checkPaymentStatus = async (merchantOrderId: string, orderId: strin
   return response.data;
 };
 
-export const confirmCOD = async (orderId: string) => {
-  const response = await api.post('/orders/cod/confirm', { orderId });
+export const confirmCOD = async (orderId: string, guestEmail?: string) => {
+  const response = await api.post('/orders/cod/confirm', { orderId, ...(guestEmail ? { guestEmail } : {}) });
+  return response.data;
+};
+
+export const getGuestOrder = async (orderId: string, email: string) => {
+  const response = await api.get(`/orders/guest/${orderId}?email=${encodeURIComponent(email)}`);
   return response.data;
 };
 
@@ -61,7 +66,8 @@ const orderService = {
   initiatePhonepePayment,
   checkPaymentStatus,
   confirmCOD,
-  applyCoupon
+  applyCoupon,
+  getGuestOrder
 };
 
 export default orderService;

@@ -412,8 +412,6 @@ export default function ProductDetail({ ssrMeta }: { ssrMeta: SSRProductMeta | n
 
   const handleAddToCart = () => {
     if (!product) return;
-    const user = localStorage.getItem('user');
-    if (!user) { router.push('/login'); return; }
     if (quantity < minQty) { showToast(`Minimum quantity is ${minQty}`, 'warning'); return; }
     const effectiveMax = Math.min(maxQty, product.stock);
     if (quantity > effectiveMax) { showToast(`Maximum quantity is ${effectiveMax}`, 'warning'); return; }
@@ -452,6 +450,7 @@ export default function ProductDetail({ ssrMeta }: { ssrMeta: SSRProductMeta | n
   };
 
   const handleBuyNow = () => {
+    if (!product) return;
     handleAddToCart();
     setTimeout(() => router.push('/cart'), 500);
   };

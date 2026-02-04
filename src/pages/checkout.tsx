@@ -48,6 +48,8 @@ export default function Checkout() {
   const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string>('');
   const [showAddressForm, setShowAddressForm] = useState(false);
+  const [guestEmail, setGuestEmail] = useState('');
+  const [guestEmailError, setGuestEmailError] = useState('');
   const [formData, setFormData] = useState({
     shippingAddress: {
       fullName: '',
@@ -362,7 +364,7 @@ export default function Checkout() {
 
   const handlePhonepePayment = async (orderId: string) => {
     try {
-      const response = await initiatePhonepePayment(orderId);
+      const response = await initiatePhonepePayment(orderId, isAuthenticated ? undefined : guestEmail);
       if (response.success && response.paymentUrl) {
         // Redirect to PhonePe payment page
         window.location.href = response.paymentUrl;
@@ -431,7 +433,17 @@ export default function Checkout() {
         return;
       }
 
-      const orderData = {
+      // Validate guest email
+      if (!isAuthenticated) {
+        if (!guestEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guestEmail)) {
+          setGuestEmailError('Please enter a valid email address');
+          setLoading(false);
+          return;
+        }
+        setGuestEmailError('');
+      }
+
+      const orderData: any = {
         items: cartItems.map(item => ({
           product: item._id,
           quantity: item.quantity,
@@ -441,7 +453,8 @@ export default function Checkout() {
         paymentMethod: formData.paymentMethod,
         totalAmount: getTotal(),
         couponCode: formData.couponCode,
-        distributor: distributorId
+        distributor: distributorId,
+        ...(isAuthenticated ? {} : { guestEmail })
       };
 
       const response = await createOrder(orderData);
@@ -453,7 +466,11 @@ export default function Checkout() {
         // Set flag to prevent redirect to cart page
         setOrderPlaced(true);
         clearCart();
-        router.push('/order-success');
+        if (!isAuthenticated && guestEmail) {
+          router.push(`/order-success?guest=true&email=${encodeURIComponent(guestEmail)}`);
+        } else {
+          router.push('/order-success');
+        }
       }
     } catch (error: any) {
       const serverMessage = error.response?.data?.error || error.response?.data?.message || '';
@@ -521,6 +538,47 @@ export default function Checkout() {
                   color: '#8a6d00'
                 }}>
                   {pincodeWarning}
+                </div>
+              )}
+
+              {!isAuthenticated && (
+                <div className="guest-checkout-section" style={{
+                  padding: '1rem',
+                  marginBottom: '1rem',
+                  background: '#f8f9fa',
+                  border: '1px solid #dee2e6',
+                  borderRadius: '8px'
+                }}>
+                  <p style={{ fontSize: '0.9rem', color: '#495057', marginBottom: '0.75rem' }}>
+                    Have an account?{' '}
+                    <a
+                      href={`/login?redirect=/checkout`}
+                      style={{ color: '#0066cc', fontWeight: 500 }}
+                    >
+                      Log in
+                    </a>
+                    {' '}for faster checkout
+                  </p>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label>Email Address *</label>
+                    <input
+                      type="email"
+                      value={guestEmail}
+                      onChange={(e) => {
+                        setGuestEmail(e.target.value);
+                        setGuestEmailError('');
+                      }}
+                      required
+                      placeholder="Order confirmation will be sent to this email"
+                      className={guestEmailError ? 'input-error' : ''}
+                      style={{ width: '100%' }}
+                    />
+                    {guestEmailError && (
+                      <span className="validation-error" style={{ color: '#cc0000', fontSize: '0.85rem' }}>
+                        {guestEmailError}
+                      </span>
+                    )}
+                  </div>
                 </div>
               )}
 
