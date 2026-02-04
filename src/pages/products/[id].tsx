@@ -8,6 +8,7 @@ import ProductCard from '../../components/ProductCard';
 import productService from '../../services/product.service';
 import { Product } from '../../types';
 import { useCart } from '../../context/CartContext';
+import ShareSheet from '../../components/ShareSheet';
 import {
   FiHeart, FiCheckCircle, FiXCircle, FiShoppingCart, FiZap,
   FiChevronLeft, FiChevronRight, FiX, FiZoomIn, FiShare2, FiTruck, FiShield, FiPackage,
@@ -282,6 +283,7 @@ export default function ProductDetail() {
   const [addingToWishlist, setAddingToWishlist] = useState(false);
   const [isInWishlist, setIsInWishlist] = useState(false);
   const [showZoom, setShowZoom] = useState(false);
+  const [showShareSheet, setShowShareSheet] = useState(false);
   const [activeTab, setActiveTab] = useState<'description' | 'details' | 'specs'>('description');
 
   // Desktop hover-lens zoom
@@ -402,14 +404,8 @@ export default function ProductDetail() {
     setTimeout(() => router.push('/cart'), 500);
   };
 
-  const handleShare = async () => {
-    const url = window.location.href;
-    if (navigator.share) {
-      try { await navigator.share({ title: product?.name, url }); } catch {}
-    } else {
-      await navigator.clipboard.writeText(url);
-      alert('Link copied!');
-    }
+  const handleShare = () => {
+    setShowShareSheet(true);
   };
 
   // Desktop hover lens
@@ -536,7 +532,7 @@ export default function ProductDetail() {
         description={`Buy ${product.name} online at ₹${product.price.toLocaleString('en-IN')}${category ? ` in ${category} category` : ''}. ${inStock ? 'In stock' : 'Out of stock'}. ${product.description?.substring(0, 120) || ''}`}
         keywords={`${product.name}, buy ${product.name} online, ${product.name} price, ${category ? category + ' ' : ''}building materials`}
         canonicalUrl={`https://www.buildadda.in/products/${product._id}`}
-        ogImage={product.image || undefined}
+        ogImage={allImages[0] || product.image || undefined}
         ogType="product"
         jsonLd={productJsonLd}
       />
@@ -844,6 +840,9 @@ export default function ProductDetail() {
       {/* ═══ Mobile Sticky Bottom Bar ═══ */}
       {inStock && (
         <div className="pdp-mobile-bottom-bar">
+          <button className="pdp-mb-share" onClick={handleShare}>
+            <FiShare2 size={20} />
+          </button>
           <button className="pdp-mb-wishlist" onClick={handleAddToWishlist} disabled={addingToWishlist}>
             <FiHeart size={20} fill={isInWishlist ? '#e74c3c' : 'none'} color={isInWishlist ? '#e74c3c' : '#333'} />
           </button>
@@ -865,6 +864,16 @@ export default function ProductDetail() {
           onChangeIndex={setSelectedImageIndex}
         />
       )}
+
+      {/* Share Sheet */}
+      <ShareSheet
+        isOpen={showShareSheet}
+        onClose={() => setShowShareSheet(false)}
+        title={product.name}
+        text={`Check out ${product.name} at ₹${product.price.toLocaleString('en-IN')} on BuildAdda`}
+        url={typeof window !== 'undefined' ? window.location.href : `https://www.buildadda.in/products/${product._id}`}
+        image={allImages[0] || product.image}
+      />
 
       <Footer />
     </>

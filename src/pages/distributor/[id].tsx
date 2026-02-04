@@ -6,6 +6,8 @@ import Footer from '../../components/Footer';
 import ProductCard from '../../components/ProductCard';
 import api from '../../services/api';
 import { Product } from '../../types';
+import { FiShare2 } from 'react-icons/fi';
+import ShareSheet from '../../components/ShareSheet';
 import styles from '../../styles/distributor-profile.module.css';
 
 interface Distributor {
@@ -34,6 +36,7 @@ const DistributorProfile = () => {
   const [distributor, setDistributor] = useState<Distributor | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showShareSheet, setShowShareSheet] = useState(false);
   const [activeTab, setActiveTab] = useState<'products' | 'about'>('products');
 
   useEffect(() => {
@@ -95,6 +98,10 @@ const DistributorProfile = () => {
     }
   };
 
+  const handleShare = () => {
+    setShowShareSheet(true);
+  };
+
   if (loading) {
     return (
       <>
@@ -129,8 +136,10 @@ const DistributorProfile = () => {
   return (
     <>
       <SEO
-        title={`${distributor.businessName} - Building Materials Distributor`}
-        description={distributor.description || `Shop building materials from ${distributor.businessName}`}
+        title={`${distributor.businessName} - Building Materials Distributor in ${distributor.city}`}
+        description={distributor.description || `Shop building materials from ${distributor.businessName} in ${distributor.city}, ${distributor.state}. ${products.length} products available. Verified distributor on BuildAdda.`}
+        ogImage={distributor.profileImage || undefined}
+        canonicalUrl={`https://www.buildadda.in/distributor/${distributor._id}`}
       />
       <Header />
 
@@ -187,6 +196,13 @@ const DistributorProfile = () => {
               >
                 <span className="icon">📧</span>
                 Email
+              </button>
+              <button
+                className={`${styles.btnContact} ${styles.btnShare}`}
+                onClick={handleShare}
+              >
+                <FiShare2 size={16} />
+                Share
               </button>
             </div>
           </div>
@@ -315,6 +331,16 @@ const DistributorProfile = () => {
           )}
         </div>
       </div>
+
+      {/* Share Sheet */}
+      <ShareSheet
+        isOpen={showShareSheet}
+        onClose={() => setShowShareSheet(false)}
+        title={distributor.businessName}
+        text={`Check out ${distributor.businessName} - Building Materials Distributor in ${distributor.city} on BuildAdda`}
+        url={typeof window !== 'undefined' ? window.location.href : `https://www.buildadda.in/distributor/${distributor._id}`}
+        image={distributor.profileImage}
+      />
 
       <Footer />
     </>
