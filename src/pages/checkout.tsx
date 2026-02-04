@@ -36,12 +36,12 @@ export default function Checkout() {
     // add other properties if needed
   }
 
-  // Extend the type of currentDistributor to include city
+  // Extend the type of currentDistributor to include city and pincode
   type Distributor = {
     _id: string;
     businessName: string;
     city?: string;
-    // add other properties if needed
+    pincode?: string;
   };
 
   const distributor: Distributor | undefined = currentDistributor;
@@ -82,6 +82,8 @@ export default function Checkout() {
     pincode: ''
   });
   const [orderPlaced, setOrderPlaced] = useState(false);
+  const [cityError, setCityError] = useState<string>('');
+  const [pincodeWarning, setPincodeWarning] = useState<string>('');
 
   useEffect(() => {
     // Redirect to cart if empty (but not after successful order placement)
@@ -399,19 +401,27 @@ export default function Checkout() {
       }
 
       // Validate shipping city matches distributor's city
+      setCityError('');
+      setPincodeWarning('');
+
       if (distributorCity && formData.shippingAddress.city) {
         const shippingCity = formData.shippingAddress.city.toLowerCase().trim();
         const distCity = distributorCity.toLowerCase().trim();
 
         if (shippingCity !== distCity) {
-          alert(
-            `Delivery not available!\n\n` +
-            `This distributor (${distributor?.businessName}) only delivers to ${distributorCity}.\n\n` +
-            `Your shipping address city is ${formData.shippingAddress.city}.\n\n` +
-            `Please update your shipping address or choose products from a distributor in your city.`
+          setCityError(
+            `Delivery not available to ${formData.shippingAddress.city}. ${distributor?.businessName} only delivers in ${distributorCity}.`
           );
           setLoading(false);
           return;
+        }
+
+        // Pincode mismatch warning (same city, different pincode — allowed but warned)
+        const distributorPincode = distributor?.pincode;
+        if (distributorPincode && formData.shippingAddress.pincode && formData.shippingAddress.pincode.trim() !== distributorPincode.trim()) {
+          setPincodeWarning(
+            `Your pincode (${formData.shippingAddress.pincode}) differs from the distributor's area (${distributorPincode}). Delivery may take longer.`
+          );
         }
       }
 
@@ -445,8 +455,13 @@ export default function Checkout() {
         clearCart();
         router.push('/order-success');
       }
-    } catch (error) {
-      alert('Order creation failed. Please try again.');
+    } catch (error: any) {
+      const serverMessage = error.response?.data?.error || error.response?.data?.message || '';
+      if (serverMessage.toLowerCase().includes('delivery not available')) {
+        setCityError(serverMessage);
+      } else {
+        alert(serverMessage || 'Order creation failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -464,6 +479,50 @@ export default function Checkout() {
           <div className="checkout-content">
             <form className="checkout-form" onSubmit={handleSubmit}>
               <h2>Shipping Details</h2>
+
+              {distributor?.city && (
+                <div className="delivery-area-info" style={{
+                  padding: '0.75rem 1rem',
+                  marginBottom: '1rem',
+                  background: '#f0f7ff',
+                  border: '1px solid #b3d4fc',
+                  borderRadius: '6px',
+                  fontSize: '0.9rem',
+                  color: '#1a3a5c'
+                }}>
+                  Delivery area: <strong>{distributor.city}</strong>
+                  {distributor.pincode && <> (Pincode: <strong>{distributor.pincode}</strong>)</>}
+                  {' '}&mdash; {distributor.businessName}
+                </div>
+              )}
+
+              {cityError && (
+                <div className="city-error-banner" style={{
+                  padding: '0.75rem 1rem',
+                  marginBottom: '1rem',
+                  background: '#fff0f0',
+                  border: '1px solid #ffb3b3',
+                  borderRadius: '6px',
+                  fontSize: '0.9rem',
+                  color: '#cc0000'
+                }}>
+                  {cityError}
+                </div>
+              )}
+
+              {pincodeWarning && (
+                <div className="pincode-warning-banner" style={{
+                  padding: '0.75rem 1rem',
+                  marginBottom: '1rem',
+                  background: '#fff8e6',
+                  border: '1px solid #ffd966',
+                  borderRadius: '6px',
+                  fontSize: '0.9rem',
+                  color: '#8a6d00'
+                }}>
+                  {pincodeWarning}
+                </div>
+              )}
 
               {isAuthenticated && savedAddresses.length > 0 && (
                 <div className="saved-addresses-section">

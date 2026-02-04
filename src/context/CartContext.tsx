@@ -30,7 +30,7 @@ interface CartContextType {
   cart: CartItem[];
   cartCount: number;
   cartTotal: number;
-  currentDistributor: { _id: string; businessName: string } | null;
+  currentDistributor: { _id: string; businessName: string; city?: string; pincode?: string } | null;
   addToCart: (product: any, quantity?: number) => void;
   removeFromCart: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
