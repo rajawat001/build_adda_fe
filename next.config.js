@@ -141,17 +141,6 @@ const withPWA = require('next-pwa')({
 const nextConfig = {
   reactStrictMode: true,
 
-  // Redirects for sitemap
-  async redirects() {
-    return [
-      {
-        source: '/sitemap.xml',
-        destination: '/api/sitemap.xml',
-        permanent: true,
-      },
-    ];
-  },
-
   // Security headers
   async headers() {
     return [

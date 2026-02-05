@@ -22,8 +22,8 @@ Allow: /distributors
 # Crawl delay for polite bots (optional)
 Crawl-delay: 1
 
-# Sitemap location (dynamic sitemap with all products and distributors)
-Sitemap: https://www.buildadda.in/api/sitemap.xml
+# Sitemap locations
+Sitemap: https://www.buildadda.in/sitemap.xml
 
 # Google-specific rules
 User-agent: Googlebot

@@ -19,24 +19,50 @@ const staticPages = [
   { url: '/returns', priority: '0.4', changefreq: 'yearly' },
 ];
 
-async function fetchProducts() {
+async function fetchProducts(): Promise<any[]> {
   try {
-    const res = await fetch(`${API_URL}/products?limit=1000&isActive=true`);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+    const res = await fetch(`${API_URL}/products?limit=500&isActive=true`, {
+      signal: controller.signal,
+      headers: { 'Accept': 'application/json' }
+    });
+    clearTimeout(timeoutId);
+
+    if (!res.ok) {
+      console.error('Products API returned:', res.status);
+      return [];
+    }
+
     const data = await res.json();
     return data.products || [];
-  } catch (error) {
-    console.error('Error fetching products for sitemap:', error);
+  } catch (error: any) {
+    console.error('Error fetching products for sitemap:', error.message || error);
     return [];
   }
 }
 
-async function fetchDistributors() {
+async function fetchDistributors(): Promise<any[]> {
   try {
-    const res = await fetch(`${API_URL}/distributors?limit=1000`);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+    const res = await fetch(`${API_URL}/distributors?limit=500`, {
+      signal: controller.signal,
+      headers: { 'Accept': 'application/json' }
+    });
+    clearTimeout(timeoutId);
+
+    if (!res.ok) {
+      console.error('Distributors API returned:', res.status);
+      return [];
+    }
+
     const data = await res.json();
     return data.distributors || [];
-  } catch (error) {
-    console.error('Error fetching distributors for sitemap:', error);
+  } catch (error: any) {
+    console.error('Error fetching distributors for sitemap:', error.message || error);
     return [];
   }
 }
@@ -61,6 +87,7 @@ function generateSitemapXml(staticPages: any[], products: any[], distributors: a
 
   // Add product pages
   for (const product of products) {
+    if (!product._id) continue;
     const lastmod = product.updatedAt
       ? new Date(product.updatedAt).toISOString().split('T')[0]
       : today;
@@ -75,6 +102,7 @@ function generateSitemapXml(staticPages: any[], products: any[], distributors: a
 
   // Add distributor pages
   for (const distributor of distributors) {
+    if (!distributor._id) continue;
     const lastmod = distributor.updatedAt
       ? new Date(distributor.updatedAt).toISOString().split('T')[0]
       : today;
@@ -92,6 +120,10 @@ function generateSitemapXml(staticPages: any[], products: any[], distributors: a
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  // Always return XML content type
+  res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+  res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
+
   try {
     // Fetch products and distributors in parallel
     const [products, distributors] = await Promise.all([
@@ -99,15 +131,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       fetchDistributors()
     ]);
 
+    console.log(`Sitemap: ${staticPages.length} static, ${products.length} products, ${distributors.length} distributors`);
+
     const sitemap = generateSitemapXml(staticPages, products, distributors);
-
-    // Set headers for XML
-    res.setHeader('Content-Type', 'application/xml');
-    res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
-
     res.status(200).send(sitemap);
   } catch (error) {
     console.error('Error generating sitemap:', error);
-    res.status(500).json({ error: 'Failed to generate sitemap' });
+    // Even on error, return valid XML with just static pages
+    const sitemap = generateSitemapXml(staticPages, [], []);
+    res.status(200).send(sitemap);
   }
 }
