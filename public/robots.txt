@@ -5,6 +5,9 @@
 User-agent: *
 Allow: /
 
+# Allow sitemap API (must be before Disallow /api/)
+Allow: /api/sitemap.xml
+
 # Disallow admin and user dashboard pages
 Disallow: /admin/
 Disallow: /user/
@@ -19,29 +22,27 @@ Disallow: /checkout
 Allow: /products
 Allow: /distributors
 
-# Crawl delay for polite bots (optional)
-Crawl-delay: 1
-
 # Sitemap locations
-Sitemap: https://www.buildadda.in/sitemap.xml
+Sitemap: https://www.buildadda.in/api/sitemap.xml
 
 # Google-specific rules
 User-agent: Googlebot
 Allow: /
+Allow: /api/sitemap.xml
 Disallow: /admin/
 Disallow: /api/
-Crawl-delay: 0
 
 # Bing-specific rules
 User-agent: Bingbot
 Allow: /
+Allow: /api/sitemap.xml
 Disallow: /admin/
 Disallow: /api/
-Crawl-delay: 1
 
 # Yandex-specific rules
 User-agent: Yandex
 Allow: /
+Allow: /api/sitemap.xml
 Disallow: /admin/
 Disallow: /api/
 
