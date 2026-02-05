@@ -19,15 +19,30 @@ const subscriptionService = {
     return response.data;
   },
 
-  // Create payment order
+  // Create payment order (one-time payment)
   createOrder: async (planId: string, couponCode?: string) => {
     const response = await api.post('/subscriptions/create-order', { planId, couponCode });
+    return response.data;
+  },
+
+  // Create payment order with autopay (recurring payment mandate)
+  createOrderWithAutopay: async (planId: string, couponCode?: string) => {
+    const response = await api.post('/subscriptions/create-order-autopay', { planId, couponCode });
     return response.data;
   },
 
   // Verify payment
   verifyPayment: async (paymentData: any) => {
     const response = await api.post('/subscriptions/verify-payment', paymentData);
+    return response.data;
+  },
+
+  // Verify autopay mandate
+  verifyAutopay: async (merchantSubscriptionId: string, subscriptionId: string) => {
+    const response = await api.post('/subscriptions/verify-autopay', {
+      merchantSubscriptionId,
+      subscriptionId
+    });
     return response.data;
   },
 
@@ -40,6 +55,21 @@ const subscriptionService = {
   // Cancel subscription
   cancelSubscription: async (subscriptionId: string, reason: string) => {
     const response = await api.post('/subscriptions/cancel', { subscriptionId, reason });
+    return response.data;
+  },
+
+  // Toggle auto-renewal
+  toggleAutoRenew: async (subscriptionId: string, enableAutoRenew: boolean) => {
+    const response = await api.post('/subscriptions/toggle-auto-renew', {
+      subscriptionId,
+      enableAutoRenew
+    });
+    return response.data;
+  },
+
+  // Revoke autopay mandate
+  revokeAutopay: async (subscriptionId: string) => {
+    const response = await api.post('/subscriptions/revoke-autopay', { subscriptionId });
     return response.data;
   }
 };

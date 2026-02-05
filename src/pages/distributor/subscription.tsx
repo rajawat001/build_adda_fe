@@ -48,6 +48,12 @@ interface Subscription {
     code: string;
     freeMonths?: number;
   };
+  autoRenew?: boolean;
+  autopay?: {
+    enabled: boolean;
+    authStatus: 'pending' | 'authorized' | 'failed' | 'revoked' | 'none';
+    frequency?: 'MONTHLY' | 'YEARLY';
+  };
   createdAt: string;
 }
 
@@ -82,6 +88,8 @@ const SubscriptionPage = () => {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
   const [isNewDistributor, setIsNewDistributor] = useState(false);
+  const [enableAutopay, setEnableAutopay] = useState(true); // Default to autopay enabled
+  const [togglingAutoRenew, setTogglingAutoRenew] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -150,10 +158,35 @@ const SubscriptionPage = () => {
 
     try {
       setProcessingPayment(true);
-      const orderResult = await subscriptionService.createOrder(
-        selectedPlan._id,
-        appliedCoupon?.coupon.code
-      );
+
+      let orderResult;
+
+      // Use autopay or one-time payment based on user selection
+      if (enableAutopay) {
+        try {
+          orderResult = await subscriptionService.createOrderWithAutopay(
+            selectedPlan._id,
+            appliedCoupon?.coupon.code
+          );
+        } catch (autopayError: any) {
+          // If autopay fails due to sandbox mode, fall back to regular payment
+          if (autopayError.response?.data?.code === 'AUTOPAY_SANDBOX_NOT_SUPPORTED') {
+            toast.info('Auto-renewal not available in test mode. Using one-time payment.');
+            setEnableAutopay(false);
+            orderResult = await subscriptionService.createOrder(
+              selectedPlan._id,
+              appliedCoupon?.coupon.code
+            );
+          } else {
+            throw autopayError;
+          }
+        }
+      } else {
+        orderResult = await subscriptionService.createOrder(
+          selectedPlan._id,
+          appliedCoupon?.coupon.code
+        );
+      }
 
       // If it's a free subscription (coupon with 100% discount or free months)
       if (orderResult.isFree) {
@@ -175,6 +208,22 @@ const SubscriptionPage = () => {
       toast.error(error.response?.data?.message || 'Failed to process subscription');
     } finally {
       setProcessingPayment(false);
+    }
+  };
+
+  const handleToggleAutoRenew = async () => {
+    if (!currentSubscription) return;
+
+    try {
+      setTogglingAutoRenew(true);
+      const newState = !currentSubscription.autoRenew;
+      await subscriptionService.toggleAutoRenew(currentSubscription._id, newState);
+      toast.success(`Auto-renewal ${newState ? 'enabled' : 'disabled'}`);
+      fetchData();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to update auto-renewal');
+    } finally {
+      setTogglingAutoRenew(false);
     }
   };
 
@@ -276,6 +325,26 @@ const SubscriptionPage = () => {
                     <div className="flex items-center gap-1 mt-2 text-sm text-green-600">
                       <FiTag className="w-4 h-4" />
                       {currentSubscription.couponApplied.code}
+                    </div>
+                  )}
+                  {/* Auto-renewal status */}
+                  {currentSubscription.autopay?.authStatus === 'authorized' && (
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className={`text-sm ${currentSubscription.autoRenew ? 'text-green-600' : 'text-gray-500'}`}>
+                        <FiRefreshCw className="w-4 h-4 inline mr-1" />
+                        Auto-renewal: {currentSubscription.autoRenew ? 'On' : 'Off'}
+                      </span>
+                      <button
+                        onClick={handleToggleAutoRenew}
+                        disabled={togglingAutoRenew}
+                        className={`px-2 py-0.5 text-xs font-medium rounded ${
+                          currentSubscription.autoRenew
+                            ? 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            : 'bg-green-100 text-green-700 hover:bg-green-200'
+                        } transition-colors`}
+                      >
+                        {togglingAutoRenew ? '...' : currentSubscription.autoRenew ? 'Turn Off' : 'Turn On'}
+                      </button>
                     </div>
                   )}
                 </div>
@@ -490,6 +559,42 @@ const SubscriptionPage = () => {
                   </div>
                 </div>
 
+                {/* Auto-renewal Toggle */}
+                {appliedCoupon?.finalAmount !== 0 && (
+                  <div className="border border-gray-200 rounded-xl p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-orange-100 rounded-lg">
+                          <FiRefreshCw className="w-5 h-5 text-orange-600" />
+                        </div>
+                        <div>
+                          <h4 className="font-medium text-[var(--text-primary)]">Auto-renewal</h4>
+                          <p className="text-xs text-[var(--text-secondary)]">
+                            Automatically renew when subscription expires
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setEnableAutopay(!enableAutopay)}
+                        className={`relative w-12 h-7 rounded-full transition-colors ${
+                          enableAutopay ? 'bg-orange-500' : 'bg-gray-300'
+                        }`}
+                      >
+                        <span
+                          className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                            enableAutopay ? 'translate-x-6' : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
+                    </div>
+                    {enableAutopay && (
+                      <p className="mt-2 text-xs text-green-600 bg-green-50 p-2 rounded-lg">
+                        Your card will be charged automatically before expiry. You can cancel anytime.
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 {/* Subscribe Button */}
                 <Button
                   className="w-full min-h-tap"
@@ -502,11 +607,15 @@ const SubscriptionPage = () => {
                     ? 'Processing...'
                     : appliedCoupon?.finalAmount === 0
                     ? 'Activate Free'
+                    : enableAutopay
+                    ? `Subscribe ₹${(appliedCoupon?.finalAmount ?? selectedPlan.offerPrice).toLocaleString('en-IN')}/` + (selectedPlan.duration === 'monthly' ? 'mo' : 'yr')
                     : `Pay ₹${(appliedCoupon?.finalAmount ?? selectedPlan.offerPrice).toLocaleString('en-IN')}`}
                 </Button>
 
                 <p className="text-xs text-center text-[var(--text-tertiary)]">
-                  By subscribing, you agree to our Terms of Service and Privacy Policy.
+                  {enableAutopay
+                    ? 'By subscribing, you authorize automatic recurring payments. Cancel anytime.'
+                    : 'By subscribing, you agree to our Terms of Service and Privacy Policy.'}
                 </p>
               </div>
             </BottomSheet>
@@ -617,6 +726,42 @@ const SubscriptionPage = () => {
                   </div>
                 </div>
 
+                {/* Auto-renewal Toggle */}
+                {appliedCoupon?.finalAmount !== 0 && (
+                  <div className="border border-gray-200 rounded-lg p-4 mb-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-orange-100 rounded-lg">
+                          <FiRefreshCw className="w-5 h-5 text-orange-600" />
+                        </div>
+                        <div>
+                          <h4 className="font-medium text-[var(--text-primary)]">Enable Auto-renewal</h4>
+                          <p className="text-sm text-[var(--text-secondary)]">
+                            Automatically renew when subscription expires
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setEnableAutopay(!enableAutopay)}
+                        className={`relative w-12 h-7 rounded-full transition-colors ${
+                          enableAutopay ? 'bg-orange-500' : 'bg-gray-300'
+                        }`}
+                      >
+                        <span
+                          className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                            enableAutopay ? 'translate-x-6' : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
+                    </div>
+                    {enableAutopay && (
+                      <p className="mt-3 text-sm text-green-600 bg-green-50 p-2 rounded-lg">
+                        Your payment method will be charged automatically before subscription expires. You can cancel anytime.
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 {/* Subscribe Button */}
                 <Button
                   className="w-full"
@@ -629,11 +774,15 @@ const SubscriptionPage = () => {
                     ? 'Processing...'
                     : appliedCoupon?.finalAmount === 0
                     ? 'Activate Free Subscription'
+                    : enableAutopay
+                    ? `Subscribe ₹${(appliedCoupon?.finalAmount ?? selectedPlan.offerPrice).toLocaleString('en-IN')}/` + (selectedPlan.duration === 'monthly' ? 'month' : 'year')
                     : `Pay ₹${(appliedCoupon?.finalAmount ?? selectedPlan.offerPrice).toLocaleString('en-IN')}`}
                 </Button>
 
                 <p className="text-xs text-center text-[var(--text-tertiary)] mt-4">
-                  By subscribing, you agree to our Terms of Service and Privacy Policy.
+                  {enableAutopay
+                    ? 'By subscribing, you authorize automatic recurring payments. Cancel anytime from your subscription page.'
+                    : 'By subscribing, you agree to our Terms of Service and Privacy Policy.'}
                 </p>
               </div>
             </div>
