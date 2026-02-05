@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'react-toastify';
 import api from '../services/api';
+import { isPushSupported, subscribeToPush, unsubscribeFromPush, isPushSubscribed } from '../services/push.service';
 
 export interface Notification {
   _id: string;
@@ -84,6 +85,20 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     }
   }, []);
 
+  // Auto-subscribe to push if permission already granted
+  useEffect(() => {
+    if (!isAuthenticated() || !isPushSupported()) return;
+    if (typeof window === 'undefined' || !('Notification' in window)) return;
+    if (Notification.permission !== 'granted') return;
+
+    // Only subscribe if not already subscribed
+    isPushSubscribed().then((subscribed) => {
+      if (!subscribed) {
+        subscribeToPush().catch(() => {});
+      }
+    });
+  }, []);
+
   // Play notification sound
   const playNotificationSound = useCallback(() => {
     if (!isNotificationEnabled || !audioRef.current) return;
@@ -118,20 +133,29 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     }
   }, [isNotificationEnabled]);
 
-  // Enable notifications
-  const enableNotifications = useCallback(() => {
+  // Enable notifications (and subscribe to push)
+  const enableNotifications = useCallback(async () => {
     if ('Notification' in window) {
-      Notification.requestPermission().then((permission) => {
-        if (permission === 'granted') {
-          setIsNotificationEnabled(true);
-          localStorage.setItem('notificationsEnabled', 'true');
-          toast.success('Notifications enabled!');
+      const permission = await Notification.requestPermission();
+      if (permission === 'granted') {
+        setIsNotificationEnabled(true);
+        localStorage.setItem('notificationsEnabled', 'true');
+
+        // Subscribe to web push if supported and authenticated
+        if (isPushSupported() && isAuthenticated()) {
+          const ok = await subscribeToPush();
+          if (ok) {
+            toast.success('Push notifications enabled!');
+          } else {
+            toast.success('Notifications enabled!');
+          }
         } else {
-          toast.error('Notification permission denied');
+          toast.success('Notifications enabled!');
         }
-      });
+      } else {
+        toast.error('Notification permission denied');
+      }
     } else {
-      // Just enable sound notifications if browser doesn't support notifications
       setIsNotificationEnabled(true);
       localStorage.setItem('notificationsEnabled', 'true');
       toast.success('Sound notifications enabled!');
@@ -174,12 +198,13 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
 
       setNotifications(newNotifications);
     } catch (error: any) {
-      // Stop polling on auth errors
+      // Stop polling on auth errors and clean up push subscription
       if (error.response?.status === 401) {
         if (pollingIntervalRef.current) {
           clearInterval(pollingIntervalRef.current);
           pollingIntervalRef.current = null;
         }
+        unsubscribeFromPush().catch(() => {});
         setNotifications([]);
         return;
       }
