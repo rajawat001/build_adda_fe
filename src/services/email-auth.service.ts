@@ -15,7 +15,9 @@ interface LoginOTPResponse {
     phone: string;
     role: string;
     emailVerified: boolean;
+    isApproved?: boolean;
   };
+  needsSubscription?: boolean;
 }
 
 interface RegisterOTPData {

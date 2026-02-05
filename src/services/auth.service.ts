@@ -45,6 +45,7 @@ interface AuthResponse {
   success: boolean;
   message: string;
   user: User;
+  needsSubscription?: boolean;
   // Note: token is in httpOnly cookie, not in response
 }
 
