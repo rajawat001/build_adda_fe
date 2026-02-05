@@ -23,7 +23,7 @@ Allow: /products
 Allow: /distributors
 
 # Sitemap locations
-Sitemap: https://www.buildadda.in/api/sitemap.xml
+Sitemap: https://www.buildadda.in/sitemap.xml
 
 # Google-specific rules
 User-agent: Googlebot

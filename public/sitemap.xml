@@ -1,97 +1,111 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-
-  <!-- Homepage - Highest Priority -->
   <url>
     <loc>https://www.buildadda.in/</loc>
     <lastmod>2026-02-05</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
-
-  <!-- Products Page - High Priority -->
   <url>
     <loc>https://www.buildadda.in/products</loc>
     <lastmod>2026-02-05</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
-
-  <!-- Distributors Page - High Priority -->
   <url>
     <loc>https://www.buildadda.in/distributors</loc>
     <lastmod>2026-02-05</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
-
-  <!-- Login Page -->
   <url>
     <loc>https://www.buildadda.in/login</loc>
     <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
-
-  <!-- Register Page -->
   <url>
     <loc>https://www.buildadda.in/register</loc>
     <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
-
-  <!-- About Page -->
   <url>
     <loc>https://www.buildadda.in/about</loc>
     <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
-
-  <!-- Contact Page -->
   <url>
     <loc>https://www.buildadda.in/contact</loc>
     <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
-
-  <!-- FAQ Page -->
   <url>
     <loc>https://www.buildadda.in/faq</loc>
     <lastmod>2026-02-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
-
-  <!-- Policy Pages -->
   <url>
     <loc>https://www.buildadda.in/privacy</loc>
     <lastmod>2026-02-05</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.4</priority>
   </url>
-
   <url>
     <loc>https://www.buildadda.in/terms</loc>
     <lastmod>2026-02-05</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.4</priority>
   </url>
-
   <url>
     <loc>https://www.buildadda.in/shipping</loc>
     <lastmod>2026-02-05</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.4</priority>
   </url>
-
   <url>
     <loc>https://www.buildadda.in/returns</loc>
     <lastmod>2026-02-05</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.4</priority>
   </url>
-
+  <url>
+    <loc>https://www.buildadda.in/products/6981d8ccf988f460746edd71</loc>
+    <lastmod>2026-02-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.buildadda.in/products/6981d7e9f988f460746edd2b</loc>
+    <lastmod>2026-02-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.buildadda.in/products/6981d725f988f460746edcfb</loc>
+    <lastmod>2026-02-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.buildadda.in/products/6981d480eaa4bf87c2da31fb</loc>
+    <lastmod>2026-02-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.buildadda.in/products/6981d3dbeaa4bf87c2da31d1</loc>
+    <lastmod>2026-02-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.buildadda.in/products/6980de215d25a45c4d5cd199</loc>
+    <lastmod>2026-02-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
 </urlset>
