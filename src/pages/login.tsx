@@ -158,7 +158,11 @@ export default function Login() {
 
   return (
     <>
-      <SEO title="Login" />
+      <SEO
+        title="Login"
+        description="Login to BuildAdda - India's Premier Building Materials Marketplace. Access your account to order cement, steel, bricks and more."
+        canonicalUrl="https://www.buildadda.in/login"
+      />
       <Header />
 
       <div className="login-page">

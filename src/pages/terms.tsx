@@ -8,6 +8,7 @@ export default function TermsAndConditions() {
       <SEO
         title="Terms and Conditions"
         description="Terms and Conditions for using BuildAdda platform"
+        canonicalUrl="https://www.buildadda.in/terms"
       />
       <Header />
 

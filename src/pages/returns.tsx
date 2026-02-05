@@ -8,6 +8,7 @@ export default function ReturnsRefunds() {
       <SEO
         title="Returns & Refunds Policy"
         description="Return, Refund and Dispute Policy for BuildAdda"
+        canonicalUrl="https://www.buildadda.in/returns"
       />
       <Header />
 

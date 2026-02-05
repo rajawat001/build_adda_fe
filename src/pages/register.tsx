@@ -290,7 +290,11 @@ export default function Register() {
 
   return (
     <>
-      <SEO title="Register" />
+      <SEO
+        title="Register"
+        description="Create your BuildAdda account. Join India's Premier Building Materials Marketplace as a buyer or distributor. Sign up now!"
+        canonicalUrl="https://www.buildadda.in/register"
+      />
       <Header />
 
       <div className="login-page">

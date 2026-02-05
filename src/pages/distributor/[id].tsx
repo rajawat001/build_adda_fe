@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import { GetServerSideProps } from 'next';
 import axios from 'axios';
@@ -138,6 +138,76 @@ const DistributorProfile = ({ ssrMeta }: { ssrMeta: SSRDistributorMeta | null })
     setShowShareSheet(true);
   };
 
+  // LocalBusiness JSON-LD Schema for Google Search
+  const distributorJsonLd = useMemo(() => {
+    if (!distributor) return null;
+
+    const schema: any = {
+      '@context': 'https://schema.org',
+      '@type': 'LocalBusiness',
+      '@id': `https://www.buildadda.in/distributor/${distributor._id}`,
+      name: distributor.businessName,
+      description: distributor.description || `${distributor.businessName} - Building Materials Distributor in ${distributor.city}, ${distributor.state}`,
+      url: `https://www.buildadda.in/distributor/${distributor._id}`,
+      telephone: distributor.phone,
+      email: distributor.email,
+      address: {
+        '@type': 'PostalAddress',
+        streetAddress: distributor.address,
+        addressLocality: distributor.city,
+        addressRegion: distributor.state,
+        postalCode: distributor.pincode,
+        addressCountry: 'IN'
+      },
+      geo: {
+        '@type': 'GeoCoordinates',
+        latitude: 26.9124,  // Default Jaipur coordinates
+        longitude: 75.7873
+      },
+      image: distributor.profileImage || 'https://www.buildadda.in/buildAddaBrandImage.png',
+      priceRange: '₹₹',
+      currenciesAccepted: 'INR',
+      paymentAccepted: 'Cash, UPI, Credit Card, Debit Card',
+      areaServed: {
+        '@type': 'GeoCircle',
+        geoMidpoint: {
+          '@type': 'GeoCoordinates',
+          latitude: 26.9124,
+          longitude: 75.7873
+        },
+        geoRadius: `${distributor.serviceRadius || 10} km`
+      },
+      sameAs: [
+        'https://www.buildadda.in'
+      ]
+    };
+
+    // Add aggregate rating if distributor has reviews
+    if (distributor.rating && distributor.reviewCount && distributor.reviewCount > 0) {
+      schema.aggregateRating = {
+        '@type': 'AggregateRating',
+        ratingValue: distributor.rating,
+        reviewCount: distributor.reviewCount,
+        bestRating: 5,
+        worstRating: 1
+      };
+    }
+
+    // Add products offered
+    if (products.length > 0) {
+      schema.makesOffer = products.slice(0, 10).map(product => ({
+        '@type': 'Offer',
+        itemOffered: {
+          '@type': 'Product',
+          name: product.name,
+          url: `https://www.buildadda.in/products/${product._id}`
+        }
+      }));
+    }
+
+    return schema;
+  }, [distributor, products]);
+
   if (loading) {
     return (
       <>
@@ -186,6 +256,7 @@ const DistributorProfile = ({ ssrMeta }: { ssrMeta: SSRDistributorMeta | null })
         description={distributor.description || `Shop building materials from ${distributor.businessName} in ${distributor.city}, ${distributor.state}. ${products.length} products available. Verified distributor on BuildAdda.`}
         ogImage={distributor.profileImage || undefined}
         canonicalUrl={`https://www.buildadda.in/distributor/${distributor._id}`}
+        jsonLd={distributorJsonLd || undefined}
       />
       <Header />
 

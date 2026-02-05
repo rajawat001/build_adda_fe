@@ -8,6 +8,7 @@ export default function PrivacyPolicy() {
       <SEO
         title="Privacy Policy"
         description="Privacy Policy for BuildAdda platform"
+        canonicalUrl="https://www.buildadda.in/privacy"
       />
       <Header />
 

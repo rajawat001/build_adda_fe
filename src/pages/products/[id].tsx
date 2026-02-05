@@ -501,28 +501,62 @@ export default function ProductDetail({ ssrMeta }: { ssrMeta: SSRProductMeta | n
 
   const productJsonLd = useMemo(() => {
     if (!product) return null;
+
+    // Build product schema for Google Popular Products
+    const productSchema: any = {
+      '@type': 'Product',
+      name: product.name,
+      description: product.description,
+      image: allImages.length > 0 ? allImages : (product.image ? [product.image] : undefined),
+      url: `https://www.buildadda.in/products/${product._id}`,
+      sku: product._id,
+      mpn: product._id,
+      brand: product.brand ? { '@type': 'Brand', name: product.brand } : { '@type': 'Brand', name: 'BuildAdda' },
+      category: category || 'Building Materials',
+      color: product.color || undefined,
+      material: product.material || undefined,
+      offers: {
+        '@type': 'Offer',
+        price: product.price,
+        priceCurrency: 'INR',
+        availability: inStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+        itemCondition: 'https://schema.org/NewCondition',
+        seller: {
+          '@type': 'Organization',
+          name: distributor?.businessName || 'BuildAdda',
+          url: distributor ? `https://www.buildadda.in/distributor/${distributor._id}` : 'https://www.buildadda.in'
+        },
+        url: `https://www.buildadda.in/products/${product._id}`,
+        priceValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        shippingDetails: {
+          '@type': 'OfferShippingDetails',
+          shippingDestination: {
+            '@type': 'DefinedRegion',
+            addressCountry: 'IN'
+          },
+          deliveryTime: {
+            '@type': 'ShippingDeliveryTime',
+            handlingTime: { '@type': 'QuantitativeValue', minValue: 1, maxValue: 3, unitCode: 'DAY' },
+            transitTime: { '@type': 'QuantitativeValue', minValue: 2, maxValue: 7, unitCode: 'DAY' }
+          }
+        },
+        hasMerchantReturnPolicy: {
+          '@type': 'MerchantReturnPolicy',
+          applicableCountry: 'IN',
+          returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
+          merchantReturnDays: 7,
+          returnMethod: 'https://schema.org/ReturnByMail',
+          returnFees: 'https://schema.org/FreeReturn'
+        }
+      },
+    };
+
+    // Note: Add aggregateRating here if product reviews are implemented in the future
+
     return {
       '@context': 'https://schema.org',
       '@graph': [
-        {
-          '@type': 'Product',
-          name: product.name,
-          description: product.description,
-          image: allImages.length > 0 ? allImages : (product.image ? [product.image] : undefined),
-          url: `https://www.buildadda.in/products/${product._id}`,
-          brand: product.brand ? { '@type': 'Brand', name: product.brand } : { '@type': 'Organization', name: distributor?.businessName || 'BuildAdda' },
-          category: category || undefined,
-          color: product.color || undefined,
-          material: product.material || undefined,
-          offers: {
-            '@type': 'Offer',
-            price: product.price,
-            priceCurrency: 'INR',
-            availability: inStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
-            seller: { '@type': 'Organization', name: distributor?.businessName || 'BuildAdda' },
-            url: `https://www.buildadda.in/products/${product._id}`,
-          },
-        },
+        productSchema,
         {
           '@type': 'BreadcrumbList',
           itemListElement: [
