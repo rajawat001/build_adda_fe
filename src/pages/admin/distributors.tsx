@@ -14,6 +14,7 @@ interface Distributor {
   _id: string;
   businessName: string;
   ownerName: string;
+  name?: string; // API returns 'name' instead of 'ownerName'
   email: string;
   phone: string;
   city: string;
@@ -251,7 +252,7 @@ const DistributorsManagement: React.FC = () => {
           <div>
             <div style={{ fontWeight: 500, color: 'var(--admin-text-primary)' }}>{value}</div>
             <div style={{ fontSize: '0.75rem', color: 'var(--admin-text-secondary)' }}>
-              {row.ownerName}
+              {row.ownerName || row.name || '-'}
             </div>
           </div>
         </div>
@@ -440,7 +441,7 @@ const DistributorsManagement: React.FC = () => {
       onConfirm: async () => {
         try {
           setActionLoading(true);
-          await api.put(`/admin/distributors/${distributorId}/approve`);
+          await api.put(`/admin/distributors/${distributorId}/approve`, { isApproved: true });
 
           await fetchDistributors();
           await fetchStats();
@@ -463,7 +464,10 @@ const DistributorsManagement: React.FC = () => {
       onConfirm: async () => {
         try {
           setActionLoading(true);
-          await api.put(`/admin/distributors/${distributorId}/reject`);
+          await api.put(`/admin/distributors/${distributorId}/approve`, {
+            isApproved: false,
+            rejectionReason: 'Application rejected by admin'
+          });
 
           await fetchDistributors();
           await fetchStats();
@@ -499,7 +503,7 @@ const DistributorsManagement: React.FC = () => {
       setSelectedDistributor(distributor);
       setEditFormData({
         businessName: distributor.businessName || '',
-        ownerName: distributor.ownerName || '',
+        ownerName: distributor.ownerName || distributor.name || '',
         email: distributor.email || '',
         phone: distributor.phone || '',
         city: distributor.city || '',
@@ -709,7 +713,7 @@ const DistributorsManagement: React.FC = () => {
                         {selectedDistributor.businessName}
                       </h3>
                       <div style={{ fontSize: '0.875rem', color: 'var(--admin-text-secondary)', marginBottom: '0.5rem' }}>
-                        Owner: {selectedDistributor.ownerName}
+                        Owner: {selectedDistributor.ownerName || selectedDistributor.name || '-'}
                       </div>
                       <div style={{ display: 'flex', gap: '0.5rem' }}>
                         <span className={`badge ${selectedDistributor.isApproved ? 'green' : 'orange'}`}>

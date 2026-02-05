@@ -54,12 +54,13 @@ export default function Login() {
     }
   };
 
-  const handleLoginSuccess = (user: any) => {
+  const handleLoginSuccess = (user: any, needsSubscription?: boolean) => {
     localStorage.setItem('user', JSON.stringify({
       _id: user._id,
       name: user.name,
       email: user.email,
-      role: user.role
+      role: user.role,
+      isApproved: user.isApproved
     }));
     localStorage.setItem('role', user.role);
     window.dispatchEvent(new Event('userLogin'));
@@ -67,7 +68,12 @@ export default function Login() {
     if (user.role === 'admin') {
       router.push('/admin/dashboard');
     } else if (user.role === 'distributor') {
-      router.push('/distributor/dashboard');
+      // Redirect to subscription page if account not approved (needs to complete payment)
+      if (needsSubscription || user.isApproved === false) {
+        router.push('/distributor/subscription');
+      } else {
+        router.push('/distributor/dashboard');
+      }
     } else {
       router.push('/');
     }
@@ -83,7 +89,7 @@ export default function Login() {
     try {
       const response = await login(formData);
       if (response.user) {
-        handleLoginSuccess(response.user);
+        handleLoginSuccess(response.user, response.needsSubscription);
       }
     } catch (err: any) {
       if (err.response?.data?.validationErrors) {
@@ -133,7 +139,7 @@ export default function Login() {
     try {
       const response = await verifyLoginOTP(otpEmail, otp);
       if (response.user) {
-        handleLoginSuccess(response.user);
+        handleLoginSuccess(response.user, response.needsSubscription);
       }
     } catch (err: any) {
       setOtpError(err.response?.data?.message || 'Invalid OTP. Please try again.');
