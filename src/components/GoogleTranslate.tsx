@@ -24,7 +24,10 @@ export default function GoogleTranslate() {
   const [isOpen, setIsOpen] = useState(false);
   const [currentLang, setCurrentLang] = useState('en');
   const [ready, setReady] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [menuTop, setMenuTop] = useState(0);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
 
   // Initialize Google Translate
   useEffect(() => {
@@ -79,15 +82,30 @@ export default function GoogleTranslate() {
     }
   }, []);
 
-  // Close on outside click
+  // Check if mobile
   useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Close on outside click (mousedown for desktop, touchstart for mobile)
+  useEffect(() => {
+    const handler = (e: MouseEvent | TouchEvent) => {
+      const target = e.type === 'touchstart'
+        ? (e as TouchEvent).touches[0]?.target as Node
+        : e.target as Node;
+      if (dropdownRef.current && target && !dropdownRef.current.contains(target)) {
         setIsOpen(false);
       }
     };
     document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
+    document.addEventListener('touchstart', handler, { passive: true });
+    return () => {
+      document.removeEventListener('mousedown', handler);
+      document.removeEventListener('touchstart', handler);
+    };
   }, []);
 
   // Monitor language changes
@@ -140,8 +158,15 @@ export default function GoogleTranslate() {
   return (
     <div ref={dropdownRef} className="gt-wrap">
       <button
+        ref={btnRef}
         className="gt-btn"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          if (isMobile && btnRef.current) {
+            const rect = btnRef.current.getBoundingClientRect();
+            setMenuTop(rect.bottom + 6);
+          }
+          setIsOpen(!isOpen);
+        }}
         type="button"
         title="Translate"
       >
@@ -149,7 +174,7 @@ export default function GoogleTranslate() {
       </button>
 
       {isOpen && (
-        <div className="gt-menu">
+        <div className="gt-menu" style={isMobile ? { top: `${menuTop}px` } : undefined}>
           <div className="gt-header">Select Language</div>
           <div className="gt-list">
             {languages.map(lang => (
@@ -261,13 +286,35 @@ export default function GoogleTranslate() {
           font-weight: bold;
         }
         @media (max-width: 768px) {
+          .gt-wrap {
+            overflow: visible !important;
+            max-width: none !important;
+          }
           .gt-btn {
-            width: 36px;
-            height: 36px;
-            font-size: 11px;
+            width: 28px;
+            height: 28px;
+            font-size: 9px;
+            border-radius: 6px;
+            min-height: 28px !important;
+            min-width: 28px !important;
+            box-shadow: 0 1px 4px rgba(249,115,22,0.3);
           }
           .gt-menu {
-            right: -10px;
+            position: fixed;
+            top: auto;
+            right: 12px;
+            left: auto;
+            width: 180px;
+            max-width: none !important;
+            z-index: 99999;
+          }
+          .gt-item {
+            min-height: 40px !important;
+            min-width: auto !important;
+            padding: 8px;
+          }
+          .gt-list {
+            max-height: 60vh;
           }
         }
       `}</style>

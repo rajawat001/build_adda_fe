@@ -590,8 +590,31 @@ export default function Header() {
             }}
           >
             <div className="mobile-menu-content">
-              <div style={{ marginBottom: '20px', paddingBottom: '20px', borderBottom: '1px solid #e5e7eb' }}>
+              <div style={{ marginBottom: '20px', paddingBottom: '20px', borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <h3 style={{ margin: 0, color: '#111827' }}>Menu</h3>
+                <button
+                  onClick={() => setShowMobileMenu(false)}
+                  aria-label="Close menu"
+                  style={{
+                    background: '#f3f4f6',
+                    border: 'none',
+                    padding: 0,
+                    cursor: 'pointer',
+                    color: '#374151',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: '50%',
+                    width: '32px',
+                    height: '32px',
+                    minHeight: '32px',
+                    minWidth: '32px',
+                    flexShrink: 0,
+                    marginRight: '35px',
+                  }}
+                >
+                  <FiX size={18} />
+                </button>
               </div>
 
               <Link href="/" onClick={() => setShowMobileMenu(false)}>

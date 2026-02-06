@@ -239,8 +239,18 @@ html, body {
   .modern-header .profile-dropdown,
   .modern-header .header-nav,
   .modern-header .main-nav,
-  .modern-header .categories-dropdown {
+  .modern-header .categories-dropdown,
+  .modern-header .header-translate,
+  .modern-header .gt-wrap {
     overflow: visible !important;
+  }
+
+  /* Fix Google Translate dropdown being clipped by * { max-width: 100% } */
+  .header-translate,
+  .header-translate *,
+  .gt-wrap,
+  .gt-wrap * {
+    max-width: none !important;
   }
 
   /* Add padding to body to account for fixed header */
