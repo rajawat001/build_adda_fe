@@ -179,13 +179,13 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://translate.google.com https://translate.googleapis.com https://translate-pa.googleapis.com https://www.gstatic.com https://ssl.gstatic.com",
-              "style-src 'self' 'unsafe-inline' https://translate.googleapis.com https://www.gstatic.com https://fonts.googleapis.com",
-              "style-src-elem 'self' 'unsafe-inline' https://translate.googleapis.com https://www.gstatic.com https://fonts.googleapis.com",
+              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https:",
+              "style-src 'self' 'unsafe-inline' https:",
+              "style-src-elem 'self' 'unsafe-inline' https:",
               "img-src 'self' data: https: blob:",
-              "font-src 'self' data: https://fonts.gstatic.com https://www.gstatic.com",
+              "font-src 'self' data: https:",
               "connect-src 'self' http://localhost:5000 https: wss:",
-              "frame-src 'self' https://translate.google.com https://www.google.com",
+              "frame-src 'self' https:",
               "frame-ancestors 'self'"
             ].join('; ')
           }
