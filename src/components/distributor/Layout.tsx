@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import Sidebar from './Sidebar';
 import SEO from '../SEO';
 import { NotificationBell } from '../NotificationBell';
+import GoogleTranslate from '../GoogleTranslate';
 import Link from 'next/link';
 import { FiUser, FiMenu, FiBell } from 'react-icons/fi';
 import { useNotifications } from '../../contexts/NotificationContext';
@@ -260,9 +261,10 @@ const DistributorLayout = ({ children, title = 'Distributor Panel' }: LayoutProp
                 display: 'flex',
                 flexDirection: 'row',
                 alignItems: 'center',
-                gap: '0.5rem',
+                gap: '0.75rem',
                 flexShrink: 0,
               }}>
+                <GoogleTranslate />
                 {isMobile ? (
                   <MobileNotificationBell />
                 ) : (

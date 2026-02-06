@@ -16,6 +16,7 @@ import {
   FiMapPin,
   FiBell
 } from 'react-icons/fi';
+import GoogleTranslate from './GoogleTranslate';
 import {
   GiBrickWall,
   GiSteelClaws,
@@ -321,6 +322,11 @@ export default function Header() {
                     Search
                   </button>
                 </form>
+              </div>
+
+              {/* Google Translate */}
+              <div className="header-translate">
+                <GoogleTranslate />
               </div>
 
               {/* Header Actions */}

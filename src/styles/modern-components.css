@@ -77,10 +77,16 @@
 
 .header-top-content {
   display: grid;
-  grid-template-columns: auto 1fr auto auto;
+  grid-template-columns: auto 1fr auto auto auto;
   gap: 24px;
   align-items: center;
   overflow: visible;
+}
+
+/* Google Translate in Header */
+.header-translate {
+  display: flex;
+  align-items: center;
 }
 
 .brand-logo img {
@@ -648,7 +654,7 @@
 /* RESPONSIVE */
 @media (max-width: 1024px) {
   .header-top-content {
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: auto 1fr auto auto;
   }
 
   .header-actions .action-label {
@@ -675,13 +681,18 @@
   }
 
   .header-top-content {
-    grid-template-columns: auto 1fr auto auto;
+    grid-template-columns: auto 1fr auto auto auto;
     gap: 8px;
   }
 
   /* Hide desktop search on mobile */
   .desktop-search {
     display: none !important;
+  }
+
+  /* Translate button on mobile */
+  .header-translate {
+    order: 2;
   }
 
   .header-actions {
@@ -748,6 +759,12 @@
 
   .header-top-content {
     gap: 6px;
+  }
+
+  /* Smaller translate button on very small screens */
+  .header-translate .translate-btn {
+    padding: 4px 8px;
+    font-size: 12px;
   }
 
   .brand-logo img {

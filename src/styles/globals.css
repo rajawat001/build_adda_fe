@@ -776,3 +776,67 @@ a:hover {
 .animate-slide-up {
   animation: slideInUp 0.6s ease-out;
 }
+
+/* ===================================
+   GOOGLE TRANSLATE OVERRIDES
+   Hide the default Google Translate bar
+   =================================== */
+
+/* Hide Google Translate top bar */
+.goog-te-banner-frame,
+.goog-te-banner-frame.skiptranslate,
+#goog-gt-tt,
+.goog-te-balloon-frame,
+.goog-tooltip,
+.goog-tooltip:hover {
+  display: none !important;
+}
+
+/* Remove body top padding added by Google */
+body {
+  top: 0 !important;
+}
+
+/* Hide the Google branding */
+.goog-te-gadget {
+  display: none !important;
+}
+
+.goog-te-gadget-icon {
+  display: none !important;
+}
+
+/* Hide the dropdown that Google inserts */
+.goog-te-combo {
+  display: none !important;
+}
+
+/* Hide skiptranslate elements */
+.skiptranslate {
+  display: none !important;
+}
+
+/* Fix for translated text styling */
+.goog-text-highlight {
+  background: none !important;
+  box-shadow: none !important;
+}
+
+/* Hide the "Translated by Google" popup */
+#goog-gt-tt {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* Prevent layout shift when Google injects elements */
+html.translated-ltr,
+html.translated-rtl {
+  margin-top: 0 !important;
+}
+
+/* Ensure iframe doesn't affect layout */
+iframe.goog-te-banner-frame {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+}

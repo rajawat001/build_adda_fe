@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import Sidebar from './Sidebar';
 import SEO from '../SEO';
 import { NotificationBell } from '../NotificationBell';
+import GoogleTranslate from '../GoogleTranslate';
 import Link from 'next/link';
 import { FiUser, FiSearch } from 'react-icons/fi';
 
@@ -53,6 +54,7 @@ const AdminLayout = ({ children, title = 'Admin Panel' }: LayoutProps) => {
                     className="global-search"
                   />
                 </div>
+                <GoogleTranslate />
                 <NotificationBell />
                 <Link href="/admin/settings" className="user-avatar">
                   <FiUser className="avatar-icon" />
