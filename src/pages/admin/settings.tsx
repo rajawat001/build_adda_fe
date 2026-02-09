@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/router';
 import {
   FiSave,
   FiSettings,
@@ -11,12 +12,45 @@ import {
   FiBell,
   FiDatabase,
   FiUpload,
+  FiDownload,
   FiAlertCircle,
   FiCheckCircle,
   FiToggleLeft,
-  FiToggleRight
+  FiToggleRight,
+  FiFileText,
+  FiBriefcase
 } from 'react-icons/fi';
 import api from '../../services/api';
+
+interface GSTSettings {
+  enabled: boolean;
+  gstin: string;
+  pan: string;
+  legalName: string;
+  tradeName: string;
+  cgstRate: number;
+  sgstRate: number;
+  igstRate: number;
+  subscriptionSacCode: string;
+  invoicePrefix: string;
+  stateCode: string;
+}
+
+interface CompanySettings {
+  name: string;
+  street: string;
+  city: string;
+  state: string;
+  pincode: string;
+  country: string;
+  phone: string;
+  email: string;
+  website: string;
+  bankName: string;
+  bankAccount: string;
+  bankIfsc: string;
+  bankBranch: string;
+}
 
 interface Settings {
   // General
@@ -48,6 +82,12 @@ interface Settings {
   taxCalculationMethod: 'inclusive' | 'exclusive';
   taxEnabled: boolean;
 
+  // GST
+  gst: GSTSettings;
+
+  // Company
+  company: CompanySettings;
+
   // Email
   smtpHost: string;
   smtpPort: number;
@@ -77,11 +117,14 @@ type SettingsSection =
   | 'payment'
   | 'shipping'
   | 'tax'
+  | 'gst'
+  | 'company'
   | 'email'
   | 'notifications'
   | 'advanced';
 
 const AdminSettings: React.FC = () => {
+  const router = useRouter();
   const [activeSection, setActiveSection] = useState<SettingsSection>('general');
   const [settings, setSettings] = useState<Settings>({
     // General
@@ -112,6 +155,38 @@ const AdminSettings: React.FC = () => {
     taxRate: 18,
     taxCalculationMethod: 'exclusive',
     taxEnabled: true,
+
+    // GST
+    gst: {
+      enabled: true,
+      gstin: '',
+      pan: '',
+      legalName: 'BuildAdda',
+      tradeName: 'BuildAdda',
+      cgstRate: 9,
+      sgstRate: 9,
+      igstRate: 18,
+      subscriptionSacCode: '998361',
+      invoicePrefix: 'BA',
+      stateCode: '24'
+    },
+
+    // Company
+    company: {
+      name: 'BuildAdda',
+      street: '',
+      city: '',
+      state: '',
+      pincode: '',
+      country: 'India',
+      phone: '',
+      email: '',
+      website: '',
+      bankName: '',
+      bankAccount: '',
+      bankIfsc: '',
+      bankBranch: ''
+    },
 
     // Email
     smtpHost: 'smtp.gmail.com',
@@ -151,7 +226,12 @@ const AdminSettings: React.FC = () => {
       const response = await api.get('/admin/settings');
 
       if (response.data.success && response.data.settings) {
-        setSettings(response.data.settings);
+        setSettings(prev => ({
+          ...prev,
+          ...response.data.settings,
+          gst: { ...prev.gst, ...(response.data.settings.gst || {}) },
+          company: { ...prev.company, ...(response.data.settings.company || {}) }
+        }));
       }
     } catch (error) {
       console.error('Fetch settings error:', error);
@@ -182,8 +262,28 @@ const AdminSettings: React.FC = () => {
     setSettings(prev => ({ ...prev, [key]: value }));
   };
 
+  const updateNestedSetting = (parent: 'gst' | 'company', key: string, value: any) => {
+    setSettings(prev => ({
+      ...prev,
+      [parent]: {
+        ...prev[parent],
+        [key]: value
+      }
+    }));
+  };
+
   const toggleBoolean = (key: keyof Settings) => {
     setSettings(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const toggleNestedBoolean = (parent: 'gst' | 'company', key: string) => {
+    setSettings(prev => ({
+      ...prev,
+      [parent]: {
+        ...prev[parent],
+        [key]: !(prev[parent] as any)[key]
+      }
+    }));
   };
 
   const sections = [
@@ -191,6 +291,8 @@ const AdminSettings: React.FC = () => {
     { id: 'payment' as SettingsSection, label: 'Payment', icon: FiCreditCard },
     { id: 'shipping' as SettingsSection, label: 'Shipping', icon: FiTruck },
     { id: 'tax' as SettingsSection, label: 'Tax', icon: FiPercent },
+    { id: 'gst' as SettingsSection, label: 'GST', icon: FiFileText },
+    { id: 'company' as SettingsSection, label: 'Company', icon: FiBriefcase },
     { id: 'email' as SettingsSection, label: 'Email', icon: FiMail },
     { id: 'notifications' as SettingsSection, label: 'Notifications', icon: FiBell },
     { id: 'advanced' as SettingsSection, label: 'Advanced', icon: FiDatabase }
@@ -243,6 +345,53 @@ const AdminSettings: React.FC = () => {
     );
   };
 
+  const renderNestedToggleSwitch = (parent: 'gst' | 'company', key: string, label: string, description?: string) => {
+    const value = (settings[parent] as any)[key] as boolean;
+    const Icon = value ? FiToggleRight : FiToggleLeft;
+
+    return (
+      <div style={{ marginBottom: '1.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+          <div>
+            <label style={{ fontWeight: 500, color: 'var(--admin-text-primary)', marginBottom: '0.25rem', display: 'block' }}>
+              {label}
+            </label>
+            {description && (
+              <span style={{ fontSize: '0.875rem', color: 'var(--admin-text-tertiary)' }}>
+                {description}
+              </span>
+            )}
+          </div>
+          <button
+            onClick={() => toggleNestedBoolean(parent, key)}
+            style={{
+              background: value ? 'var(--admin-primary-color)' : 'var(--admin-text-tertiary)',
+              border: 'none',
+              borderRadius: '1.5rem',
+              width: '3rem',
+              height: '1.5rem',
+              cursor: 'pointer',
+              position: 'relative',
+              transition: 'background 0.2s'
+            }}
+          >
+            <Icon
+              size={20}
+              style={{
+                position: 'absolute',
+                top: '50%',
+                right: value ? '0.25rem' : 'auto',
+                left: value ? 'auto' : '0.25rem',
+                transform: 'translateY(-50%)',
+                color: '#fff'
+              }}
+            />
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   const renderInputField = (key: keyof Settings, label: string, type: string = 'text', placeholder?: string) => {
     return (
       <div style={{ marginBottom: '1.5rem' }}>
@@ -253,6 +402,31 @@ const AdminSettings: React.FC = () => {
           type={type}
           value={settings[key] as string | number}
           onChange={(e) => updateSetting(key, type === 'number' ? parseFloat(e.target.value) : e.target.value)}
+          placeholder={placeholder}
+          style={{
+            width: '100%',
+            padding: '0.75rem',
+            border: '1px solid var(--admin-border-primary)',
+            borderRadius: '0.5rem',
+            fontSize: '0.9375rem',
+            color: 'var(--admin-text-primary)',
+            backgroundColor: 'var(--admin-bg-card)'
+          }}
+        />
+      </div>
+    );
+  };
+
+  const renderNestedInputField = (parent: 'gst' | 'company', key: string, label: string, type: string = 'text', placeholder?: string) => {
+    return (
+      <div style={{ marginBottom: '1.5rem' }}>
+        <label style={{ display: 'block', fontWeight: 500, color: 'var(--admin-text-primary)', marginBottom: '0.5rem' }}>
+          {label}
+        </label>
+        <input
+          type={type}
+          value={(settings[parent] as any)[key] as string | number}
+          onChange={(e) => updateNestedSetting(parent, key, type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value)}
           placeholder={placeholder}
           style={{
             width: '100%',
@@ -438,6 +612,77 @@ const AdminSettings: React.FC = () => {
     </div>
   );
 
+  const renderGSTSettings = () => (
+    <div>
+      <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1.5rem', color: 'var(--admin-text-primary)' }}>
+        GST Configuration
+      </h3>
+      <div style={{ marginBottom: '1.5rem' }}>
+        {renderNestedToggleSwitch('gst', 'enabled', 'Enable GST', 'Apply GST to invoices and orders')}
+      </div>
+      {settings.gst.enabled && (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+          <div>
+            <h4 style={{ fontSize: '1rem', fontWeight: 500, marginBottom: '1rem', color: 'var(--admin-text-secondary)' }}>
+              Registration Details
+            </h4>
+            {renderNestedInputField('gst', 'gstin', 'GSTIN', 'text', 'e.g. 24AAAAA0000A1Z5')}
+            {renderNestedInputField('gst', 'pan', 'PAN', 'text', 'e.g. AAAAA0000A')}
+            {renderNestedInputField('gst', 'legalName', 'Legal Name', 'text', 'Legal entity name')}
+            {renderNestedInputField('gst', 'tradeName', 'Trade Name', 'text', 'Business trade name')}
+            {renderNestedInputField('gst', 'stateCode', 'State Code', 'text', 'e.g. 24 for Gujarat')}
+          </div>
+          <div>
+            <h4 style={{ fontSize: '1rem', fontWeight: 500, marginBottom: '1rem', color: 'var(--admin-text-secondary)' }}>
+              Tax Rates & Invoice
+            </h4>
+            {renderNestedInputField('gst', 'cgstRate', 'CGST Rate (%)', 'number', '9')}
+            {renderNestedInputField('gst', 'sgstRate', 'SGST Rate (%)', 'number', '9')}
+            {renderNestedInputField('gst', 'igstRate', 'IGST Rate (%)', 'number', '18')}
+            {renderNestedInputField('gst', 'subscriptionSacCode', 'Subscription SAC Code', 'text', '998361')}
+            {renderNestedInputField('gst', 'invoicePrefix', 'Invoice Prefix', 'text', 'BA')}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  const renderCompanySettings = () => (
+    <div>
+      <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1.5rem', color: 'var(--admin-text-primary)' }}>
+        Company Details
+      </h3>
+      <p style={{ fontSize: '0.875rem', color: 'var(--admin-text-tertiary)', marginBottom: '1.5rem' }}>
+        These details are used in invoices, receipts, and legal documents.
+      </p>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+        <div>
+          <h4 style={{ fontSize: '1rem', fontWeight: 500, marginBottom: '1rem', color: 'var(--admin-text-secondary)' }}>
+            Business Information
+          </h4>
+          {renderNestedInputField('company', 'name', 'Company Name', 'text', 'Your company name')}
+          {renderNestedInputField('company', 'street', 'Street Address', 'text', 'Street address')}
+          {renderNestedInputField('company', 'city', 'City', 'text', 'City')}
+          {renderNestedInputField('company', 'state', 'State', 'text', 'State')}
+          {renderNestedInputField('company', 'pincode', 'Pincode', 'text', 'Pincode')}
+          {renderNestedInputField('company', 'country', 'Country', 'text', 'Country')}
+        </div>
+        <div>
+          <h4 style={{ fontSize: '1rem', fontWeight: 500, marginBottom: '1rem', color: 'var(--admin-text-secondary)' }}>
+            Contact & Banking
+          </h4>
+          {renderNestedInputField('company', 'phone', 'Phone', 'tel', '+91 XXXXXXXXXX')}
+          {renderNestedInputField('company', 'email', 'Email', 'email', 'company@example.com')}
+          {renderNestedInputField('company', 'website', 'Website', 'url', 'https://www.example.com')}
+          {renderNestedInputField('company', 'bankName', 'Bank Name', 'text', 'Bank name')}
+          {renderNestedInputField('company', 'bankAccount', 'Bank Account Number', 'text', 'Account number')}
+          {renderNestedInputField('company', 'bankIfsc', 'Bank IFSC Code', 'text', 'IFSC code')}
+          {renderNestedInputField('company', 'bankBranch', 'Bank Branch', 'text', 'Branch name')}
+        </div>
+      </div>
+    </div>
+  );
+
   const renderEmailSettings = () => (
     <div>
       <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1.5rem', color: 'var(--admin-text-primary)' }}>
@@ -542,6 +787,10 @@ const AdminSettings: React.FC = () => {
         return renderShippingSettings();
       case 'tax':
         return renderTaxSettings();
+      case 'gst':
+        return renderGSTSettings();
+      case 'company':
+        return renderCompanySettings();
       case 'email':
         return renderEmailSettings();
       case 'notifications':
@@ -565,28 +814,59 @@ const AdminSettings: React.FC = () => {
     <div style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto' }}>
       {/* Header */}
       <div style={{ marginBottom: '2rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
-          <div
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div
+              style={{
+                width: '3rem',
+                height: '3rem',
+                background: 'var(--admin-primary-gradient)',
+                borderRadius: '0.75rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <FiSettings size={24} style={{ color: '#fff' }} />
+            </div>
+            <div>
+              <h1 style={{ fontSize: '1.875rem', fontWeight: 700, margin: 0, color: 'var(--admin-text-primary)' }}>
+                System Settings
+              </h1>
+              <p style={{ fontSize: '0.9375rem', color: 'var(--admin-text-tertiary)', margin: 0 }}>
+                Configure your platform settings
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => router.push('/admin/import-export')}
             style={{
-              width: '3rem',
-              height: '3rem',
-              background: 'var(--admin-primary-gradient)',
-              borderRadius: '0.75rem',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center'
+              gap: '0.5rem',
+              padding: '0.625rem 1.25rem',
+              border: '1px solid var(--admin-border-primary)',
+              borderRadius: '0.5rem',
+              background: 'var(--admin-bg-card)',
+              color: 'var(--admin-text-primary)',
+              fontSize: '0.9375rem',
+              fontWeight: 500,
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = 'var(--admin-primary-color)';
+              e.currentTarget.style.color = 'var(--admin-primary-color)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = 'var(--admin-border-primary)';
+              e.currentTarget.style.color = 'var(--admin-text-primary)';
             }}
           >
-            <FiSettings size={24} style={{ color: '#fff' }} />
-          </div>
-          <div>
-            <h1 style={{ fontSize: '1.875rem', fontWeight: 700, margin: 0, color: 'var(--admin-text-primary)' }}>
-              System Settings
-            </h1>
-            <p style={{ fontSize: '0.9375rem', color: 'var(--admin-text-tertiary)', margin: 0 }}>
-              Configure your platform settings
-            </p>
-          </div>
+            <FiUpload size={16} />
+            <FiDownload size={16} />
+            Import / Export
+          </button>
         </div>
       </div>
 
