@@ -25,6 +25,7 @@ import {
   GiPaintBucket,
   GiDominoTiles
 } from 'react-icons/gi';
+import api from '../services/api';
 
 export default function Header() {
   const router = useRouter();
@@ -44,6 +45,7 @@ export default function Header() {
 
   useEffect(() => {
     loadUserData();
+    loadCategories();
 
     const handleStorageChange = () => {
       loadUserData();
@@ -177,14 +179,45 @@ export default function Header() {
     };
   }, [showMobileMenu]);
 
-  const categories = [
-    { id: 'Cement', name: 'Cement', icon: <GiBrickWall size={20} /> },
-    { id: 'Steel', name: 'Steel', icon: <GiSteelClaws size={20} /> },
-    { id: 'Bricks', name: 'Bricks', icon: <GiClayBrick size={20} /> },
-    { id: 'Sand', name: 'Sand', icon: <GiSandCastle size={20} /> },
-    { id: 'Paint', name: 'Paint', icon: <GiPaintBucket size={20} /> },
-    { id: 'Tiles', name: 'Tiles', icon: <GiDominoTiles size={20} /> }
+  const categoryIconMap: Record<string, React.ReactNode> = {
+    'Cement': <GiBrickWall size={20} />,
+    'Steel': <GiSteelClaws size={20} />,
+    'Bricks': <GiClayBrick size={20} />,
+    'Sand': <GiSandCastle size={20} />,
+    'Paint': <GiPaintBucket size={20} />,
+    'Tiles': <GiDominoTiles size={20} />,
+    'Other': <FiPackage size={20} />,
+  };
+
+  const defaultCategories = [
+    { id: 'Cement', name: 'Cement' },
+    { id: 'Steel', name: 'Steel' },
+    { id: 'Bricks', name: 'Bricks' },
+    { id: 'Sand', name: 'Sand' },
+    { id: 'Paint', name: 'Paint' },
+    { id: 'Tiles', name: 'Tiles' }
   ];
+
+  const [categories, setCategories] = useState(defaultCategories);
+
+  const getCategoryIcon = (name: string) => {
+    return categoryIconMap[name] || <FiPackage size={20} />;
+  };
+
+  const loadCategories = async () => {
+    try {
+      const response = await api.get('/products/categories');
+      const categoryList = response.data.categories || [];
+      if (categoryList.length > 0) {
+        setCategories(categoryList.map((cat: any) => ({
+          id: cat.id || cat._id || cat.name,
+          name: cat.name,
+        })));
+      }
+    } catch (error) {
+      console.error('Error loading categories:', error);
+    }
+  };
 
   // Mega-menu state
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
@@ -238,10 +271,10 @@ export default function Header() {
   const handleMegaMenuOpen = useCallback(() => {
     setShowCategoryMenu(true);
     // Auto-select first category
-    if (!activeCategory) {
-      handleCategoryHover('Cement');
+    if (!activeCategory && categories.length > 0) {
+      handleCategoryHover(categories[0].id);
     }
-  }, [activeCategory, handleCategoryHover]);
+  }, [activeCategory, handleCategoryHover, categories]);
 
   const searchPlaceholders: Record<string, string> = {
     products: 'Search products by name...',
@@ -457,7 +490,7 @@ export default function Header() {
                           onMouseEnter={() => handleCategoryHover(category.id)}
                           onClick={() => handleCategoryClick(category.id)}
                         >
-                          <span className="mega-menu-category-icon">{category.icon}</span>
+                          <span className="mega-menu-category-icon">{getCategoryIcon(category.name)}</span>
                           <span>{category.name}</span>
                         </button>
                       ))}
@@ -637,7 +670,7 @@ export default function Header() {
                       setShowMobileMenu(false);
                     }}
                   >
-                    <span className="mega-menu-category-icon">{category.icon}</span> {category.name}
+                    <span className="mega-menu-category-icon">{getCategoryIcon(category.name)}</span> {category.name}
                   </button>
                 ))}
               </div>

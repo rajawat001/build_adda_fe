@@ -270,10 +270,6 @@ html, body {
     grid-template-columns: 1fr;
   }
 
-  .categories-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
   .features-grid {
     grid-template-columns: 1fr;
   }
@@ -284,11 +280,6 @@ html, body {
   .container {
     padding-left: 12px;
     padding-right: 12px;
-  }
-
-  /* Stack categories on very small screens */
-  .categories-grid {
-    grid-template-columns: 1fr;
   }
 
   /* Smaller text for very small screens */

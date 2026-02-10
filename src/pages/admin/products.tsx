@@ -211,7 +211,7 @@ const ProductsManagement: React.FC = () => {
       label: 'Category',
       sortable: true,
       render: (value) => value ? (
-        <span className="badge purple">{value.name}</span>
+        <span className="badge purple">{typeof value === 'string' ? value : value.name}</span>
       ) : (
         <span style={{ color: 'var(--admin-text-tertiary)', fontSize: '0.875rem' }}>Uncategorized</span>
       )
@@ -302,17 +302,29 @@ const ProductsManagement: React.FC = () => {
 
   const filterOptions: FilterOption[] = [
     {
+      key: 'search',
+      label: 'Product Name',
+      type: 'text',
+      placeholder: 'Search by product name...'
+    },
+    {
+      key: 'distributor',
+      label: 'Distributor Name',
+      type: 'text',
+      placeholder: 'Search by distributor name...'
+    },
+    {
       key: 'category',
       label: 'Category',
       type: 'select',
       options: [
-        { value: 'cement', label: 'Cement' },
-        { value: 'steel', label: 'Steel' },
-        { value: 'bricks', label: 'Bricks' },
-        { value: 'sand', label: 'Sand' },
-        { value: 'paint', label: 'Paint' },
-        { value: 'tiles', label: 'Tiles' },
-        { value: 'other', label: 'Other' }
+        { value: 'Cement', label: 'Cement' },
+        { value: 'Steel', label: 'Steel' },
+        { value: 'Bricks', label: 'Bricks' },
+        { value: 'Sand', label: 'Sand' },
+        { value: 'Paint', label: 'Paint' },
+        { value: 'Tiles', label: 'Tiles' },
+        { value: 'Other', label: 'Other' }
       ]
     },
     {
@@ -486,7 +498,7 @@ const ProductsManagement: React.FC = () => {
                 )}
               </div>
               {product.category && (
-                <span className="badge purple">{product.category.name}</span>
+                <span className="badge purple">{typeof product.category === 'string' ? product.category : product.category.name}</span>
               )}
             </div>
 

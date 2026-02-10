@@ -193,10 +193,64 @@
   background: #f9fafb;
 }
 
+.categories-scroll-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.category-scroll-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: white;
+  color: #374151;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+  opacity: 0;
+}
+
+.categories-scroll-wrapper:hover .category-scroll-btn {
+  opacity: 1;
+}
+
+.category-scroll-btn:hover {
+  background: #d97706;
+  color: white;
+  box-shadow: 0 6px 16px rgba(217, 119, 6, 0.3);
+}
+
+.category-scroll-left {
+  left: -16px;
+}
+
+.category-scroll-right {
+  right: -16px;
+}
+
 .categories-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  display: flex;
   gap: 24px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: 8px;
+}
+
+.categories-grid::-webkit-scrollbar {
+  display: none;
 }
 
 .category-card {
@@ -206,6 +260,8 @@
   cursor: pointer;
   transition: all 0.3s;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  min-width: 200px;
+  flex-shrink: 0;
 }
 
 .category-card:hover {
@@ -511,7 +567,11 @@
   }
 
   .categories-grid {
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+  }
+
+  .category-card {
+    min-width: 170px;
   }
 
   .product-grid-modern {
@@ -573,8 +633,15 @@
   }
 
   .categories-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
+    gap: 12px;
+  }
+
+  .category-card {
+    min-width: 150px;
+  }
+
+  .category-scroll-btn {
+    display: none;
   }
 
   .category-image {
@@ -703,7 +770,11 @@
   }
 
   .categories-grid {
-    gap: 12px;
+    gap: 10px;
+  }
+
+  .category-card {
+    min-width: 130px;
   }
 
   .category-image {
@@ -802,12 +873,12 @@
     font-size: 13px;
   }
 
-  .categories-grid {
-    grid-template-columns: 1fr;
+  .category-card {
+    min-width: 120px;
   }
 
   .category-image {
-    height: 160px;
+    height: 130px;
   }
 
   .cta-title {
