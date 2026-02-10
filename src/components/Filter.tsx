@@ -1,5 +1,6 @@
 interface Category {
   _id: string;
+  id?: string;
   name: string;
 }
 
@@ -10,6 +11,7 @@ interface FilterProps {
     minPrice: string;
     maxPrice: string;
     availability: string;
+    sortBy?: string;
     pincode?: string;
   };
   onFilterChange: (filterName: string, value: string) => void;
@@ -18,57 +20,66 @@ interface FilterProps {
 export default function Filter({ categories, filters, onFilterChange }: FilterProps) {
   return (
     <div className="filter-container">
-      <h3>Filters</h3>
-      
-      <div className="filter-group">
-        <label>Category</label>
+      {/* Category Filter */}
+      <div className="filter-section">
+        <h4>Category</h4>
         <select
+          className="filter-select"
           value={filters.category}
           onChange={(e) => onFilterChange('category', e.target.value)}
         >
-          <option key="all-categories" value="">All Categories</option>
+          <option value="">All Categories</option>
           {categories.map((cat) => (
-            <option key={cat._id} value={cat._id}>
+            <option key={cat._id || cat.id} value={cat.id || cat.name}>
               {cat.name}
             </option>
           ))}
         </select>
       </div>
-      
-      <div className="filter-group">
-        <label>Price Range</label>
+
+      {/* Price Range Filter */}
+      <div className="filter-section">
+        <h4>Price Range</h4>
         <div className="price-inputs">
-          <input
-            type="number"
-            placeholder="Min"
-            value={filters.minPrice}
-            onChange={(e) => onFilterChange('minPrice', e.target.value)}
-          />
-          <span>-</span>
-          <input
-            type="number"
-            placeholder="Max"
-            value={filters.maxPrice}
-            onChange={(e) => onFilterChange('maxPrice', e.target.value)}
-          />
+          <div className="price-input-group">
+            <label>Min (₹)</label>
+            <input
+              type="number"
+              placeholder="0"
+              value={filters.minPrice}
+              onChange={(e) => onFilterChange('minPrice', e.target.value)}
+              min="0"
+            />
+          </div>
+          <span className="price-separator">–</span>
+          <div className="price-input-group">
+            <label>Max (₹)</label>
+            <input
+              type="number"
+              placeholder="Any"
+              value={filters.maxPrice}
+              onChange={(e) => onFilterChange('maxPrice', e.target.value)}
+              min="0"
+            />
+          </div>
         </div>
       </div>
-      
-      {/* Availability filter removed — out-of-stock products are hidden server-side */}
 
-      <div className="filter-group">
-        <label>Filter by Pincode</label>
+      {/* Pincode Filter */}
+      <div className="filter-section">
+        <h4>Pincode</h4>
         <input
+          className="filter-input"
           type="text"
-          placeholder="Enter pincode (e.g., 400001)"
+          placeholder="e.g., 302001"
           value={filters.pincode || ''}
-          onChange={(e) => onFilterChange('pincode', e.target.value)}
+          onChange={(e) => {
+            const val = e.target.value.replace(/\D/g, '');
+            onFilterChange('pincode', val);
+          }}
           maxLength={6}
-          pattern="[0-9]*"
         />
-        <small style={{ fontSize: '12px', color: '#666', marginTop: '4px', display: 'block' }}>
-          Find products from distributors in your area
-        </small>
+        <small>Find products from distributors in your area</small>
       </div>
     </div>
   );

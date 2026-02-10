@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/router';
 import SEO from '../components/SEO';
 import Header from '../components/Header';
@@ -19,7 +19,10 @@ const Products = () => {
   const [hasMore, setHasMore] = useState(true);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const router = useRouter();
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const isInitialMount = useRef(true);
 
+  // Applied filters are what actually trigger API calls (debounced from user input)
   const [filters, setFilters] = useState({
     category: '',
     minPrice: '',
@@ -28,6 +31,8 @@ const Products = () => {
     sortBy: 'newest',
     pincode: ''
   });
+  const [appliedFilters, setAppliedFilters] = useState(filters);
+  const [appliedSearch, setAppliedSearch] = useState('');
 
   // Read URL query params (from header search or category links)
   useEffect(() => {
@@ -35,9 +40,11 @@ const Products = () => {
     const { search, category } = router.query;
     if (search && typeof search === 'string') {
       setSearchTerm(search);
+      setAppliedSearch(search);
     }
     if (category && typeof category === 'string') {
       setFilters(prev => ({ ...prev, category }));
+      setAppliedFilters(prev => ({ ...prev, category }));
     }
   }, [router.isReady, router.query.search, router.query.category]);
 
@@ -46,13 +53,56 @@ const Products = () => {
     fetchCategories();
   }, []);
 
-  // Fetch products when filters change
+  // Debounce: when user types in text inputs (search, price, pincode), wait 500ms before applying
+  // For dropdowns (category, sortBy, availability), apply immediately
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+
+    // Check if only a dropdown changed (instant apply) vs text input (debounce)
+    const isDropdownChange =
+      filters.category !== appliedFilters.category ||
+      filters.sortBy !== appliedFilters.sortBy ||
+      filters.availability !== appliedFilters.availability;
+
+    const isTextChange =
+      filters.minPrice !== appliedFilters.minPrice ||
+      filters.maxPrice !== appliedFilters.maxPrice ||
+      filters.pincode !== appliedFilters.pincode ||
+      searchTerm !== appliedSearch;
+
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+
+    if (isDropdownChange) {
+      // Dropdown changed — apply immediately (includes any pending text changes too)
+      setAppliedFilters({ ...filters });
+      setAppliedSearch(searchTerm);
+    } else if (isTextChange) {
+      // Text input changed — debounce 500ms
+      debounceRef.current = setTimeout(() => {
+        setAppliedFilters({ ...filters });
+        setAppliedSearch(searchTerm);
+      }, 500);
+    }
+
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
+  }, [filters, searchTerm]);
+
+  // Fetch products only when appliedFilters/appliedSearch change (after debounce)
   useEffect(() => {
     setProducts([]);
     setPage(1);
     setHasMore(true);
     fetchProducts(1, true);
-  }, [filters, searchTerm]);
+  }, [appliedFilters, appliedSearch]);
 
 
   const fetchProducts = async (pageNum: number = 1, reset: boolean = false) => {
@@ -63,17 +113,17 @@ const Products = () => {
         setLoadingMore(true);
       }
 
-      // Build query parameters
+      // Build query parameters using applied (debounced) values
       const params: any = {
         page: pageNum,
         limit: 24,
-        sortBy: filters.sortBy
+        sortBy: appliedFilters.sortBy
       };
 
-      if (filters.category) params.category = filters.category;
-      if (filters.minPrice) params.minPrice = filters.minPrice;
-      if (filters.maxPrice) params.maxPrice = filters.maxPrice;
-      if (searchTerm) params.search = searchTerm;
+      if (appliedFilters.category) params.category = appliedFilters.category;
+      if (appliedFilters.minPrice) params.minPrice = appliedFilters.minPrice;
+      if (appliedFilters.maxPrice) params.maxPrice = appliedFilters.maxPrice;
+      if (appliedSearch) params.search = appliedSearch;
 
       const response = await productService.getAllProducts(params);
 
@@ -95,11 +145,11 @@ const Products = () => {
       // Filter by pincode on client side (stock filtering done server-side)
       let filtered = productsList;
 
-      if (filters.pincode && filters.pincode.trim()) {
+      if (appliedFilters.pincode && appliedFilters.pincode.trim()) {
         filtered = filtered.filter(product => {
           const distributor = typeof product.distributor === 'object' ? product.distributor : null;
           if (distributor && (distributor as any).pincode) {
-            return (distributor as any).pincode.includes(filters.pincode.trim());
+            return (distributor as any).pincode.includes(appliedFilters.pincode.trim());
           }
           return false;
         });
@@ -130,7 +180,7 @@ const Products = () => {
     const nextPage = page + 1;
     setPage(nextPage);
     fetchProducts(nextPage, false);
-  }, [page, filters, searchTerm]);
+  }, [page, appliedFilters, appliedSearch]);
 
   const fetchCategories = async () => {
     try {
@@ -162,15 +212,18 @@ const Products = () => {
   };
 
   const resetFilters = () => {
-    setFilters({
+    const defaultFilters = {
       category: '',
       minPrice: '',
       maxPrice: '',
       availability: 'all',
       sortBy: 'newest',
       pincode: ''
-    });
+    };
+    setFilters(defaultFilters);
+    setAppliedFilters(defaultFilters);
     setSearchTerm('');
+    setAppliedSearch('');
   };
 
   // Lock body scroll when mobile filters are open

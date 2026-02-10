@@ -256,34 +256,45 @@
   border-radius: 3px;
 }
 
-/* Filter Groups - Improved */
+/* Filter Groups - Improved (supports both .filter-group and .filter-section) */
 .mobile-filter-content .filter-container {
   padding: 0;
+  border-left: none;
+  box-shadow: none;
+  background: transparent;
 }
 
 .mobile-filter-content .filter-container h3 {
   display: none;
 }
 
-.mobile-filter-content .filter-group {
+.mobile-filter-content .filter-group,
+.mobile-filter-content .filter-section {
   margin-bottom: 28px;
 }
 
-.mobile-filter-content .filter-group:last-child {
+.mobile-filter-content .filter-group:last-child,
+.mobile-filter-content .filter-section:last-child {
   margin-bottom: 0;
 }
 
-.mobile-filter-content .filter-group label {
+.mobile-filter-content .filter-group label,
+.mobile-filter-content .filter-section h4 {
   display: block;
   font-weight: 600;
   font-size: 15px;
   color: #111827;
   margin-bottom: 10px;
   letter-spacing: -0.3px;
+  text-transform: none;
 }
 
 .mobile-filter-content .filter-group input,
-.mobile-filter-content .filter-group select {
+.mobile-filter-content .filter-group select,
+.mobile-filter-content .filter-section input,
+.mobile-filter-content .filter-section select,
+.mobile-filter-content .filter-select,
+.mobile-filter-content .filter-input {
   width: 100%;
   padding: 14px 16px;
   border: 2px solid #e5e7eb;
@@ -294,17 +305,24 @@
   min-height: 52px;
   background: #fafafa;
   color: #111827;
+  box-sizing: border-box;
 }
 
 .mobile-filter-content .filter-group input:focus,
-.mobile-filter-content .filter-group select:focus {
+.mobile-filter-content .filter-group select:focus,
+.mobile-filter-content .filter-section input:focus,
+.mobile-filter-content .filter-section select:focus,
+.mobile-filter-content .filter-select:focus,
+.mobile-filter-content .filter-input:focus {
   outline: none;
   border-color: #d97706;
   background: white;
   box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.1);
 }
 
-.mobile-filter-content .filter-group select {
+.mobile-filter-content .filter-group select,
+.mobile-filter-content .filter-section select,
+.mobile-filter-content select.filter-select {
   appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath fill='%23374151' d='M8 11L3 6h10z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
@@ -315,7 +333,16 @@
 .mobile-filter-content .price-inputs {
   display: flex;
   gap: 12px;
-  align-items: center;
+  align-items: flex-end;
+}
+
+.mobile-filter-content .price-inputs .price-input-group {
+  flex: 1;
+}
+
+.mobile-filter-content .price-inputs .price-separator {
+  margin-top: 0;
+  padding-bottom: 14px;
 }
 
 .mobile-filter-content .price-inputs input {
@@ -328,7 +355,8 @@
   font-size: 16px;
 }
 
-.mobile-filter-content .filter-group small {
+.mobile-filter-content .filter-group small,
+.mobile-filter-content .filter-section small {
   font-size: 13px;
   color: #6b7280;
   margin-top: 8px;
