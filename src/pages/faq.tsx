@@ -62,13 +62,13 @@ const faqData: FAQItem[] = [
     id: 8,
     category: 'Payment',
     question: 'What payment methods do you accept?',
-    answer: 'We support Cash on Delivery (COD) and online payments (Credit/Debit Cards, UPI, Net Banking, Digital Wallets) processed securely through Online payment gateway. Payment availability may vary by distributor.'
+    answer: 'We support Cash on Delivery (COD) and online payments (Credit/Debit Cards, UPI, Net Banking, Digital Wallets) processed securely through PhonePe\'s payment gateway. Payment availability may vary by distributor.'
   },
   {
     id: 9,
     category: 'Payment',
     question: 'Is it safe to make online payments on BuildAdda?',
-    answer: 'Yes. Online payments are processed through Online secure payment gateway with industry-standard encryption. BuildAdda does not store your card details, bank account numbers, or UPI PINs on its servers.'
+    answer: 'Yes. Online payments are processed through PhonePe\'s secure payment gateway with industry-standard encryption. BuildAdda does not store your card details, bank account numbers, or UPI PINs on its servers.'
   },
   {
     id: 10,
@@ -126,7 +126,7 @@ const faqData: FAQItem[] = [
     id: 18,
     category: 'Returns',
     question: 'When will I get my refund?',
-    answer: 'For cancelled online orders (pre-shipment), an automated refund may be initiated through Online, typically taking 5-10 business days. For product returns, refund processing is handled by the distributor/seller. BuildAdda does not guarantee refund timelines or amounts — these are the distributor\'s responsibility.'
+    answer: 'For cancelled online orders (pre-shipment), an automated refund may be initiated through PhonePe, typically taking 5-10 business days. For product returns, refund processing is handled by the distributor/seller. BuildAdda does not guarantee refund timelines or amounts — these are the distributor\'s responsibility.'
   },
   {
     id: 19,

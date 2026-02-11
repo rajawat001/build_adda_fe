@@ -61,7 +61,7 @@ export default function ReturnsRefunds() {
 
               <h3>3.3 Cancellation of Online Paid Orders</h3>
               <p>
-                If an order paid via online payment (Online) is cancelled before shipment, the Platform may facilitate an automated refund to the original payment method through the payment gateway. This automated facilitation is provided as a convenience and does not constitute BuildAdda accepting any obligation or liability for the refund. Refund processing times depend on the payment gateway (Online) and the customer's bank, typically 5-10 business days.
+                If an order paid via online payment (PhonePe) is cancelled before shipment, the Platform may facilitate an automated refund to the original payment method through the payment gateway. This automated facilitation is provided as a convenience and does not constitute BuildAdda accepting any obligation or liability for the refund. Refund processing times depend on the payment gateway (PhonePe) and the customer's bank, typically 5-10 business days.
               </p>
 
               <h3>3.4 Cash on Delivery Orders</h3>
@@ -112,7 +112,7 @@ export default function ReturnsRefunds() {
 
               <h3>5.2 Online Payment Refunds</h3>
               <p>
-                For orders paid online via Online, refunds (when approved by the distributor or triggered by pre-shipment cancellation) are processed back to the original payment method through the payment gateway. Typical processing time is 5-10 business days, depending on the payment gateway and the customer's financial institution. BuildAdda facilitates this process as a technology intermediary only.
+                For orders paid online via PhonePe, refunds (when approved by the distributor or triggered by pre-shipment cancellation) are processed back to the original payment method through the payment gateway. Typical processing time is 5-10 business days, depending on the payment gateway and the customer's financial institution. BuildAdda facilitates this process as a technology intermediary only.
               </p>
 
               <h3>5.3 COD Refunds</h3>
@@ -136,7 +136,6 @@ export default function ReturnsRefunds() {
                 <li>Document any damage with photographs</li>
                 <li>Contact the distributor/seller directly within 24 hours of delivery</li>
                 <li>Do not use or install the product if it appears damaged</li>
-                <li>Replacement for exchange product will be delivered within 7 to 10 days</li>
               </ul>
               <p>
                 Resolution of damaged/defective product claims (replacement, refund, or credit) is entirely at the discretion of the distributor/seller. BuildAdda is not responsible for product defects, damages during transit, or any losses arising therefrom.
@@ -197,7 +196,7 @@ export default function ReturnsRefunds() {
             <section>
               <h2>11. Governing Law</h2>
               <p>
-                This policy is governed by the laws of India. Any disputes arising from this policy shall be subject to the exclusive jurisdiction of the courts in Gangapur City, Rajasthan, India.
+                This policy is governed by the laws of India. Any disputes arising from this policy shall be subject to the exclusive jurisdiction of the courts in Jaipur, Rajasthan, India.
               </p>
             </section>
 
@@ -210,7 +209,7 @@ export default function ReturnsRefunds() {
                 <li>Owner: Himmat Singh Rajawat</li>
                 <li>Email: support@buildadda.in</li>
                 <li>Phone: +91 6377845721</li>
-                <li>Address: Saini Colony, mirzapur, Rajasthan, India - 322201</li>
+                <li>Address: Plot 42, Bhuvneshwari Vatika Vistar 3rd, Vaishali West Road, Jaipur, Rajasthan, India - 302034</li>
               </ul>
             </section>
           </div>

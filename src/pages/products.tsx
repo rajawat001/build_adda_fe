@@ -341,8 +341,8 @@ const Products = () => {
     <>
       <SEO
         title="Building Materials Products - Buy Cement, Steel, Bricks, Sand, Paint, Tiles Online"
-        description="Browse 1000+ building materials products from verified distributors in Gangapur City. Shop cement, steel, bricks, sand, paint, tiles, and construction supplies at wholesale prices. Free delivery on orders above ₹50,000. Quality assured, best deals guaranteed."
-        keywords="building materials products, buy cement online, steel products, bricks for sale, sand suppliers, paint online India, tiles shop, construction materials catalog, wholesale building supplies, cement price list, steel rate, building materials Gangapur City, construction products India"
+        description="Browse 1000+ building materials products from verified distributors in Jaipur. Shop cement, steel, bricks, sand, paint, tiles, and construction supplies at wholesale prices. Free delivery on orders above ₹50,000. Quality assured, best deals guaranteed."
+        keywords="building materials products, buy cement online, steel products, bricks for sale, sand suppliers, paint online India, tiles shop, construction materials catalog, wholesale building supplies, cement price list, steel rate, building materials Jaipur, construction products India"
         canonicalUrl="https://www.buildadda.in/products"
         ogImage="https://www.buildadda.in/buildAddaBrandImage.png"
         jsonLd={productsStructuredData}

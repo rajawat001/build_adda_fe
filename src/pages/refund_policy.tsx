@@ -7,8 +7,8 @@ export default function RefundPolicy() {
     <>
       <SEO
         title="Refund Policy - BuildAdda"
-        description="Refund Policy for BuildAdda platform. Learn about refund eligibility, processing timelines, and Online payment refunds."
-        keywords="BuildAdda refund policy, refund process, Online refund, online payment refund, building materials refund"
+        description="Refund Policy for BuildAdda platform. Learn about refund eligibility, processing timelines, and PhonePe payment refunds."
+        keywords="BuildAdda refund policy, refund process, PhonePe refund, online payment refund, building materials refund"
         canonicalUrl="https://www.buildadda.in/refund_policy"
       />
       <Header />
@@ -46,29 +46,29 @@ export default function RefundPolicy() {
             </section>
 
             <section>
-              <h2>3. Refund for Online Payments (Online)</h2>
+              <h2>3. Refund for Online Payments (PhonePe)</h2>
 
               <h3>3.1 Pre-Shipment Cancellation Refunds</h3>
               <p>
-                If an order paid via online payment through <strong>Online payment gateway</strong> is cancelled before shipment by the distributor, the Platform may facilitate an automated refund to the original payment method through Online. This automated facilitation is provided as a convenience and does not constitute BuildAdda accepting any obligation or liability for the refund.
+                If an order paid via online payment through <strong>PhonePe payment gateway</strong> is cancelled before shipment by the distributor, the Platform may facilitate an automated refund to the original payment method through PhonePe. This automated facilitation is provided as a convenience and does not constitute BuildAdda accepting any obligation or liability for the refund.
               </p>
 
               <h3>3.2 Refund Processing Timeline</h3>
               <p>
-                Refunds processed through Online payment gateway are typically credited back to the original payment method within <strong>5-10 business days</strong>, depending on:
+                Refunds processed through PhonePe payment gateway are typically credited back to the original payment method within <strong>5-10 business days</strong>, depending on:
               </p>
               <ul>
-                <li>Online's refund processing time</li>
+                <li>PhonePe's refund processing time</li>
                 <li>The customer's bank or financial institution processing time</li>
                 <li>The payment method used (UPI, Credit Card, Debit Card, Net Banking, or Digital Wallet)</li>
               </ul>
               <p>
-                BuildAdda does not control and is not responsible for refund processing times by Online or your financial institution.
+                BuildAdda does not control and is not responsible for refund processing times by PhonePe or your financial institution.
               </p>
 
               <h3>3.3 Refund Method</h3>
               <p>
-                Refunds for online payments made via Online will be processed back to the <strong>same payment method</strong> used during the original transaction. BuildAdda does not offer refunds via alternative methods for online payments.
+                Refunds for online payments made via PhonePe will be processed back to the <strong>same payment method</strong> used during the original transaction. BuildAdda does not offer refunds via alternative methods for online payments.
               </p>
             </section>
 
@@ -134,7 +134,7 @@ export default function RefundPolicy() {
             <section>
               <h2>8. Subscription Refunds (Distributors)</h2>
               <p>
-                Distributor subscription fees paid to BuildAdda through Online payment gateway are <strong>non-refundable</strong> once the subscription period has commenced. In the event of technical errors resulting in duplicate charges, BuildAdda will process a refund for the duplicate amount only through Online.
+                Distributor subscription fees paid to BuildAdda through PhonePe payment gateway are <strong>non-refundable</strong> once the subscription period has commenced. In the event of technical errors resulting in duplicate charges, BuildAdda will process a refund for the duplicate amount only through PhonePe.
               </p>
             </section>
 
@@ -155,7 +155,7 @@ export default function RefundPolicy() {
               </p>
               <ul>
                 <li>Any failure by a distributor/seller to process or honour refund requests</li>
-                <li>Any delays in refund processing by Online payment gateway or financial institutions</li>
+                <li>Any delays in refund processing by PhonePe payment gateway or financial institutions</li>
                 <li>Any financial loss arising from refund disputes between customers and distributors</li>
                 <li>Any incorrect refund amounts determined by the distributor/seller</li>
                 <li>Any refund claims arising from product quality, defects, or misrepresentation by distributors</li>
@@ -168,7 +168,7 @@ export default function RefundPolicy() {
             <section>
               <h2>11. Payment Security</h2>
               <p>
-                All online payments and refunds on BuildAdda are processed through <strong>Online's secure payment gateway</strong> with industry-standard encryption and security measures. BuildAdda does not store your credit/debit card details, bank account numbers, UPI PINs, or any other sensitive financial information on its servers.
+                All online payments and refunds on BuildAdda are processed through <strong>PhonePe's secure payment gateway</strong> with industry-standard encryption and security measures. BuildAdda does not store your credit/debit card details, bank account numbers, UPI PINs, or any other sensitive financial information on its servers.
               </p>
             </section>
 
@@ -182,7 +182,7 @@ export default function RefundPolicy() {
             <section>
               <h2>13. Governing Law</h2>
               <p>
-                This Refund Policy is governed by the laws of India. Any disputes arising from this policy shall be subject to the exclusive jurisdiction of the courts in Gangapur City, Rajasthan, India.
+                This Refund Policy is governed by the laws of India. Any disputes arising from this policy shall be subject to the exclusive jurisdiction of the courts in Jaipur, Rajasthan, India.
               </p>
             </section>
 
@@ -195,7 +195,7 @@ export default function RefundPolicy() {
                 <li>Owner: Himmat Singh Rajawat</li>
                 <li>Email: support@buildadda.in</li>
                 <li>Phone: +91 6377845721</li>
-                <li>Address: Saini Colony, mirzapur, Rajasthan, India - 322201</li>
+                <li>Address: Plot 42, Bhuvneshwari Vatika Vistar 3rd, Vaishali West Road, Jaipur, Rajasthan, India - 302034</li>
               </ul>
             </section>
           </div>
