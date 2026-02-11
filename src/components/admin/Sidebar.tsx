@@ -10,6 +10,7 @@ import {
   FiTag,
   FiShield,
   FiMail,
+  FiMessageSquare,
   FiStar,
   FiActivity,
   FiSettings,
@@ -37,6 +38,7 @@ const Sidebar = ({ onLogout }: SidebarProps) => {
     { icon: FiShield, label: 'Roles', path: '/admin/roles' },
     { icon: FiMail, label: 'Email Templates', path: '/admin/email-templates' },
     { icon: FiStar, label: 'Reviews', path: '/admin/reviews' },
+    { icon: FiMessageSquare, label: 'Messages', path: '/admin/contacts' },
     { icon: FiActivity, label: 'Activity Logs', path: '/admin/activity-logs' },
     { icon: FiSettings, label: 'Settings', path: '/admin/settings' },
   ];

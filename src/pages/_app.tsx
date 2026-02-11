@@ -7,6 +7,7 @@ import { CartProvider } from '../context/CartContext';
 import { ToastProvider } from '../components/common/ToastContainer';
 import { ToastContainer } from 'react-toastify';
 import CartConflictModal from '../components/CartConflictModal';
+import ChatWidget from '../components/ChatWidget';
 import InstallPWA from '../components/common/InstallPWA';
 import 'react-toastify/dist/ReactToastify.css';
 import '../styles/globals.css';
@@ -42,6 +43,7 @@ import '../styles/InstallPWA.css';
 import '../styles/otp.css';
 import '../styles/email-auth.css';
 import '../styles/mobile-cards.css';
+import '../styles/chat-widget.css';
 
 export default function App({ Component, pageProps }: AppProps) {
   // PWA auto-update: reload page when a new service worker takes over
@@ -87,6 +89,7 @@ export default function App({ Component, pageProps }: AppProps) {
               <InstallPWA />
             <Component {...pageProps} />
             <CartConflictModal />
+            <ChatWidget />
             <ToastContainer
               position="top-right"
               autoClose={3000}
