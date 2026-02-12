@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
 import { FiTruck, FiCheck, FiX, FiPackage, FiShoppingCart, FiMapPin, FiPhone, FiMail, FiDollarSign, FiTrendingUp, FiEye, FiEdit, FiCalendar, FiStar, FiFileText } from 'react-icons/fi';
 import AdminLayout from '../../components/admin/Layout';
 import StatCard from '../../components/admin/StatCard';
@@ -39,6 +40,7 @@ interface DistributorStats {
 }
 
 const DistributorsManagement: React.FC = () => {
+  const router = useRouter();
   const [distributors, setDistributors] = useState<Distributor[]>([]);
   const [stats, setStats] = useState<DistributorStats>({
     total: 0,
@@ -85,6 +87,12 @@ const DistributorsManagement: React.FC = () => {
     gstNumber: '',
     isActive: true
   });
+
+  useEffect(() => {
+    if (router.isReady && router.query.search) {
+      setSearchTerm(router.query.search as string);
+    }
+  }, [router.isReady, router.query.search]);
 
   useEffect(() => {
     fetchDistributors();
@@ -380,6 +388,12 @@ const DistributorsManagement: React.FC = () => {
   ];
 
   const filterOptions: FilterOption[] = [
+    {
+      key: 'search',
+      label: 'Search',
+      type: 'text',
+      placeholder: 'Search by name, email, phone...'
+    },
     {
       key: 'approval',
       label: 'Approval Status',

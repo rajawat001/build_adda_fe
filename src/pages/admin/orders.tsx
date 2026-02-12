@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
 import { FiShoppingCart, FiClock, FiCheckCircle, FiXCircle, FiTruck, FiPackage, FiDollarSign, FiUser, FiMapPin, FiCalendar, FiEye } from 'react-icons/fi';
 import AdminLayout from '../../components/admin/Layout';
 import StatCard from '../../components/admin/StatCard';
@@ -62,6 +63,7 @@ interface OrderStats {
 }
 
 const OrdersManagement: React.FC = () => {
+  const router = useRouter();
   const [orders, setOrders] = useState<Order[]>([]);
   const [stats, setStats] = useState<OrderStats>({
     total: 0,
@@ -95,6 +97,12 @@ const OrdersManagement: React.FC = () => {
     onConfirm: () => {}
   });
   const [actionLoading, setActionLoading] = useState(false);
+
+  useEffect(() => {
+    if (router.isReady && router.query.search) {
+      setSearchTerm(router.query.search as string);
+    }
+  }, [router.isReady, router.query.search]);
 
   useEffect(() => {
     fetchOrders();

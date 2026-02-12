@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
 import { FiUsers, FiMail, FiPhone, FiCalendar, FiEdit, FiTrash2, FiEye, FiCheck, FiX, FiUserCheck, FiUserX, FiShoppingCart, FiDollarSign, FiMapPin } from 'react-icons/fi';
 import AdminLayout from '../../components/admin/Layout';
 import StatCard from '../../components/admin/StatCard';
@@ -40,6 +41,7 @@ interface UserStats {
 }
 
 const UsersManagement: React.FC = () => {
+  const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
   const [stats, setStats] = useState<UserStats>({
     total: 0,
@@ -83,6 +85,12 @@ const UsersManagement: React.FC = () => {
     isActive: true,
     isVerified: false
   });
+
+  useEffect(() => {
+    if (router.isReady && router.query.search) {
+      setSearchTerm(router.query.search as string);
+    }
+  }, [router.isReady, router.query.search]);
 
   useEffect(() => {
     fetchUsers();
@@ -359,6 +367,12 @@ const UsersManagement: React.FC = () => {
   ];
 
   const filterOptions: FilterOption[] = [
+    {
+      key: 'search',
+      label: 'Search',
+      type: 'text',
+      placeholder: 'Search by name, email, phone...'
+    },
     {
       key: 'role',
       label: 'Role',

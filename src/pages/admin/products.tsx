@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
 import { FiPackage, FiGrid, FiList, FiTrash2, FiEdit, FiEye, FiAlertCircle, FiTrendingUp, FiDollarSign, FiUpload, FiX, FiCheck } from 'react-icons/fi';
 import AdminLayout from '../../components/admin/Layout';
 import StatCard from '../../components/admin/StatCard';
@@ -40,6 +41,7 @@ interface ProductStats {
 }
 
 const ProductsManagement: React.FC = () => {
+  const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
   const [stats, setStats] = useState<ProductStats>({
     total: 0,
@@ -83,6 +85,12 @@ const ProductsManagement: React.FC = () => {
     stockQuantity: 0,
     isActive: true
   });
+
+  useEffect(() => {
+    if (router.isReady && router.query.search) {
+      setSearchTerm(router.query.search as string);
+    }
+  }, [router.isReady, router.query.search]);
 
   useEffect(() => {
     fetchProducts();
