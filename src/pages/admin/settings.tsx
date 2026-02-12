@@ -18,7 +18,11 @@ import {
   FiToggleLeft,
   FiToggleRight,
   FiFileText,
-  FiBriefcase
+  FiBriefcase,
+  FiMapPin,
+  FiPlus,
+  FiTrash2,
+  FiArrowLeft
 } from 'react-icons/fi';
 import api from '../../services/api';
 
@@ -50,6 +54,11 @@ interface CompanySettings {
   bankAccount: string;
   bankIfsc: string;
   bankBranch: string;
+}
+
+interface ServiceArea {
+  state: string;
+  cities: string[];
 }
 
 interface Settings {
@@ -110,6 +119,9 @@ interface Settings {
   debugMode: boolean;
   cacheEnabled: boolean;
   apiRateLimit: number;
+
+  // Service Areas
+  serviceAreas: ServiceArea[];
 }
 
 type SettingsSection =
@@ -121,7 +133,8 @@ type SettingsSection =
   | 'company'
   | 'email'
   | 'notifications'
-  | 'advanced';
+  | 'advanced'
+  | 'serviceAreas';
 
 const AdminSettings: React.FC = () => {
   const router = useRouter();
@@ -209,7 +222,10 @@ const AdminSettings: React.FC = () => {
     maintenanceMode: false,
     debugMode: false,
     cacheEnabled: true,
-    apiRateLimit: 100
+    apiRateLimit: 100,
+
+    // Service Areas
+    serviceAreas: [{ state: 'Rajasthan', cities: ['Jaipur'] }]
   });
 
   const [loading, setLoading] = useState(false);
@@ -230,7 +246,8 @@ const AdminSettings: React.FC = () => {
           ...prev,
           ...response.data.settings,
           gst: { ...prev.gst, ...(response.data.settings.gst || {}) },
-          company: { ...prev.company, ...(response.data.settings.company || {}) }
+          company: { ...prev.company, ...(response.data.settings.company || {}) },
+          serviceAreas: response.data.settings.serviceAreas || prev.serviceAreas
         }));
       }
     } catch (error) {
@@ -286,6 +303,49 @@ const AdminSettings: React.FC = () => {
     }));
   };
 
+  // Service Areas local state
+  const [newStateName, setNewStateName] = useState('');
+  const [newCityNames, setNewCityNames] = useState<{ [stateIndex: number]: string }>({});
+
+  const addState = () => {
+    const trimmed = newStateName.trim();
+    if (!trimmed) return;
+    if (settings.serviceAreas.some(a => a.state.toLowerCase() === trimmed.toLowerCase())) return;
+    setSettings(prev => ({
+      ...prev,
+      serviceAreas: [...prev.serviceAreas, { state: trimmed, cities: [] }]
+    }));
+    setNewStateName('');
+  };
+
+  const removeState = (index: number) => {
+    setSettings(prev => ({
+      ...prev,
+      serviceAreas: prev.serviceAreas.filter((_, i) => i !== index)
+    }));
+  };
+
+  const addCity = (stateIndex: number) => {
+    const cityName = (newCityNames[stateIndex] || '').trim();
+    if (!cityName) return;
+    const area = settings.serviceAreas[stateIndex];
+    if (area.cities.some(c => c.toLowerCase() === cityName.toLowerCase())) return;
+    setSettings(prev => {
+      const updated = [...prev.serviceAreas];
+      updated[stateIndex] = { ...updated[stateIndex], cities: [...updated[stateIndex].cities, cityName] };
+      return { ...prev, serviceAreas: updated };
+    });
+    setNewCityNames(prev => ({ ...prev, [stateIndex]: '' }));
+  };
+
+  const removeCity = (stateIndex: number, cityIndex: number) => {
+    setSettings(prev => {
+      const updated = [...prev.serviceAreas];
+      updated[stateIndex] = { ...updated[stateIndex], cities: updated[stateIndex].cities.filter((_, i) => i !== cityIndex) };
+      return { ...prev, serviceAreas: updated };
+    });
+  };
+
   const sections = [
     { id: 'general' as SettingsSection, label: 'General', icon: FiGlobe },
     { id: 'payment' as SettingsSection, label: 'Payment', icon: FiCreditCard },
@@ -295,7 +355,8 @@ const AdminSettings: React.FC = () => {
     { id: 'company' as SettingsSection, label: 'Company', icon: FiBriefcase },
     { id: 'email' as SettingsSection, label: 'Email', icon: FiMail },
     { id: 'notifications' as SettingsSection, label: 'Notifications', icon: FiBell },
-    { id: 'advanced' as SettingsSection, label: 'Advanced', icon: FiDatabase }
+    { id: 'advanced' as SettingsSection, label: 'Advanced', icon: FiDatabase },
+    { id: 'serviceAreas' as SettingsSection, label: 'Service Areas', icon: FiMapPin }
   ];
 
   const renderToggleSwitch = (key: keyof Settings, label: string, description?: string) => {
@@ -777,6 +838,188 @@ const AdminSettings: React.FC = () => {
     </div>
   );
 
+  const renderServiceAreasSettings = () => (
+    <div>
+      <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.5rem', color: 'var(--admin-text-primary)' }}>
+        Service Areas
+      </h3>
+      <p style={{ fontSize: '0.875rem', color: 'var(--admin-text-tertiary)', marginBottom: '1.5rem' }}>
+        Manage delivery states and cities. These will appear as dropdown options in the checkout page.
+      </p>
+
+      {settings.serviceAreas.map((area, stateIndex) => (
+        <div
+          key={stateIndex}
+          style={{
+            border: '1px solid var(--admin-border-primary)',
+            borderRadius: '0.75rem',
+            padding: '1.25rem',
+            marginBottom: '1rem',
+            background: 'var(--admin-bg-secondary)'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+            <h4 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--admin-text-primary)', margin: 0 }}>
+              {area.state}
+            </h4>
+            <button
+              onClick={() => removeState(stateIndex)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                padding: '0.4rem 0.75rem',
+                background: 'rgba(239, 68, 68, 0.1)',
+                color: '#ef4444',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                borderRadius: '0.375rem',
+                cursor: 'pointer',
+                fontSize: '0.8125rem',
+                fontWeight: 500
+              }}
+            >
+              <FiTrash2 size={14} />
+              Remove State
+            </button>
+          </div>
+
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.75rem' }}>
+            {area.cities.map((city, cityIndex) => (
+              <span
+                key={cityIndex}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.4rem 0.75rem',
+                  background: 'var(--admin-bg-card)',
+                  border: '1px solid var(--admin-border-primary)',
+                  borderRadius: '2rem',
+                  fontSize: '0.875rem',
+                  color: 'var(--admin-text-primary)'
+                }}
+              >
+                {city}
+                <button
+                  onClick={() => removeCity(stateIndex, cityIndex)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    padding: '0',
+                    display: 'flex',
+                    alignItems: 'center',
+                    color: 'var(--admin-text-tertiary)'
+                  }}
+                  title="Remove city"
+                >
+                  &times;
+                </button>
+              </span>
+            ))}
+            {area.cities.length === 0 && (
+              <span style={{ fontSize: '0.875rem', color: 'var(--admin-text-tertiary)', fontStyle: 'italic' }}>
+                No cities added yet
+              </span>
+            )}
+          </div>
+
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <input
+              type="text"
+              value={newCityNames[stateIndex] || ''}
+              onChange={(e) => setNewCityNames(prev => ({ ...prev, [stateIndex]: e.target.value }))}
+              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addCity(stateIndex); } }}
+              placeholder="Add a city..."
+              style={{
+                flex: 1,
+                minWidth: 0,
+                padding: '0.5rem 0.75rem',
+                border: '1px solid #d1d5db',
+                borderRadius: '0.375rem',
+                fontSize: '0.875rem',
+                color: '#374151',
+                backgroundColor: '#fff'
+              }}
+            />
+            <button
+              onClick={() => addCity(stateIndex)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                padding: '0.5rem 0.75rem',
+                background: '#4f46e5',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '0.375rem',
+                cursor: 'pointer',
+                fontSize: '0.8125rem',
+                fontWeight: 500,
+                whiteSpace: 'nowrap',
+                flexShrink: 0
+              }}
+            >
+              <FiPlus size={14} />
+              Add City
+            </button>
+          </div>
+        </div>
+      ))}
+
+      <div style={{
+        border: '2px dashed #d1d5db',
+        borderRadius: '0.75rem',
+        padding: '1.25rem',
+        marginTop: '1rem'
+      }}>
+        <label style={{ display: 'block', fontWeight: 500, color: '#374151', marginBottom: '0.5rem', fontSize: '0.9375rem' }}>
+          Add New State
+        </label>
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <input
+            type="text"
+            value={newStateName}
+            onChange={(e) => setNewStateName(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addState(); } }}
+            placeholder="Enter state name..."
+            style={{
+              flex: 1,
+              minWidth: 0,
+              padding: '0.625rem 0.75rem',
+              border: '1px solid #d1d5db',
+              borderRadius: '0.375rem',
+              fontSize: '0.9375rem',
+              color: '#374151',
+              backgroundColor: '#fff'
+            }}
+          />
+          <button
+            onClick={addState}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.35rem',
+              padding: '0.625rem 1rem',
+              background: '#4f46e5',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '0.375rem',
+              cursor: 'pointer',
+              fontSize: '0.9375rem',
+              fontWeight: 500,
+              whiteSpace: 'nowrap',
+              flexShrink: 0
+            }}
+          >
+            <FiPlus size={16} />
+            Add State
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
   const renderContent = () => {
     switch (activeSection) {
       case 'general':
@@ -797,6 +1040,8 @@ const AdminSettings: React.FC = () => {
         return renderNotificationSettings();
       case 'advanced':
         return renderAdvancedSettings();
+      case 'serviceAreas':
+        return renderServiceAreasSettings();
       default:
         return null;
     }
@@ -900,8 +1145,40 @@ const AdminSettings: React.FC = () => {
 
       <div style={{ display: 'flex', gap: '2rem' }}>
         {/* Sidebar Navigation */}
-        <div style={{ width: '250px', flexShrink: 0 }}>
-          <div style={{ background: 'var(--admin-bg-card)', borderRadius: '1rem', padding: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+        <div style={{ width: '240px', flexShrink: 0, position: 'sticky', top: '1rem', alignSelf: 'flex-start' }}>
+          {/* Back Button */}
+          <button
+            onClick={() => router.back()}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              padding: '0.5rem 0.75rem',
+              marginBottom: '0.5rem',
+              background: '#fff',
+              color: '#374151',
+              border: '1px solid #d1d5db',
+              borderRadius: '0.5rem',
+              cursor: 'pointer',
+              fontSize: '0.875rem',
+              fontWeight: 500,
+              width: '100%',
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = '#6366f1';
+              e.currentTarget.style.color = '#6366f1';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = '#d1d5db';
+              e.currentTarget.style.color = '#374151';
+            }}
+          >
+            <FiArrowLeft size={16} />
+            Back
+          </button>
+
+          <div style={{ background: '#fff', borderRadius: '0.75rem', padding: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
             {sections.map((section) => {
               const Icon = section.icon;
               const isActive = activeSection === section.id;
@@ -912,23 +1189,34 @@ const AdminSettings: React.FC = () => {
                   onClick={() => setActiveSection(section.id)}
                   style={{
                     width: '100%',
-                    padding: '0.875rem 1rem',
-                    marginBottom: '0.5rem',
-                    background: isActive ? 'var(--admin-primary-gradient)' : 'transparent',
-                    color: isActive ? '#fff' : 'var(--admin-text-primary)',
+                    padding: '0.5rem 0.75rem',
+                    marginBottom: '2px',
+                    background: isActive ? '#4f46e5' : 'transparent',
+                    color: isActive ? '#fff' : '#374151',
                     border: 'none',
-                    borderRadius: '0.5rem',
+                    borderRadius: '0.375rem',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '0.75rem',
-                    fontSize: '0.9375rem',
-                    fontWeight: isActive ? 500 : 400,
-                    transition: 'all 0.2s',
-                    textAlign: 'left'
+                    gap: '0.6rem',
+                    fontSize: '0.875rem',
+                    fontWeight: isActive ? 600 : 400,
+                    transition: 'all 0.15s',
+                    textAlign: 'left',
+                    boxShadow: isActive ? '0 2px 6px rgba(79, 70, 229, 0.4)' : 'none'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.background = '#f3f4f6';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.background = 'transparent';
+                    }
                   }}
                 >
-                  <Icon size={18} />
+                  <Icon size={16} />
                   {section.label}
                 </button>
               );
@@ -943,13 +1231,13 @@ const AdminSettings: React.FC = () => {
             whileTap={{ scale: 0.98 }}
             style={{
               width: '100%',
-              marginTop: '1rem',
-              padding: '0.875rem',
-              background: 'var(--admin-primary-gradient)',
+              marginTop: '0.5rem',
+              padding: '0.625rem',
+              background: '#4f46e5',
               color: '#fff',
               border: 'none',
               borderRadius: '0.5rem',
-              fontSize: '0.9375rem',
+              fontSize: '0.875rem',
               fontWeight: 600,
               cursor: saving ? 'not-allowed' : 'pointer',
               opacity: saving ? 0.6 : 1,
@@ -957,10 +1245,10 @@ const AdminSettings: React.FC = () => {
               alignItems: 'center',
               justifyContent: 'center',
               gap: '0.5rem',
-              boxShadow: '0 4px 6px rgba(102, 126, 234, 0.25)'
+              boxShadow: '0 2px 6px rgba(79, 70, 229, 0.3)'
             }}
           >
-            <FiSave size={18} />
+            <FiSave size={16} />
             {saving ? 'Saving...' : 'Save Settings'}
           </motion.button>
         </div>

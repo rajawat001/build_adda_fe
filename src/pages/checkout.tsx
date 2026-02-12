@@ -6,6 +6,7 @@ import Footer from '../components/Footer';
 import { createOrder, initiatePhonepePayment } from '../services/order.service';
 import authService from '../services/auth.service';
 import { useCart } from '../context/CartContext';
+import api from '../services/api';
 
 interface Address {
   _id?: string;
@@ -55,8 +56,8 @@ export default function Checkout() {
       fullName: '',
       phone: '',
       address: '',
-      city: '',
-      state: '',
+      city: 'Jaipur',
+      state: 'Rajasthan',
       pincode: ''
     },
     couponCode: '',
@@ -86,6 +87,7 @@ export default function Checkout() {
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [cityError, setCityError] = useState<string>('');
   const [pincodeWarning, setPincodeWarning] = useState<string>('');
+  const [serviceAreas, setServiceAreas] = useState<{ state: string; cities: string[] }[]>([{ state: 'Rajasthan', cities: ['Jaipur'] }]);
 
   useEffect(() => {
     // Redirect to cart if empty (but not after successful order placement)
@@ -97,8 +99,27 @@ export default function Checkout() {
     // Fetch user profile to get saved addresses
     fetchUserProfile();
 
+    // Fetch service areas for state/city dropdowns
+    fetchServiceAreas();
+
     // No external payment scripts needed — PhonePe uses redirect
   }, [cartItems.length]);
+
+  const fetchServiceAreas = async () => {
+    try {
+      const response = await api.get('/settings/public');
+      if (response.data.success && response.data.settings.serviceAreas) {
+        setServiceAreas(response.data.settings.serviceAreas);
+      }
+    } catch (error) {
+      console.error('Failed to fetch service areas:', error);
+    }
+  };
+
+  const getCitiesForState = (stateName: string) => {
+    const area = serviceAreas.find(a => a.state === stateName);
+    return area ? area.cities : [];
+  };
 
   const fetchUserProfile = async () => {
     try {
@@ -707,30 +728,39 @@ export default function Checkout() {
                   </div>
                   <div className="form-row">
                     <div className="form-group">
+                      <label>State *</label>
+                      <select
+                        value={newAddress.state}
+                        onChange={(e) => {
+                          setNewAddress({ ...newAddress, state: e.target.value, city: '' });
+                          setAddressFieldErrors({...addressFieldErrors, state: '', city: ''});
+                        }}
+                        className={addressFieldErrors.state ? 'input-error' : ''}
+                      >
+                        <option value="">Select State</option>
+                        {serviceAreas.map(area => (
+                          <option key={area.state} value={area.state}>{area.state}</option>
+                        ))}
+                      </select>
+                      {addressFieldErrors.state && <span className="validation-error">{addressFieldErrors.state}</span>}
+                    </div>
+                    <div className="form-group">
                       <label>City *</label>
-                      <input
-                        type="text"
+                      <select
                         value={newAddress.city}
                         onChange={(e) => {
                           setNewAddress({ ...newAddress, city: e.target.value });
                           setAddressFieldErrors({...addressFieldErrors, city: ''});
                         }}
+                        disabled={!newAddress.state}
                         className={addressFieldErrors.city ? 'input-error' : ''}
-                      />
+                      >
+                        <option value="">{newAddress.state ? 'Select City' : 'Select a state first'}</option>
+                        {getCitiesForState(newAddress.state).map(city => (
+                          <option key={city} value={city}>{city}</option>
+                        ))}
+                      </select>
                       {addressFieldErrors.city && <span className="validation-error">{addressFieldErrors.city}</span>}
-                    </div>
-                    <div className="form-group">
-                      <label>State *</label>
-                      <input
-                        type="text"
-                        value={newAddress.state}
-                        onChange={(e) => {
-                          setNewAddress({ ...newAddress, state: e.target.value });
-                          setAddressFieldErrors({...addressFieldErrors, state: ''});
-                        }}
-                        className={addressFieldErrors.state ? 'input-error' : ''}
-                      />
-                      {addressFieldErrors.state && <span className="validation-error">{addressFieldErrors.state}</span>}
                     </div>
                     <div className="form-group">
                       <label>Pincode *</label>
@@ -805,27 +835,43 @@ export default function Checkout() {
                   </div>
 
                   <div className="form-group">
+                    <label>State *</label>
+                    <select
+                      name="state"
+                      value={formData.shippingAddress.state}
+                      onChange={(e) => {
+                        setFormData(prev => ({
+                          ...prev,
+                          shippingAddress: {
+                            ...prev.shippingAddress,
+                            state: e.target.value,
+                            city: ''
+                          }
+                        }));
+                      }}
+                      required
+                    >
+                      <option value="">Select State</option>
+                      {serviceAreas.map(area => (
+                        <option key={area.state} value={area.state}>{area.state}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="form-group">
                     <label>City *</label>
-                    <input
-                      type="text"
+                    <select
                       name="city"
                       value={formData.shippingAddress.city}
                       onChange={handleChange}
                       required
-                      placeholder="City"
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label>State *</label>
-                    <input
-                      type="text"
-                      name="state"
-                      value={formData.shippingAddress.state}
-                      onChange={handleChange}
-                      required
-                      placeholder="State"
-                    />
+                      disabled={!formData.shippingAddress.state}
+                    >
+                      <option value="">{formData.shippingAddress.state ? 'Select City' : 'Select a state first'}</option>
+                      {getCitiesForState(formData.shippingAddress.state).map(city => (
+                        <option key={city} value={city}>{city}</option>
+                      ))}
+                    </select>
                   </div>
 
                   <div className="form-group">
