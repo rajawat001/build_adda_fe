@@ -73,3 +73,21 @@ export const requireRole = (allowedRoles: string[], redirectUrl: string = '/'): 
   }
   return true;
 };
+
+export const getPermissions = (): string[] => {
+  const user = getUser();
+  return user?.permissions || [];
+};
+
+export const hasPermission = (permission: string): boolean => {
+  const permissions = getPermissions();
+  if (permissions.includes('*')) return true;
+  if (permissions.includes(permission)) return true;
+  const [entity] = permission.split('.');
+  if (permissions.includes(`${entity}.*`)) return true;
+  return false;
+};
+
+export const setUserWithPermissions = (user: any): void => {
+  setUser(user);
+};

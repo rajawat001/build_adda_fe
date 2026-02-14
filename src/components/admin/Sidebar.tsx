@@ -16,8 +16,10 @@ import {
   FiSettings,
   FiLogOut,
   FiTruck,
-  FiCreditCard
+  FiCreditCard,
+  FiUserCheck
 } from 'react-icons/fi';
+import { usePermissions } from '../../hooks/usePermissions';
 
 interface SidebarProps {
   onLogout: () => void;
@@ -25,23 +27,29 @@ interface SidebarProps {
 
 const Sidebar = ({ onLogout }: SidebarProps) => {
   const router = useRouter();
+  const { hasPermission } = usePermissions();
 
-  const menuItems = [
-    { icon: FiHome, label: 'Dashboard', path: '/admin/dashboard' },
-    { icon: FiUsers, label: 'Users', path: '/admin/users' },
-    { icon: FiTruck, label: 'Distributors', path: '/admin/distributors' },
-    { icon: FiPackage, label: 'Products', path: '/admin/products' },
-    { icon: FiShoppingCart, label: 'Orders', path: '/admin/orders' },
-    { icon: FiFolder, label: 'Categories', path: '/admin/categories' },
-    { icon: FiTag, label: 'Coupons', path: '/admin/coupons' },
-    { icon: FiCreditCard, label: 'Subscriptions', path: '/admin/subscription-plans' },
-    { icon: FiShield, label: 'Roles', path: '/admin/roles' },
-    { icon: FiMail, label: 'Email Templates', path: '/admin/email-templates' },
-    { icon: FiStar, label: 'Reviews', path: '/admin/reviews' },
-    { icon: FiMessageSquare, label: 'Messages', path: '/admin/contacts' },
-    { icon: FiActivity, label: 'Activity Logs', path: '/admin/activity-logs' },
-    { icon: FiSettings, label: 'Settings', path: '/admin/settings' },
+  const allMenuItems = [
+    { icon: FiHome, label: 'Dashboard', path: '/admin/dashboard', permission: null },
+    { icon: FiUsers, label: 'Users', path: '/admin/users', permission: 'users.view' },
+    { icon: FiTruck, label: 'Distributors', path: '/admin/distributors', permission: 'distributors.view' },
+    { icon: FiPackage, label: 'Products', path: '/admin/products', permission: 'products.view' },
+    { icon: FiShoppingCart, label: 'Orders', path: '/admin/orders', permission: 'orders.view' },
+    { icon: FiFolder, label: 'Categories', path: '/admin/categories', permission: 'categories.view' },
+    { icon: FiTag, label: 'Coupons', path: '/admin/coupons', permission: 'coupons.view' },
+    { icon: FiCreditCard, label: 'Subscriptions', path: '/admin/subscription-plans', permission: 'subscriptions.view' },
+    { icon: FiShield, label: 'Roles', path: '/admin/roles', permission: 'roles.view' },
+    { icon: FiUserCheck, label: 'Admin Users', path: '/admin/admin-users', permission: 'roles.view' },
+    { icon: FiMail, label: 'Email Templates', path: '/admin/email-templates', permission: 'emailTemplates.view' },
+    { icon: FiStar, label: 'Reviews', path: '/admin/reviews', permission: 'reviews.view' },
+    { icon: FiMessageSquare, label: 'Messages', path: '/admin/contacts', permission: 'contacts.view' },
+    { icon: FiActivity, label: 'Activity Logs', path: '/admin/activity-logs', permission: 'activityLogs.view' },
+    { icon: FiSettings, label: 'Settings', path: '/admin/settings', permission: 'settings.view' },
   ];
+
+  const menuItems = allMenuItems.filter(item =>
+    item.permission === null || hasPermission(item.permission)
+  );
 
   const isActive = (path: string) => router.pathname === path;
 

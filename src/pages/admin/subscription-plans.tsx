@@ -465,7 +465,7 @@ const SubscriptionPlansManagement: React.FC = () => {
   ];
 
   return (
-    <AdminLayout title="Subscription Plans">
+    <AdminLayout title="Subscription Plans" requiredPermission="subscriptions.view">
       <div className="admin-content">
         {/* Header */}
         <div style={{ marginBottom: '2rem' }}>

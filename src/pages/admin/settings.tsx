@@ -25,6 +25,7 @@ import {
   FiArrowLeft
 } from 'react-icons/fi';
 import api from '../../services/api';
+import { usePermissions } from '../../hooks/usePermissions';
 
 interface GSTSettings {
   enabled: boolean;
@@ -138,6 +139,7 @@ type SettingsSection =
 
 const AdminSettings: React.FC = () => {
   const router = useRouter();
+  const { hasPermission, loading: permissionsLoading } = usePermissions();
   const [activeSection, setActiveSection] = useState<SettingsSection>('general');
   const [settings, setSettings] = useState<Settings>({
     // General
@@ -1046,6 +1048,17 @@ const AdminSettings: React.FC = () => {
         return null;
     }
   };
+
+  if (!permissionsLoading && !hasPermission('settings.view')) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', textAlign: 'center', color: '#6b7280' }}>
+        <FiSettings style={{ width: 64, height: 64, color: '#9ca3af', marginBottom: '1.5rem' }} />
+        <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#1a202c', margin: '0 0 0.5rem' }}>Access Denied</h2>
+        <p style={{ fontSize: '1rem', margin: '0 0 1.5rem' }}>You don't have permission to view this page.</p>
+        <a href="/admin/dashboard" style={{ padding: '0.625rem 1.5rem', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', borderRadius: 8, textDecoration: 'none', fontWeight: 500 }}>Back to Dashboard</a>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

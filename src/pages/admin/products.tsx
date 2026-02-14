@@ -17,7 +17,9 @@ interface Product {
   description: string;
   price: number;
   mrp: number;
+  realPrice: number;
   stockQuantity: number;
+  stock: number;
   category?: {
     _id: string;
     name: string;
@@ -383,8 +385,8 @@ const ProductsManagement: React.FC = () => {
         name: product.name || '',
         description: product.description || '',
         price: product.price || 0,
-        mrp: product.mrp || 0,
-        stockQuantity: product.stockQuantity || 0,
+        mrp: product.realPrice || product.mrp || 0,
+        stockQuantity: product.stock || product.stockQuantity || 0,
         isActive: product.isActive ?? true
       });
       setShowEditModal(true);
@@ -536,7 +538,7 @@ const ProductsManagement: React.FC = () => {
   );
 
   return (
-    <AdminLayout title="Products Management">
+    <AdminLayout title="Products Management" requiredPermission="products.view">
       <div className="admin-content">
         {/* Header Section */}
         <div style={{ marginBottom: '2rem' }}>

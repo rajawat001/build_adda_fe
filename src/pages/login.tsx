@@ -60,7 +60,8 @@ export default function Login() {
       name: user.name,
       email: user.email,
       role: user.role,
-      isApproved: user.isApproved
+      isApproved: user.isApproved,
+      permissions: user.permissions
     }));
     localStorage.setItem('role', user.role);
     window.dispatchEvent(new Event('userLogin'));

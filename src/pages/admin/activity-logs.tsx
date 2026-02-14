@@ -212,7 +212,7 @@ const ActivityLogsPage: React.FC = () => {
   ];
 
   return (
-    <AdminLayout title="Activity Logs" >
+    <AdminLayout title="Activity Logs" requiredPermission="activityLogs.view">
       <div className="admin-content">
         {/* Header Section */}
         <div style={{ marginBottom: '2rem' }}>

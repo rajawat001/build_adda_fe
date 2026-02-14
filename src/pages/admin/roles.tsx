@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { FiShield, FiUsers, FiPlus, FiEdit, FiTrash2, FiCheck, FiX, FiLock } from 'react-icons/fi';
+import React, { useState, useEffect, useCallback } from 'react';
+import { FiShield, FiUsers, FiPlus, FiEdit, FiTrash2, FiCheck, FiX, FiLock, FiAlertCircle } from 'react-icons/fi';
 import AdminLayout from '../../components/admin/Layout';
 import StatCard from '../../components/admin/StatCard';
 import ConfirmDialog from '../../components/admin/ConfirmDialog';
@@ -12,6 +12,7 @@ interface Role {
   description: string;
   permissions: string[];
   isActive: boolean;
+  isSystem: boolean;
   createdAt: string;
   userCount?: number;
 }
@@ -32,71 +33,106 @@ interface PermissionGroup {
   }[];
 }
 
+// Must match Role model's validPermissions exactly
 const PERMISSION_GROUPS: PermissionGroup[] = [
   {
     name: 'users',
     label: 'User Management',
     permissions: [
       { key: 'users.view', label: 'View Users', description: 'View user list and details' },
-      { key: 'users.create', label: 'Create Users', description: 'Create new users' },
-      { key: 'users.edit', label: 'Edit Users', description: 'Edit user information' },
-      { key: 'users.delete', label: 'Delete Users', description: 'Delete users' }
+      { key: 'users.create', label: 'Create Users', description: 'Create new user accounts' },
+      { key: 'users.edit', label: 'Edit Users', description: 'Edit user information and status' },
+      { key: 'users.delete', label: 'Delete Users', description: 'Permanently delete users' }
     ]
   },
   {
     name: 'distributors',
     label: 'Distributor Management',
     permissions: [
-      { key: 'distributors.view', label: 'View Distributors', description: 'View distributor list' },
-      { key: 'distributors.approve', label: 'Approve Distributors', description: 'Approve/reject distributors' },
+      { key: 'distributors.view', label: 'View Distributors', description: 'View distributor list and details' },
+      { key: 'distributors.approve', label: 'Approve Distributors', description: 'Approve or reject distributor applications' },
       { key: 'distributors.edit', label: 'Edit Distributors', description: 'Edit distributor information' },
-      { key: 'distributors.delete', label: 'Delete Distributors', description: 'Delete distributors' }
+      { key: 'distributors.delete', label: 'Delete Distributors', description: 'Delete distributors and their products' }
     ]
   },
   {
     name: 'products',
     label: 'Product Management',
     permissions: [
-      { key: 'products.view', label: 'View Products', description: 'View product list' },
-      { key: 'products.edit', label: 'Edit Products', description: 'Edit product information' },
-      { key: 'products.delete', label: 'Delete Products', description: 'Delete products' }
+      { key: 'products.view', label: 'View Products', description: 'View product listings and details' },
+      { key: 'products.edit', label: 'Edit Products', description: 'Edit product information and pricing' },
+      { key: 'products.delete', label: 'Delete Products', description: 'Remove products from the platform' }
     ]
   },
   {
     name: 'orders',
     label: 'Order Management',
     permissions: [
-      { key: 'orders.view', label: 'View Orders', description: 'View order list and details' },
-      { key: 'orders.edit', label: 'Edit Orders', description: 'Update order status' },
-      { key: 'orders.refund', label: 'Process Refunds', description: 'Issue refunds' }
+      { key: 'orders.view', label: 'View Orders', description: 'View order list, details, and history' },
+      { key: 'orders.edit', label: 'Edit Orders', description: 'Update order status and details' },
+      { key: 'orders.refund', label: 'Process Refunds', description: 'Issue refunds for paid orders' }
     ]
   },
   {
     name: 'categories',
     label: 'Category Management',
     permissions: [
-      { key: 'categories.manage', label: 'Manage Categories', description: 'Full category management' }
+      { key: 'categories.view', label: 'View Categories', description: 'View product categories' },
+      { key: 'categories.create', label: 'Create Categories', description: 'Add new product categories' },
+      { key: 'categories.edit', label: 'Edit Categories', description: 'Edit category details' },
+      { key: 'categories.delete', label: 'Delete Categories', description: 'Remove product categories' }
     ]
   },
   {
     name: 'coupons',
     label: 'Coupon Management',
     permissions: [
-      { key: 'coupons.manage', label: 'Manage Coupons', description: 'Full coupon management' }
+      { key: 'coupons.view', label: 'View Coupons', description: 'View coupon list and usage' },
+      { key: 'coupons.create', label: 'Create Coupons', description: 'Create new discount coupons' },
+      { key: 'coupons.edit', label: 'Edit Coupons', description: 'Edit coupon settings' },
+      { key: 'coupons.delete', label: 'Delete Coupons', description: 'Remove coupons' }
     ]
   },
   {
-    name: 'analytics',
-    label: 'Analytics & Reports',
+    name: 'roles',
+    label: 'Role Management',
     permissions: [
-      { key: 'analytics.view', label: 'View Analytics', description: 'View analytics and reports' }
+      { key: 'roles.view', label: 'View Roles', description: 'View roles and permissions' },
+      { key: 'roles.create', label: 'Create Roles', description: 'Create new roles' },
+      { key: 'roles.edit', label: 'Edit Roles', description: 'Edit role permissions' },
+      { key: 'roles.delete', label: 'Delete Roles', description: 'Delete custom roles' }
+    ]
+  },
+  {
+    name: 'reviews',
+    label: 'Review Management',
+    permissions: [
+      { key: 'reviews.view', label: 'View Reviews', description: 'View product reviews' },
+      { key: 'reviews.approve', label: 'Approve Reviews', description: 'Approve or reject reviews' },
+      { key: 'reviews.delete', label: 'Delete Reviews', description: 'Remove reviews' }
     ]
   },
   {
     name: 'settings',
     label: 'System Settings',
     permissions: [
-      { key: 'settings.manage', label: 'Manage Settings', description: 'Configure system settings' }
+      { key: 'settings.view', label: 'View Settings', description: 'View system configuration' },
+      { key: 'settings.edit', label: 'Edit Settings', description: 'Modify system configuration' }
+    ]
+  },
+  {
+    name: 'activityLogs',
+    label: 'Activity Logs',
+    permissions: [
+      { key: 'activityLogs.view', label: 'View Activity Logs', description: 'View system activity and audit logs' }
+    ]
+  },
+  {
+    name: 'emailTemplates',
+    label: 'Email Templates',
+    permissions: [
+      { key: 'emailTemplates.view', label: 'View Templates', description: 'View email templates' },
+      { key: 'emailTemplates.edit', label: 'Edit Templates', description: 'Edit email templates' }
     ]
   }
 ];
@@ -131,6 +167,7 @@ const RolesManagement: React.FC = () => {
     onConfirm: () => {}
   });
   const [actionLoading, setActionLoading] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     fetchRoles();
@@ -140,10 +177,12 @@ const RolesManagement: React.FC = () => {
   const fetchRoles = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/admin/roles');
+      setError('');
+      const response = await api.get('/admin/roles?includeInactive=true');
       setRoles(response.data.roles || []);
-    } catch (error) {
-      console.error('Error fetching roles:', error);
+    } catch (err: any) {
+      console.error('Error fetching roles:', err);
+      setError(err.response?.data?.message || 'Failed to load roles');
     } finally {
       setLoading(false);
     }
@@ -152,10 +191,9 @@ const RolesManagement: React.FC = () => {
   const fetchStats = async () => {
     try {
       const response = await api.get('/admin/roles/stats');
-      const data = response.data;
-      setStats(data.stats || stats);
-    } catch (error) {
-      console.error('Error fetching stats:', error);
+      setStats(response.data.stats || stats);
+    } catch (err) {
+      console.error('Error fetching stats:', err);
     }
   };
 
@@ -174,33 +212,34 @@ const RolesManagement: React.FC = () => {
     setEditingRole(role);
     setFormData({
       name: role.name,
-      description: role.description,
-      permissions: role.permissions,
+      description: role.description || '',
+      permissions: [...role.permissions],
       isActive: role.isActive
     });
     setShowModal(true);
   };
 
-  const handleTogglePermission = (permission: string) => {
+  const handleTogglePermission = useCallback((permission: string) => {
     setFormData(prev => ({
       ...prev,
       permissions: prev.permissions.includes(permission)
         ? prev.permissions.filter(p => p !== permission)
         : [...prev.permissions, permission]
     }));
-  };
+  }, []);
 
-  const handleToggleAllInGroup = (group: PermissionGroup) => {
+  const handleToggleAllInGroup = useCallback((group: PermissionGroup) => {
     const groupPermissions = group.permissions.map(p => p.key);
-    const allSelected = groupPermissions.every(p => formData.permissions.includes(p));
-
-    setFormData(prev => ({
-      ...prev,
-      permissions: allSelected
-        ? prev.permissions.filter(p => !groupPermissions.includes(p))
-        : Array.from(new Set([...prev.permissions, ...groupPermissions]))
-    }));
-  };
+    setFormData(prev => {
+      const allSelected = groupPermissions.every(p => prev.permissions.includes(p));
+      return {
+        ...prev,
+        permissions: allSelected
+          ? prev.permissions.filter(p => !groupPermissions.includes(p))
+          : Array.from(new Set([...prev.permissions, ...groupPermissions]))
+      };
+    });
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -216,38 +255,45 @@ const RolesManagement: React.FC = () => {
       await fetchRoles();
       await fetchStats();
       setShowModal(false);
-    } catch (error) {
-      console.error('Save role failed:', error);
+    } catch (err: any) {
+      console.error('Save role failed:', err);
+      alert(err.response?.data?.message || 'Failed to save role');
     } finally {
       setActionLoading(false);
     }
   };
 
   const handleDeleteRole = (role: Role) => {
+    if (role.isSystem) {
+      alert('System roles cannot be deleted');
+      return;
+    }
+
     setConfirmDialog({
       isOpen: true,
       title: 'Delete Role',
-      message: `Are you sure you want to delete the role "${role.name}"? Users with this role will lose their permissions.`,
+      message: `Are you sure you want to delete the role "${role.name}"? This action cannot be undone.`,
       variant: 'danger',
       onConfirm: async () => {
         try {
           setActionLoading(true);
           await api.delete(`/admin/roles/${role._id}`);
-
           await fetchRoles();
           await fetchStats();
-        } catch (error) {
-          console.error('Delete failed:', error);
+        } catch (err: any) {
+          console.error('Delete failed:', err);
+          alert(err.response?.data?.message || 'Failed to delete role');
         } finally {
           setActionLoading(false);
-          setConfirmDialog({ ...confirmDialog, isOpen: false });
+          setConfirmDialog(prev => ({ ...prev, isOpen: false }));
         }
       }
     });
   };
 
   const getPermissionCount = (permissions: string[]) => {
-    return permissions.filter(p => p !== '*').length;
+    if (permissions.includes('*')) return 'All';
+    return permissions.length;
   };
 
   const RoleFormModal = () => (
@@ -283,7 +329,13 @@ const RolesManagement: React.FC = () => {
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     required
                     placeholder="e.g., Manager"
+                    disabled={editingRole?.isSystem}
                   />
+                  {editingRole?.isSystem && (
+                    <div style={{ fontSize: '0.75rem', color: 'var(--admin-text-secondary)', marginTop: '0.25rem' }}>
+                      System role names cannot be changed
+                    </div>
+                  )}
                 </div>
 
                 <div className="form-group">
@@ -299,7 +351,7 @@ const RolesManagement: React.FC = () => {
 
                 <div className="form-group">
                   <label className="form-label" style={{ marginBottom: '1rem' }}>
-                    Permissions ({formData.permissions.includes('*') ? 'All' : getPermissionCount(formData.permissions)} selected)
+                    Permissions ({getPermissionCount(formData.permissions)} selected)
                   </label>
 
                   {/* Super Admin - All Permissions */}
@@ -334,7 +386,7 @@ const RolesManagement: React.FC = () => {
                     const someSelected = groupPermissions.some(p => formData.permissions.includes(p));
 
                     return (
-                      <div key={group.name} style={{ marginBottom: '1.5rem', border: '1px solid var(--admin-border-primary)', borderRadius: '8px', overflow: 'hidden' }}>
+                      <div key={group.name} style={{ marginBottom: '1rem', border: '1px solid var(--admin-border-primary)', borderRadius: '8px', overflow: 'hidden' }}>
                         {/* Group Header */}
                         <div style={{ padding: '0.75rem 1rem', background: 'var(--admin-bg-secondary)', borderBottom: '1px solid var(--admin-border-primary)' }}>
                           <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', margin: 0 }}>
@@ -352,6 +404,9 @@ const RolesManagement: React.FC = () => {
                             <span style={{ fontWeight: 600, color: 'var(--admin-text-primary)' }}>
                               {group.label}
                             </span>
+                            <span style={{ fontSize: '0.75rem', color: 'var(--admin-text-secondary)', marginLeft: 'auto' }}>
+                              {groupPermissions.filter(p => formData.permissions.includes(p)).length}/{groupPermissions.length}
+                            </span>
                           </label>
                         </div>
 
@@ -364,7 +419,7 @@ const RolesManagement: React.FC = () => {
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: '0.75rem',
-                                padding: '0.75rem',
+                                padding: '0.625rem 0.75rem',
                                 cursor: 'pointer',
                                 borderRadius: '6px',
                                 transition: 'background 0.2s'
@@ -442,7 +497,7 @@ const RolesManagement: React.FC = () => {
   );
 
   return (
-    <AdminLayout title="Roles & Permissions">
+    <AdminLayout title="Roles & Permissions" requiredPermission="roles.view">
       <div className="admin-content">
         {/* Header Section */}
         <div style={{ marginBottom: '2rem' }}>
@@ -468,7 +523,7 @@ const RolesManagement: React.FC = () => {
               value={stats.total.toLocaleString()}
               icon={FiShield}
               variant="products"
-              subtitle="All roles"
+              subtitle="All defined roles"
             />
             <StatCard
               title="Active Roles"
@@ -482,10 +537,28 @@ const RolesManagement: React.FC = () => {
               value={stats.totalUsers.toLocaleString()}
               icon={FiUsers}
               variant="users"
-              subtitle="Assigned to roles"
+              subtitle="All users across roles"
             />
           </div>
         </div>
+
+        {/* Error State */}
+        {error && (
+          <div style={{
+            padding: '1rem 1.5rem',
+            background: '#fef2f2',
+            border: '1px solid #fecaca',
+            borderRadius: '8px',
+            color: '#dc2626',
+            marginBottom: '1.5rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}>
+            <FiAlertCircle size={18} />
+            {error}
+          </div>
+        )}
 
         {/* Roles List */}
         <motion.div
@@ -505,11 +578,12 @@ const RolesManagement: React.FC = () => {
                   style={{
                     padding: '1.5rem',
                     background: 'white',
-                    border: '1px solid var(--admin-border-primary)',
+                    border: `1px solid ${role.isActive ? 'var(--admin-border-primary)' : '#fecaca'}`,
                     borderRadius: '12px',
                     display: 'flex',
                     justifyContent: 'space-between',
-                    alignItems: 'flex-start'
+                    alignItems: 'flex-start',
+                    opacity: role.isActive ? 1 : 0.7
                   }}
                 >
                   <div style={{ flex: 1 }}>
@@ -518,18 +592,37 @@ const RolesManagement: React.FC = () => {
                         width: '40px',
                         height: '40px',
                         borderRadius: '8px',
-                        background: role.permissions.includes('*') ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' : 'var(--admin-gradient)',
+                        background: role.permissions.includes('*')
+                          ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
+                          : 'var(--admin-gradient)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        color: 'white'
+                        color: 'white',
+                        flexShrink: 0
                       }}>
                         {role.permissions.includes('*') ? <FiLock size={20} /> : <FiShield size={20} />}
                       </div>
                       <div>
-                        <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: 'var(--admin-text-primary)', margin: 0 }}>
-                          {role.name}
-                        </h3>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: 'var(--admin-text-primary)', margin: 0 }}>
+                            {role.name}
+                          </h3>
+                          {role.isSystem && (
+                            <span style={{
+                              fontSize: '0.625rem',
+                              fontWeight: 600,
+                              padding: '0.125rem 0.5rem',
+                              background: '#dbeafe',
+                              color: '#1e40af',
+                              borderRadius: '4px',
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.05em'
+                            }}>
+                              System
+                            </span>
+                          )}
+                        </div>
                         {role.description && (
                           <p style={{ fontSize: '0.875rem', color: 'var(--admin-text-secondary)', margin: '0.25rem 0 0 0' }}>
                             {role.description}
@@ -546,27 +639,48 @@ const RolesManagement: React.FC = () => {
                         <span className="badge red">Full Access</span>
                       ) : (
                         <span className="badge purple">
-                          {getPermissionCount(role.permissions)} Permissions
+                          {role.permissions.length} Permission{role.permissions.length !== 1 ? 's' : ''}
                         </span>
                       )}
-                      {role.userCount !== undefined && (
-                        <span className="badge blue">
-                          <FiUsers size={12} style={{ marginRight: '0.25rem' }} />
-                          {role.userCount} users
-                        </span>
-                      )}
+                      <span className="badge blue">
+                        <FiUsers size={12} style={{ marginRight: '0.25rem' }} />
+                        {role.userCount ?? 0} user{(role.userCount ?? 0) !== 1 ? 's' : ''}
+                      </span>
                     </div>
 
                     {/* Permission Preview */}
                     {!role.permissions.includes('*') && role.permissions.length > 0 && (
-                      <div style={{ marginTop: '1rem', fontSize: '0.875rem', color: 'var(--admin-text-secondary)' }}>
-                        <strong>Permissions:</strong> {role.permissions.slice(0, 5).join(', ')}
-                        {role.permissions.length > 5 && ` +${role.permissions.length - 5} more`}
+                      <div style={{ marginTop: '0.75rem', fontSize: '0.8125rem', color: 'var(--admin-text-secondary)' }}>
+                        {role.permissions.slice(0, 6).map((p, i) => (
+                          <span key={p} style={{
+                            display: 'inline-block',
+                            padding: '0.125rem 0.5rem',
+                            background: 'var(--admin-bg-secondary)',
+                            borderRadius: '4px',
+                            marginRight: '0.375rem',
+                            marginBottom: '0.375rem',
+                            fontSize: '0.75rem'
+                          }}>
+                            {p}
+                          </span>
+                        ))}
+                        {role.permissions.length > 6 && (
+                          <span style={{
+                            display: 'inline-block',
+                            padding: '0.125rem 0.5rem',
+                            background: 'var(--admin-bg-secondary)',
+                            borderRadius: '4px',
+                            fontSize: '0.75rem',
+                            fontWeight: 500
+                          }}>
+                            +{role.permissions.length - 6} more
+                          </span>
+                        )}
                       </div>
                     )}
                   </div>
 
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0, marginLeft: '1rem' }}>
                     <button
                       className="btn-icon"
                       title="Edit Role"
@@ -574,13 +688,15 @@ const RolesManagement: React.FC = () => {
                     >
                       <FiEdit size={16} />
                     </button>
-                    <button
-                      className="btn-icon danger"
-                      title="Delete Role"
-                      onClick={() => handleDeleteRole(role)}
-                    >
-                      <FiTrash2 size={16} />
-                    </button>
+                    {!role.isSystem && (
+                      <button
+                        className="btn-icon danger"
+                        title="Delete Role"
+                        onClick={() => handleDeleteRole(role)}
+                      >
+                        <FiTrash2 size={16} />
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -610,7 +726,7 @@ const RolesManagement: React.FC = () => {
           message={confirmDialog.message}
           variant={confirmDialog.variant}
           onConfirm={confirmDialog.onConfirm}
-          onCancel={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
+          onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
           loading={actionLoading}
         />
       </div>

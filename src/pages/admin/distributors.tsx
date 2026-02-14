@@ -566,7 +566,7 @@ const DistributorsManagement: React.FC = () => {
   };
 
   return (
-    <AdminLayout title="Distributors Management" >
+    <AdminLayout title="Distributors Management" requiredPermission="distributors.view">
       <div className="admin-content">
         {/* Header Section */}
         <div style={{ marginBottom: '2rem' }}>

@@ -395,7 +395,7 @@ const CouponsManagement: React.FC = () => {
   ];
 
   return (
-    <AdminLayout title="Coupons Management">
+    <AdminLayout title="Coupons Management" requiredPermission="coupons.view">
       <div className="admin-content">
         {/* Header Section */}
         <div style={{ marginBottom: '2rem' }}>

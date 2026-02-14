@@ -591,7 +591,7 @@ const ReviewsManagement: React.FC = () => {
   );
 
   return (
-    <AdminLayout title="Reviews Management" >
+    <AdminLayout title="Reviews Management" requiredPermission="reviews.view">
       <div className="admin-content">
         {/* Header Section */}
         <div style={{ marginBottom: '2rem' }}>

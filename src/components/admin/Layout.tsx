@@ -5,12 +5,14 @@ import SEO from '../SEO';
 import { NotificationBell } from '../NotificationBell';
 import GoogleTranslate from '../GoogleTranslate';
 import Link from 'next/link';
-import { FiUser, FiSearch, FiUsers, FiShoppingCart, FiTruck, FiPackage } from 'react-icons/fi';
+import { FiUser, FiSearch, FiUsers, FiShoppingCart, FiTruck, FiPackage, FiLock } from 'react-icons/fi';
 import api from '../../services/api';
+import { usePermissions } from '../../hooks/usePermissions';
 
 interface LayoutProps {
   children: ReactNode;
   title?: string;
+  requiredPermission?: string;
 }
 
 interface SearchResults {
@@ -20,8 +22,9 @@ interface SearchResults {
   products: any[];
 }
 
-const AdminLayout = ({ children, title = 'Admin Panel' }: LayoutProps) => {
+const AdminLayout = ({ children, title = 'Admin Panel', requiredPermission }: LayoutProps) => {
   const router = useRouter();
+  const { hasPermission, loading: permissionsLoading } = usePermissions();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResults>({ users: [], distributors: [], orders: [], products: [] });
   const [searchLoading, setSearchLoading] = useState(false);
@@ -207,7 +210,18 @@ const AdminLayout = ({ children, title = 'Admin Panel' }: LayoutProps) => {
           </div>
 
           <div className="main-content">
-            {children}
+            {requiredPermission && !permissionsLoading && !hasPermission(requiredPermission) ? (
+              <div className="access-denied">
+                <FiLock className="access-denied-icon" />
+                <h2>Access Denied</h2>
+                <p>You don't have permission to view this page.</p>
+                <Link href="/admin/dashboard" className="back-link">
+                  Back to Dashboard
+                </Link>
+              </div>
+            ) : (
+              children
+            )}
           </div>
         </main>
       </div>
@@ -477,6 +491,50 @@ const AdminLayout = ({ children, title = 'Admin Panel' }: LayoutProps) => {
           .global-search:focus {
             width: 200px;
           }
+        }
+
+        .access-denied {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          min-height: 60vh;
+          text-align: center;
+          color: var(--text-secondary, #6b7280);
+        }
+
+        .access-denied :global(.access-denied-icon) {
+          width: 64px;
+          height: 64px;
+          color: var(--text-secondary, #9ca3af);
+          margin-bottom: 1.5rem;
+        }
+
+        .access-denied h2 {
+          font-size: 1.5rem;
+          font-weight: 700;
+          color: var(--text-primary, #1a202c);
+          margin: 0 0 0.5rem;
+        }
+
+        .access-denied p {
+          font-size: 1rem;
+          margin: 0 0 1.5rem;
+        }
+
+        .access-denied :global(.back-link) {
+          display: inline-block;
+          padding: 0.625rem 1.5rem;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+          border-radius: 8px;
+          text-decoration: none;
+          font-weight: 500;
+          transition: opacity 0.2s;
+        }
+
+        .access-denied :global(.back-link:hover) {
+          opacity: 0.9;
         }
 
         :global(body) {

@@ -551,7 +551,7 @@ const OrdersManagement: React.FC = () => {
   };
 
   return (
-    <AdminLayout title="Orders Management">
+    <AdminLayout title="Orders Management" requiredPermission="orders.view">
       <div className="admin-content">
         {/* Header Section */}
         <div style={{ marginBottom: '2rem' }}>

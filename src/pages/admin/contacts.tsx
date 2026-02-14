@@ -546,7 +546,7 @@ const ContactsManagement: React.FC = () => {
   );
 
   return (
-    <AdminLayout title="Contact Messages">
+    <AdminLayout title="Contact Messages" requiredPermission="contacts.view">
       <div className="admin-content">
         {/* Header */}
         <div style={{ marginBottom: '2rem' }}>

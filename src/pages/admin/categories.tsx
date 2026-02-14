@@ -274,7 +274,7 @@ const CategoriesManagement: React.FC = () => {
   };
 
   return (
-    <AdminLayout title="Categories Management">
+    <AdminLayout title="Categories Management" requiredPermission="categories.view">
       <div className="admin-content">
         {/* Header Section */}
         <div style={{ marginBottom: '2rem' }}>

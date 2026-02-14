@@ -438,7 +438,7 @@ const EmailTemplatesManagement: React.FC = () => {
   );
 
   return (
-    <AdminLayout title="Email Templates">
+    <AdminLayout title="Email Templates" requiredPermission="emailTemplates.view">
       <div className="admin-content">
         {/* Header Section */}
         <div style={{ marginBottom: '2rem' }}>

@@ -512,7 +512,7 @@ const UsersManagement: React.FC = () => {
   };
 
   return (
-    <AdminLayout title="Users Management">
+    <AdminLayout title="Users Management" requiredPermission="users.view">
       <div className="admin-content">
         {/* Header Section */}
         <div style={{ marginBottom: '2rem' }}>
