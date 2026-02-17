@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/router';
 import SEO from '../components/SEO';
 import Header from '../components/Header';
@@ -40,20 +40,36 @@ const Distributors = () => {
   const router = useRouter();
   const { location: userLocation, isLoading: locationLoading, retryDetection } = useLocation();
 
-  useEffect(() => {
-    if (locationLoading) return;
+  const locationResolvedRef = useRef(false);
 
+  useEffect(() => {
     const searchParam = router.query.search as string | undefined;
+
     if (searchParam && searchParam.trim()) {
+      // Search param always takes priority
       setActiveSearch(searchParam.trim());
       setIsNearbyMode(false);
       fetchAllDistributors(1, true, searchParam.trim());
-    } else if (userLocation) {
-      // Auto-filter by location
+      return;
+    }
+
+    if (locationLoading && !locationResolvedRef.current) {
+      // Still detecting location — show all distributors immediately
+      setActiveSearch('');
+      setIsNearbyMode(false);
+      fetchAllDistributors(1, true);
+      return;
+    }
+
+    locationResolvedRef.current = true;
+
+    if (userLocation) {
+      // Location available — auto-filter by location
       setActiveSearch('');
       setIsNearbyMode(true);
       fetchNearbyDistributors();
     } else {
+      // No location (denied or unavailable) — show all
       setActiveSearch('');
       setIsNearbyMode(false);
       fetchAllDistributors(1, true);
@@ -78,7 +94,7 @@ const Distributors = () => {
     setLoading(true);
     try {
       const response = await api.get(
-        `/users/distributors/nearby?lat=${userLocation.lat}&lng=${userLocation.lng}&distance=${maxDistance}`
+        `/users/distributors/nearby?lat=${userLocation.lat}&lng=${userLocation.lng}&pincode=${userLocation.pincode}&distance=${maxDistance}`
       );
       setDistributors(response.data.distributors || []);
       setHasMore(false);
@@ -162,7 +178,7 @@ const Distributors = () => {
     setIsNearbyMode(true);
     try {
       const response = await api.get(
-        `/users/distributors/nearby?lat=${userLocation.lat}&lng=${userLocation.lng}&distance=${maxDistance}`
+        `/users/distributors/nearby?lat=${userLocation.lat}&lng=${userLocation.lng}&pincode=${userLocation.pincode}&distance=${maxDistance}`
       );
       setDistributors(response.data.distributors || []);
       setHasMore(false);

@@ -75,11 +75,27 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
+  // Load data immediately, then re-fetch when location becomes available
+  const locationResolvedRef = useRef(false);
+
   useEffect(() => {
-    if (locationLoading) return;
+    // Always load categories (not location-dependent)
+    loadCategories();
+  }, []);
+
+  useEffect(() => {
+    // On first render, load without location if still detecting
+    // When location resolves (or changes), re-fetch with location
+    if (locationLoading && !locationResolvedRef.current) {
+      // First load — show products immediately without location filter
+      loadProducts();
+      loadDistributors();
+      return;
+    }
+
+    locationResolvedRef.current = true;
     loadProducts();
     loadDistributors();
-    loadCategories();
   }, [locationLoading, userLocation]);
 
   // Auto-scroll categories
@@ -141,7 +157,7 @@ export default function Home() {
       let response;
       if (userLocation) {
         response = await api.get(
-          `/users/distributors/nearby?lat=${userLocation.lat}&lng=${userLocation.lng}&distance=50`
+          `/users/distributors/nearby?lat=${userLocation.lat}&lng=${userLocation.lng}&pincode=${userLocation.pincode}&distance=50`
         );
       } else {
         response = await api.get('/users/distributors?limit=6');
@@ -448,7 +464,7 @@ export default function Home() {
               <p className="section-subtitle">Handpicked products for your construction needs</p>
             </div>
 
-            {loading || locationLoading ? (
+            {loading ? (
               <div className="loading-state">
                 <p>Loading products...</p>
               </div>
