@@ -6,19 +6,6 @@ import { StatsCard, Card, Loading, Button } from '../../components/ui';
 import { useIsMobile } from '../../hooks';
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  ArcElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler,
-} from 'chart.js';
-import {
   FiDollarSign,
   FiShoppingCart,
   FiPackage,
@@ -30,20 +17,6 @@ import {
 } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import api from '../../services/api';
-
-// Register ChartJS components
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  ArcElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler
-);
 
 interface DashboardStats {
   totalRevenue: number;

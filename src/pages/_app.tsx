@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import type { AppProps} from 'next/app';
 import Head from 'next/head';
+import '../utils/chartSetup';
 import { ThemeProvider } from '../contexts/ThemeContext';
 import { NotificationProvider } from '../contexts/NotificationContext';
 import { CartProvider } from '../context/CartContext';

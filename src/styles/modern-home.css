@@ -324,6 +324,9 @@
   font-size: 18px;
   font-weight: 600;
   color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* FEATURED SECTION */
@@ -411,6 +414,10 @@
   font-weight: 700;
   color: #111827;
   margin-bottom: 12px;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .distributor-info {
@@ -426,6 +433,13 @@
   gap: 8px;
   color: #6b7280;
   font-size: 14px;
+  min-width: 0;
+}
+
+.info-item span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .rating-row {

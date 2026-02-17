@@ -19,7 +19,6 @@ import {
 } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import { motion, AnimatePresence } from 'framer-motion';
-import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import api from '../../services/api';
 
@@ -117,7 +116,8 @@ const Products = () => {
     }
   };
 
-  const handleExport = () => {
+  const handleExport = async () => {
+    const XLSX = await import('xlsx');
     const exportData = filteredProducts.map((p) => ({
       Name: p.name,
       Category: p.category,

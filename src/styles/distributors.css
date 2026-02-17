@@ -404,7 +404,10 @@
   color: #4b5563;
   font-size: 0.85rem;
   line-height: 1.4;
-  word-break: break-word;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .distance-badge {

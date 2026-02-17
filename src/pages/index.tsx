@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/router';
+import Image from 'next/image';
 import SEO from '../components/SEO';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
@@ -307,11 +308,15 @@ export default function Home() {
         <section className="hero-banner">
           <div className="hero-banner-img-wrap">
             {bannerImages.map((src, idx) => (
-              <img
+              <Image
                 key={src}
                 src={src}
                 alt={`BuildAdda Banner ${idx + 1}`}
                 className={`hero-banner-img${idx === currentBanner ? ' active' : ''}`}
+                width={1920}
+                height={600}
+                priority={idx === 0}
+                sizes="100vw"
               />
             ))}
           </div>
@@ -376,7 +381,8 @@ export default function Home() {
                   >
                     <div className="category-image">
                       {category.image ? (
-                        <img src={category.image} alt={category.name} />
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={category.image} alt={category.name} loading="lazy" />
                       ) : (
                         <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                           {getCategoryIcon(category.name)}

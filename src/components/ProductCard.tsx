@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Product } from '../types';
 import { useCart } from '../context/CartContext';
 import productService from '../services/product.service';
@@ -13,7 +14,10 @@ interface ProductCardProps {
   showWishlist?: boolean;
 }
 
-export default function ProductCard({ product, onAddToCart, onAddToWishlist, showWishlist = true }: ProductCardProps) {
+// Default placeholder image (simple gray building materials icon)
+const defaultImage = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iI2Y1ZjVmNSIvPjxwYXRoIGQ9Ik0xNTAgMTAwaDEwMHYyMDBoLTEwMHoiIGZpbGw9IiNkOTc3MDYiLz48cGF0aCBkPSJNMTgwIDEzMGg0MHY0MGgtNDB6TTEwMCAyMDBoMjAwdjIwaC0yMDB6IiBmaWxsPSIjYjQ1MzA5Ii8+PHRleHQgeD0iNTAlIiB5PSI1NSUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+QnVpbGRpbmcgTWF0ZXJpYWw8L3RleHQ+PC9zdmc+';
+
+function ProductCard({ product, onAddToCart, onAddToWishlist, showWishlist = true }: ProductCardProps) {
   const [isInWishlist, setIsInWishlist] = useState(false);
   const [wishlistLoading, setWishlistLoading] = useState(false);
   const { addToCart } = useCart();
@@ -98,20 +102,22 @@ export default function ProductCard({ product, onAddToCart, onAddToWishlist, sho
     ? product.category
     : product.category?.name || 'Unknown';
 
-  // Default placeholder image (simple gray building materials icon)
-  const defaultImage = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iI2Y1ZjVmNSIvPjxwYXRoIGQ9Ik0xNTAgMTAwaDEwMHYyMDBoLTEwMHoiIGZpbGw9IiNkOTc3MDYiLz48cGF0aCBkPSJNMTgwIDEzMGg0MHY0MGgtNDB6TTEwMCAyMDBoMjAwdjIwaC0yMDB6IiBmaWxsPSIjYjQ1MzA5Ii8+PHRleHQgeD0iNTAlIiB5PSI1NSUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+QnVpbGRpbmcgTWF0ZXJpYWw8L3RleHQ+PC9zdmc+';
-
   return (
     <div className="product-card">
       <Link href={`/products/${product._id}`} className="product-image-link">
         <div className="product-image">
-          <img
-            src={product.image || defaultImage}
-            alt={product.name}
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = defaultImage;
-            }}
-          />
+          {(product.image && product.image.startsWith('http')) ? (
+            <Image
+              src={product.image}
+              alt={product.name}
+              width={400}
+              height={400}
+              sizes="(max-width:768px) 50vw, 25vw"
+            />
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={product.image || defaultImage} alt={product.name} />
+          )}
           {showWishlist && (
             <button
               className={`wishlist-btn ${isInWishlist ? 'active' : ''}`}
@@ -139,9 +145,7 @@ export default function ProductCard({ product, onAddToCart, onAddToWishlist, sho
           </Link>
         </p>
         {product.brand && (
-          <p className="brand" style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', fontWeight: 500, marginBottom: '0.25rem' }}>
-            {product.brand}
-          </p>
+          <p className="brand">{product.brand}</p>
         )}
         <div className="product-footer">
           <span className="price">
@@ -180,3 +184,5 @@ export default function ProductCard({ product, onAddToCart, onAddToWishlist, sho
     </div>
   );
 }
+
+export default React.memo(ProductCard);

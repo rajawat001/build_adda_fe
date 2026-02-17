@@ -3,23 +3,9 @@ import { useRouter } from 'next/router';
 import DistributorLayout from '../../components/distributor/Layout';
 import { Button, Card, Loading, Badge } from '../../components/ui';
 import { Line, Bar, Doughnut, Pie } from 'react-chartjs-2';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  ArcElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler,
-} from 'chart.js';
 import api from '../../services/api';
 import { toast } from 'react-toastify';
 import { format, subDays, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
-import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import { useIsMobile } from '../../hooks';
 import {
@@ -34,19 +20,6 @@ import {
   FiBarChart2,
   FiPieChart,
 } from 'react-icons/fi';
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  ArcElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler
-);
 
 interface AnalyticsData {
   revenue: {
@@ -149,9 +122,10 @@ const Analytics = () => {
     }
   };
 
-  const exportToExcel = () => {
+  const exportToExcel = async () => {
     if (!analyticsData) return;
 
+    const XLSX = await import('xlsx');
     const wb = XLSX.utils.book_new();
 
     // Revenue data

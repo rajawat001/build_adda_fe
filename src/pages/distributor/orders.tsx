@@ -20,7 +20,6 @@ import {
 } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import { motion, AnimatePresence } from 'framer-motion';
-import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import { format, formatDistanceToNow } from 'date-fns';
 import api from '../../services/api';
@@ -159,7 +158,8 @@ const Orders = () => {
     }
   };
 
-  const handleExport = () => {
+  const handleExport = async () => {
+    const XLSX = await import('xlsx');
     const exportData = filteredOrders.map((o) => ({
       'Order Number': o.orderNumber,
       Customer: o.user?.name || 'Unknown User',

@@ -3,19 +3,6 @@ import AdminLayout from '../../components/admin/Layout';
 import StatCard from '../../components/admin/StatCard';
 import { Line, Doughnut, Bar } from 'react-chartjs-2';
 import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  ArcElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler
-} from 'chart.js';
-import {
   FiDollarSign,
   FiShoppingCart,
   FiUsers,
@@ -28,20 +15,6 @@ import {
 } from 'react-icons/fi';
 import api from '../../services/api';
 import { formatDistanceToNow } from 'date-fns';
-
-// Register ChartJS components
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  ArcElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler
-);
 
 interface DashboardStats {
   totalRevenue: number;
@@ -329,7 +302,7 @@ const AdminDashboard = () => {
       </div>
 
       {/* Quick Stats Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+      <div className="admin-stat-grid">
         <div className="stat-card products">
           <div className="stat-card-header">
             <div className="stat-card-icon products">
@@ -406,42 +379,16 @@ const AdminDashboard = () => {
         </div>
         <div style={{ padding: '1.5rem' }}>
           {activityLogs.map((log) => (
-            <div
-              key={log._id}
-              style={{
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: '1rem',
-                padding: '1rem',
-                borderBottom: '1px solid var(--admin-border-primary)',
-                transition: 'background 0.2s'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.background = 'var(--admin-bg-hover)'}
-              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-            >
-              <div style={{
-                width: '40px',
-                height: '40px',
-                borderRadius: '50%',
-                background: 'var(--admin-gradient)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'white',
-                flexShrink: 0
-              }}>
+            <div key={log._id} className="admin-activity-item">
+              <div className="admin-activity-avatar">
                 {log.action === 'approve' && <FiCheckCircle />}
                 {log.action === 'update' && <FiTrendingUp />}
                 {log.action === 'create' && <FiPackage />}
                 {!['approve', 'update', 'create'].includes(log.action) && <FiAlertCircle />}
               </div>
-              <div style={{ flex: 1 }}>
-                <p style={{ margin: 0, fontWeight: 500, color: 'var(--admin-text-primary)' }}>
-                  {log.description}
-                </p>
-                <p style={{ margin: '0.25rem 0 0', fontSize: '0.875rem', color: 'var(--admin-text-secondary)' }}>
-                  by {log.adminName} • {formatDistanceToNow(new Date(log.createdAt), { addSuffix: true })}
-                </p>
+              <div className="admin-activity-content">
+                <p>{log.description}</p>
+                <p>by {log.adminName} • {formatDistanceToNow(new Date(log.createdAt), { addSuffix: true })}</p>
               </div>
             </div>
           ))}
