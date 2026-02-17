@@ -3,6 +3,7 @@ import type { AppProps} from 'next/app';
 import Head from 'next/head';
 import '../utils/chartSetup';
 import { ThemeProvider } from '../contexts/ThemeContext';
+import { LocationProvider } from '../context/LocationContext';
 import { NotificationProvider } from '../contexts/NotificationContext';
 import { CartProvider } from '../context/CartContext';
 import { ToastProvider } from '../components/common/ToastContainer';
@@ -83,6 +84,7 @@ export default function App({ Component, pageProps }: AppProps) {
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes" />
       </Head>
     <ThemeProvider>
+      <LocationProvider>
       <NotificationProvider>
         <CartProvider>
           <ToastProvider>
@@ -106,6 +108,7 @@ export default function App({ Component, pageProps }: AppProps) {
           </ToastProvider>
         </CartProvider>
       </NotificationProvider>
+      </LocationProvider>
     </ThemeProvider>
     </>
   );

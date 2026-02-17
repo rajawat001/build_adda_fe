@@ -124,19 +124,21 @@
   .product-card .product-title-link {
     display: block !important;
     text-decoration: none !important;
+    overflow: hidden !important;
+    min-width: 0 !important;
   }
 
-  /* ── Title — 2-line clamp ── */
+  /* ── Title — single-line truncation ── */
   .product-card .product-info h3 {
     font-size: 12px !important;
     font-weight: 600 !important;
     line-height: 1.3 !important;
     margin: 0 0 2px 0 !important;
     min-height: unset !important;
-    display: -webkit-box !important;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
+    display: block !important;
+    white-space: nowrap !important;
     overflow: hidden !important;
+    text-overflow: ellipsis !important;
     color: #282c3f !important;
   }
 

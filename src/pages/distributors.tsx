@@ -4,7 +4,7 @@ import SEO from '../components/SEO';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import api from '../services/api';
-import { getCurrentLocation } from '../utils/location';
+import { useLocation } from '../context/LocationContext';
 import { FiFilter, FiX, FiMapPin, FiSearch, FiMail, FiPhone, FiNavigation, FiStar, FiCheckCircle, FiArrowRight } from 'react-icons/fi';
 
 interface Distributor {
@@ -34,22 +34,31 @@ const Distributors = () => {
   const [hasMore, setHasMore] = useState(true);
   const [searchPincode, setSearchPincode] = useState('');
   const [maxDistance, setMaxDistance] = useState(50);
-  const [userLocation, setUserLocation] = useState<{lat: number; lng: number} | null>(null);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [activeSearch, setActiveSearch] = useState('');
+  const [isNearbyMode, setIsNearbyMode] = useState(false);
   const router = useRouter();
+  const { location: userLocation, isLoading: locationLoading, retryDetection } = useLocation();
 
   useEffect(() => {
+    if (locationLoading) return;
+
     const searchParam = router.query.search as string | undefined;
     if (searchParam && searchParam.trim()) {
       setActiveSearch(searchParam.trim());
+      setIsNearbyMode(false);
       fetchAllDistributors(1, true, searchParam.trim());
+    } else if (userLocation) {
+      // Auto-filter by location
+      setActiveSearch('');
+      setIsNearbyMode(true);
+      fetchNearbyDistributors();
     } else {
       setActiveSearch('');
+      setIsNearbyMode(false);
       fetchAllDistributors(1, true);
     }
-    detectUserLocation();
-  }, [router.query.search]);
+  }, [router.query.search, locationLoading, userLocation]);
 
   // Lock body scroll when mobile filters are open
   useEffect(() => {
@@ -64,17 +73,22 @@ const Distributors = () => {
     };
   }, [showMobileFilters]);
 
-
-  const detectUserLocation = async () => {
+  const fetchNearbyDistributors = async () => {
+    if (!userLocation) return;
+    setLoading(true);
     try {
-      const location = await getCurrentLocation();
-      setUserLocation({
-        lat: location.latitude,
-        lng: location.longitude
-      });
+      const response = await api.get(
+        `/users/distributors/nearby?lat=${userLocation.lat}&lng=${userLocation.lng}&distance=${maxDistance}`
+      );
+      setDistributors(response.data.distributors || []);
+      setHasMore(false);
     } catch (error) {
-      // Location access denied or timed out - this is expected, user can search by pincode instead
-      console.log('Location not available - user can search by pincode');
+      console.error('No nearby distributors:', error);
+      // Fall back to all distributors
+      setIsNearbyMode(false);
+      fetchAllDistributors(1, true);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -139,16 +153,19 @@ const Distributors = () => {
 
   const searchByCurrentLocation = async () => {
     if (!userLocation) {
-      alert('Location access denied. Please enter pincode manually.');
+      retryDetection();
+      alert('Detecting your location... Please try again in a moment.');
       return;
     }
 
     setLoading(true);
+    setIsNearbyMode(true);
     try {
       const response = await api.get(
         `/users/distributors/nearby?lat=${userLocation.lat}&lng=${userLocation.lng}&distance=${maxDistance}`
       );
       setDistributors(response.data.distributors || []);
+      setHasMore(false);
     } catch (error) {
       console.error('Error searching distributors:', error);
       alert('No distributors found nearby');
@@ -332,7 +349,7 @@ const Distributors = () => {
             </div>
           )}
           <div className="section-header">
-            <h2>{activeSearch ? 'Search Results' : 'Available Distributors'}</h2>
+            <h2>{activeSearch ? 'Search Results' : isNearbyMode ? `Distributors Near ${userLocation?.city || 'You'}` : 'Available Distributors'}</h2>
             <p>{distributors.length} distributors found</p>
           </div>
           

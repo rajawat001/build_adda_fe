@@ -26,6 +26,7 @@ import {
   GiDominoTiles
 } from 'react-icons/gi';
 import api from '../services/api';
+import { useLocation } from '../context/LocationContext';
 
 export default function Header() {
   const router = useRouter();
@@ -42,6 +43,7 @@ export default function Header() {
   const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
   const profileRef = useRef<HTMLDivElement>(null);
   const searchPanelRef = useRef<HTMLDivElement>(null);
+  const { location: userLocation, clearLocation, retryDetection } = useLocation();
 
   useEffect(() => {
     loadUserData();
@@ -325,6 +327,24 @@ export default function Header() {
                 <Link href="/" className="brand-logo">
                   <img src="/buildAddaBrandImage.png" alt="BuildAdda" />
                 </Link>
+                {userLocation ? (
+                  <div className="header-location" onClick={clearLocation} title="Change location">
+                    <FiMapPin size={16} className="header-location-pin" />
+                    <div className="header-location-text">
+                      <span className="header-location-label">Delivering to</span>
+                      <span className="header-location-city">{userLocation.city || userLocation.pincode} {userLocation.pincode && <small>{userLocation.pincode}</small>}</span>
+                    </div>
+                    <FiX size={14} className="header-location-close" />
+                  </div>
+                ) : (
+                  <div className="header-location header-location-detect" onClick={retryDetection} title="Detect your location">
+                    <FiMapPin size={16} className="header-location-pin" />
+                    <div className="header-location-text">
+                      <span className="header-location-label">Set location</span>
+                      <span className="header-location-city">Detect</span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Desktop Search Bar - hidden on mobile, replaced by mobile search below */}

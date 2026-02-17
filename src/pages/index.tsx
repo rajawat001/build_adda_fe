@@ -8,6 +8,7 @@ import ProductCard from '../components/ProductCard';
 import productService from '../services/product.service';
 import api from '../services/api';
 import { Product } from '../types';
+import { useLocation } from '../context/LocationContext';
 import {
   FiTruck,
   FiShield,
@@ -30,6 +31,7 @@ import {
 
 export default function Home() {
   const router = useRouter();
+  const { location: userLocation, isLoading: locationLoading, clearLocation } = useLocation();
   const [products, setProducts] = useState<Product[]>([]);
   const [distributors, setDistributors] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
@@ -74,10 +76,11 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    if (locationLoading) return;
     loadProducts();
     loadDistributors();
     loadCategories();
-  }, []);
+  }, [locationLoading, userLocation]);
 
   // Auto-scroll categories
   useEffect(() => {
@@ -104,7 +107,14 @@ export default function Home() {
 
   const loadProducts = async () => {
     try {
-      const response = await productService.getProducts({ limit: 8 });
+      const params: any = { limit: 8 };
+      if (userLocation) {
+        params.lat = userLocation.lat;
+        params.lng = userLocation.lng;
+        params.pincode = userLocation.pincode;
+        params.distance = 50;
+      }
+      const response = await productService.getProducts(params);
 
       let productList: Product[] = [];
 
@@ -128,12 +138,25 @@ export default function Home() {
 
   const loadDistributors = async () => {
     try {
-      const response = await api.get('/users/distributors?limit=6');
+      let response;
+      if (userLocation) {
+        response = await api.get(
+          `/users/distributors/nearby?lat=${userLocation.lat}&lng=${userLocation.lng}&distance=50`
+        );
+      } else {
+        response = await api.get('/users/distributors?limit=6');
+      }
       const distributorList = response.data.distributors || [];
-      setDistributors(distributorList);
+      setDistributors(distributorList.slice(0, 6));
     } catch (error) {
       console.error('Error loading distributors:', error);
-      setDistributors([]);
+      // If nearby search fails, fall back to all distributors
+      try {
+        const fallback = await api.get('/users/distributors?limit=6');
+        setDistributors(fallback.data.distributors || []);
+      } catch {
+        setDistributors([]);
+      }
     }
   };
 
@@ -352,6 +375,15 @@ export default function Home() {
           </div>
         </section>
 
+        {/* LOCATION BANNER */}
+        {userLocation && (
+          <div className="location-banner">
+            <FiMapPin size={16} />
+            <span>Showing results near <strong>{userLocation.city || userLocation.pincode}</strong></span>
+            <button className="location-banner-clear" onClick={clearLocation}>Show All</button>
+          </div>
+        )}
+
         {/* CATEGORIES */}
         <section className="categories-section">
           <div className="container">
@@ -416,13 +448,18 @@ export default function Home() {
               <p className="section-subtitle">Handpicked products for your construction needs</p>
             </div>
 
-            {loading ? (
+            {loading || locationLoading ? (
               <div className="loading-state">
                 <p>Loading products...</p>
               </div>
             ) : products.length === 0 ? (
               <div className="empty-state">
-                <p>No products available at the moment.</p>
+                <p>{userLocation ? `No products available in ${userLocation.city || 'your area'} yet.` : 'No products available at the moment.'}</p>
+                {userLocation && (
+                  <button className="btn-primary-large" onClick={clearLocation} style={{ marginTop: '1rem' }}>
+                    Browse All Products
+                  </button>
+                )}
               </div>
             ) : (
               <>
@@ -483,7 +520,13 @@ export default function Home() {
                       <FiMapPin size={14} />
                       <span>{distributor.city}, {distributor.state}</span>
                     </div>
-                    {distributor.rating && (
+                    {distributor.distance != null && (
+                      <div className="info-item">
+                        <FiTruck size={14} />
+                        <span>{distributor.distance.toFixed(1)} km away</span>
+                      </div>
+                    )}
+                    {distributor.rating > 0 && (
                       <div className="rating-row">
                         <FiStar size={14} fill="#f59e0b" color="#f59e0b" />
                         <span>{distributor.rating.toFixed(1)}</span>

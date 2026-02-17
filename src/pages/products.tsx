@@ -8,6 +8,7 @@ import Filter from '../components/Filter';
 import productService from '../services/product.service';
 import { Product, Category } from '../types';
 import { FiFilter, FiX } from 'react-icons/fi';
+import { useLocation } from '../context/LocationContext';
 
 const Products = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -21,6 +22,7 @@ const Products = () => {
   const router = useRouter();
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   const isInitialMount = useRef(true);
+  const { location: userLocation } = useLocation();
 
   // Applied filters are what actually trigger API calls (debounced from user input)
   const [filters, setFilters] = useState({
@@ -96,13 +98,13 @@ const Products = () => {
     };
   }, [filters, searchTerm]);
 
-  // Fetch products only when appliedFilters/appliedSearch change (after debounce)
+  // Fetch products only when appliedFilters/appliedSearch/location change (after debounce)
   useEffect(() => {
     setProducts([]);
     setPage(1);
     setHasMore(true);
     fetchProducts(1, true);
-  }, [appliedFilters, appliedSearch]);
+  }, [appliedFilters, appliedSearch, userLocation]);
 
 
   const fetchProducts = async (pageNum: number = 1, reset: boolean = false) => {
@@ -125,6 +127,18 @@ const Products = () => {
       if (appliedFilters.maxPrice) params.maxPrice = appliedFilters.maxPrice;
       if (appliedSearch) params.search = appliedSearch;
 
+      // Location-based filtering (server-side)
+      if (appliedFilters.pincode && appliedFilters.pincode.trim()) {
+        // User manually entered a pincode — use that
+        params.pincode = appliedFilters.pincode.trim();
+      } else if (userLocation) {
+        // Auto-detected location — use coordinates
+        params.lat = userLocation.lat;
+        params.lng = userLocation.lng;
+        params.pincode = userLocation.pincode;
+        params.distance = 50;
+      }
+
       const response = await productService.getAllProducts(params);
 
       // Handle different response structures
@@ -142,27 +156,14 @@ const Products = () => {
         totalCount = response.data.total || response.data.products.length;
       }
 
-      // Filter by pincode on client side (stock filtering done server-side)
-      let filtered = productsList;
-
-      if (appliedFilters.pincode && appliedFilters.pincode.trim()) {
-        filtered = filtered.filter(product => {
-          const distributor = typeof product.distributor === 'object' ? product.distributor : null;
-          if (distributor && (distributor as any).pincode) {
-            return (distributor as any).pincode.includes(appliedFilters.pincode.trim());
-          }
-          return false;
-        });
-      }
-
       if (reset) {
-        setProducts(filtered);
+        setProducts(productsList);
       } else {
-        setProducts(prev => [...prev, ...filtered]);
+        setProducts(prev => [...prev, ...productsList]);
       }
 
       // Check if there are more products to load
-      setHasMore(filtered.length === 24);
+      setHasMore(productsList.length === 24);
 
     } catch (error) {
       console.error('Error fetching products:', error);

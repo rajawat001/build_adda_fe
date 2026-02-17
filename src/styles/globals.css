@@ -461,6 +461,9 @@ a:hover {
   font-size: 1.2rem;
   font-weight: var(--font-weight-bold);
   color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .category {
@@ -839,4 +842,152 @@ iframe.goog-te-banner-frame {
   display: none !important;
   visibility: hidden !important;
   height: 0 !important;
+}
+
+/* ── Header Location Selector (Swiggy/Zomato style) ── */
+.header-location {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  margin-top: 4px;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.2s;
+  position: relative;
+}
+
+.header-location:hover {
+  background: #f5f5f5;
+}
+
+.header-location-pin {
+  color: #ff6b35;
+  flex-shrink: 0;
+}
+
+.header-location-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+  min-width: 0;
+}
+
+.header-location-label {
+  font-size: 0.65rem;
+  color: #9ca3af;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.header-location-city {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+}
+
+.header-location-city small {
+  font-weight: 400;
+  color: #9ca3af;
+  font-size: 0.72rem;
+}
+
+.header-location-close {
+  color: #9ca3af;
+  flex-shrink: 0;
+  transition: color 0.2s;
+}
+
+.header-location:hover .header-location-close {
+  color: #ef4444;
+}
+
+.header-location-detect {
+  border: 1px dashed #d1d5db;
+}
+
+.header-location-detect:hover {
+  border-color: #ff6b35;
+  background: #fff7ed;
+}
+
+.header-location-detect .header-location-city {
+  color: #ff6b35;
+}
+
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ── Location Banner (Homepage) ── */
+.location-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: #fff7ed;
+  border-bottom: 1px solid #fed7aa;
+  color: #92400e;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.location-banner strong {
+  font-weight: 700;
+  color: #78350f;
+}
+
+.location-banner-clear {
+  margin-left: 8px;
+  padding: 4px 14px;
+  background: #fff;
+  border: 1px solid #d97706;
+  border-radius: 20px;
+  color: #d97706;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.location-banner-clear:hover {
+  background: #d97706;
+  color: #fff;
+}
+
+@media (max-width: 1024px) {
+  .logo-section {
+    gap: 8px;
+  }
+
+  .header-location-city {
+    max-width: 100px;
+  }
+}
+
+@media (max-width: 768px) {
+  .logo-section {
+    gap: 0;
+  }
+
+  .header-location {
+    display: none;
+  }
+
+  .location-banner {
+    font-size: 0.8rem;
+    padding: 8px 12px;
+    flex-wrap: wrap;
+  }
 }
