@@ -7,7 +7,7 @@ import ProductCard from '../components/ProductCard';
 import Filter from '../components/Filter';
 import productService from '../services/product.service';
 import { Product, Category } from '../types';
-import { FiFilter, FiX } from 'react-icons/fi';
+import { FiFilter, FiX, FiMapPin } from 'react-icons/fi';
 import { useLocation } from '../context/LocationContext';
 
 const Products = () => {
@@ -19,10 +19,11 @@ const Products = () => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [noLocalProducts, setNoLocalProducts] = useState(false);
   const router = useRouter();
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   const isInitialMount = useRef(true);
-  const { location: userLocation } = useLocation();
+  const { location: userLocation, clearLocation } = useLocation();
 
   // Applied filters are what actually trigger API calls (debounced from user input)
   const [filters, setFilters] = useState({
@@ -111,6 +112,7 @@ const Products = () => {
     try {
       if (reset) {
         setLoading(true);
+        setNoLocalProducts(false);
       } else {
         setLoadingMore(true);
       }
@@ -128,11 +130,10 @@ const Products = () => {
       if (appliedSearch) params.search = appliedSearch;
 
       // Location-based filtering (server-side)
+      const hasLocationFilter = !!(appliedFilters.pincode?.trim() || userLocation);
       if (appliedFilters.pincode && appliedFilters.pincode.trim()) {
-        // User manually entered a pincode — use that
         params.pincode = appliedFilters.pincode.trim();
       } else if (userLocation) {
-        // Auto-detected location — use coordinates
         params.lat = userLocation.lat;
         params.lng = userLocation.lng;
         params.pincode = userLocation.pincode;
@@ -156,14 +157,38 @@ const Products = () => {
         totalCount = response.data.total || response.data.products.length;
       }
 
-      if (reset) {
-        setProducts(productsList);
-      } else {
-        setProducts(prev => [...prev, ...productsList]);
-      }
+      // If location was active but no products found — show "expanding" message + load all
+      if (reset && productsList.length === 0 && hasLocationFilter && !appliedSearch) {
+        setNoLocalProducts(true);
+        // Re-fetch without location to show all products
+        const allParams: any = {
+          page: 1,
+          limit: 24,
+          sortBy: appliedFilters.sortBy
+        };
+        if (appliedFilters.category) allParams.category = appliedFilters.category;
+        if (appliedFilters.minPrice) allParams.minPrice = appliedFilters.minPrice;
+        if (appliedFilters.maxPrice) allParams.maxPrice = appliedFilters.maxPrice;
 
-      // Check if there are more products to load
-      setHasMore(productsList.length === 24);
+        const allResponse = await productService.getAllProducts(allParams);
+        let allProducts: Product[] = [];
+        if (allResponse.products) {
+          allProducts = allResponse.products;
+        } else if (Array.isArray(allResponse)) {
+          allProducts = allResponse;
+        } else if (allResponse.data?.products) {
+          allProducts = allResponse.data.products;
+        }
+        setProducts(allProducts);
+        setHasMore(allProducts.length === 24);
+      } else {
+        if (reset) {
+          setProducts(productsList);
+        } else {
+          setProducts(prev => [...prev, ...productsList]);
+        }
+        setHasMore(productsList.length === 24);
+      }
 
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -432,12 +457,31 @@ const Products = () => {
               </div>
             </div>
 
-            {products.length === 0 && !loading ? (
+            {/* "We're expanding" banner when no local products */}
+            {noLocalProducts && (
+              <div className="no-local-banner">
+                <div className="no-local-banner-icon">
+                  <FiMapPin size={32} />
+                </div>
+                <h3>We're not in {userLocation?.city || 'your area'} yet!</h3>
+                <p>We are expanding our network rapidly and will be providing service in your area very soon. Stay tuned!</p>
+                <span className="no-local-banner-tag">Coming Soon</span>
+              </div>
+            )}
+
+            {noLocalProducts && products.length > 0 && (
+              <div className="other-area-header">
+                <h3>See Products from Other Areas</h3>
+                <p>Browse products available from distributors in other cities</p>
+              </div>
+            )}
+
+            {products.length === 0 && !loading && !noLocalProducts ? (
               <div className="no-products">
                 <p>No products found matching your criteria</p>
                 <button onClick={resetFilters}>Clear Filters</button>
               </div>
-            ) : (
+            ) : products.length > 0 ? (
               <>
                 <div className="products-grid">
                   {products.map((product) => (
@@ -476,7 +520,7 @@ const Products = () => {
                   </div>
                 )}
               </>
-            )}
+            ) : null}
           </div>
         </div>
 

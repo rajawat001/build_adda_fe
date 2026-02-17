@@ -36,6 +36,8 @@ export default function Home() {
   const [distributors, setDistributors] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [noLocalProducts, setNoLocalProducts] = useState(false);
+  const [noLocalDistributors, setNoLocalDistributors] = useState(false);
   const categoryScrollRef = useRef<HTMLDivElement>(null);
   const categoryAutoScrollRef = useRef<NodeJS.Timeout | null>(null);
   const [isHoveringCategories, setIsHoveringCategories] = useState(false);
@@ -123,6 +125,7 @@ export default function Home() {
 
   const loadProducts = async () => {
     try {
+      setNoLocalProducts(false);
       const params: any = { limit: 8 };
       if (userLocation) {
         params.lat = userLocation.lat;
@@ -134,7 +137,6 @@ export default function Home() {
 
       let productList: Product[] = [];
 
-      // ✅ Normalize API response
       if (Array.isArray(response)) {
         productList = response;
       } else if (response?.products && Array.isArray(response.products)) {
@@ -143,7 +145,22 @@ export default function Home() {
         productList = response.data.products;
       }
 
-      setProducts(productList);
+      // If location active but no products — show expanding message + load all
+      if (productList.length === 0 && userLocation) {
+        setNoLocalProducts(true);
+        const allResponse = await productService.getProducts({ limit: 8 });
+        let allProducts: Product[] = [];
+        if (Array.isArray(allResponse)) {
+          allProducts = allResponse;
+        } else if (allResponse?.products) {
+          allProducts = allResponse.products;
+        } else if (allResponse?.data?.products) {
+          allProducts = allResponse.data.products;
+        }
+        setProducts(allProducts);
+      } else {
+        setProducts(productList);
+      }
     } catch (error) {
       console.error('Error loading products:', error);
       setProducts([]);
@@ -154,6 +171,7 @@ export default function Home() {
 
   const loadDistributors = async () => {
     try {
+      setNoLocalDistributors(false);
       let response;
       if (userLocation) {
         response = await api.get(
@@ -163,10 +181,17 @@ export default function Home() {
         response = await api.get('/users/distributors?limit=6');
       }
       const distributorList = response.data.distributors || [];
-      setDistributors(distributorList.slice(0, 6));
+
+      // If location active but no distributors — show expanding message + load all
+      if (distributorList.length === 0 && userLocation) {
+        setNoLocalDistributors(true);
+        const fallback = await api.get('/users/distributors?limit=6');
+        setDistributors((fallback.data.distributors || []).slice(0, 6));
+      } else {
+        setDistributors(distributorList.slice(0, 6));
+      }
     } catch (error) {
       console.error('Error loading distributors:', error);
-      // If nearby search fails, fall back to all distributors
       try {
         const fallback = await api.get('/users/distributors?limit=6');
         setDistributors(fallback.data.distributors || []);
@@ -468,36 +493,48 @@ export default function Home() {
               <div className="loading-state">
                 <p>Loading products...</p>
               </div>
-            ) : products.length === 0 ? (
-              <div className="empty-state">
-                <p>{userLocation ? `No products available in ${userLocation.city || 'your area'} yet.` : 'No products available at the moment.'}</p>
-                {userLocation && (
-                  <button className="btn-primary-large" onClick={clearLocation} style={{ marginTop: '1rem' }}>
-                    Browse All Products
-                  </button>
-                )}
-              </div>
             ) : (
               <>
-                <div className="product-grid-modern">
-                  {products.map((product) => (
-                    <ProductCard
-                      key={product._id}
-                      product={product}
-                      onAddToCart={handleAddToCart}
-                      onAddToWishlist={handleAddToWishlist}
-                    />
-                  ))}
-                </div>
-                <div className="section-footer">
-                  <button
-                    className="btn-view-all"
-                    onClick={() => router.push('/products')}
-                  >
-                    View All Products
-                    <FiArrowRight />
-                  </button>
-                </div>
+                {noLocalProducts && (
+                  <div className="no-local-banner no-local-banner-compact">
+                    <div className="no-local-banner-icon">
+                      <FiMapPin size={24} />
+                    </div>
+                    <div>
+                      <h3>No products in {userLocation?.city || 'your area'} yet!</h3>
+                      <p>We're expanding rapidly and will serve your area soon. Here are products from other areas:</p>
+                    </div>
+                    <span className="no-local-banner-tag">Coming Soon</span>
+                  </div>
+                )}
+
+                {products.length === 0 ? (
+                  <div className="empty-state">
+                    <p>No products available at the moment.</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="product-grid-modern">
+                      {products.map((product) => (
+                        <ProductCard
+                          key={product._id}
+                          product={product}
+                          onAddToCart={handleAddToCart}
+                          onAddToWishlist={handleAddToWishlist}
+                        />
+                      ))}
+                    </div>
+                    <div className="section-footer">
+                      <button
+                        className="btn-view-all"
+                        onClick={() => router.push('/products')}
+                      >
+                        View All Products
+                        <FiArrowRight />
+                      </button>
+                    </div>
+                  </>
+                )}
               </>
             )}
           </div>
@@ -512,6 +549,19 @@ export default function Home() {
                 Connect with verified distributors in your area
               </p>
             </div>
+
+            {noLocalDistributors && (
+              <div className="no-local-banner no-local-banner-compact">
+                <div className="no-local-banner-icon">
+                  <FiMapPin size={24} />
+                </div>
+                <div>
+                  <h3>No distributors in {userLocation?.city || 'your area'} yet!</h3>
+                  <p>We're expanding rapidly and will serve your area soon. Here are distributors from other areas:</p>
+                </div>
+                <span className="no-local-banner-tag">Coming Soon</span>
+              </div>
+            )}
 
             <div className="distributors-grid">
               {distributors.slice(0, 6).map((distributor) => (

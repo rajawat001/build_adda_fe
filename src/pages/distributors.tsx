@@ -33,10 +33,12 @@ const Distributors = () => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [searchPincode, setSearchPincode] = useState('');
+  const [searchCity, setSearchCity] = useState('');
   const [maxDistance, setMaxDistance] = useState(50);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [activeSearch, setActiveSearch] = useState('');
   const [isNearbyMode, setIsNearbyMode] = useState(false);
+  const [noLocalResults, setNoLocalResults] = useState(false);
   const router = useRouter();
   const { location: userLocation, isLoading: locationLoading, retryDetection } = useLocation();
 
@@ -92,17 +94,25 @@ const Distributors = () => {
   const fetchNearbyDistributors = async () => {
     if (!userLocation) return;
     setLoading(true);
+    setNoLocalResults(false);
     try {
       const response = await api.get(
         `/users/distributors/nearby?lat=${userLocation.lat}&lng=${userLocation.lng}&pincode=${userLocation.pincode}&distance=${maxDistance}`
       );
-      setDistributors(response.data.distributors || []);
-      setHasMore(false);
+      const results = response.data.distributors || [];
+      if (results.length > 0) {
+        setDistributors(results);
+        setHasMore(false);
+      } else {
+        // No distributors in user's area — show expanding message + load all
+        setNoLocalResults(true);
+        setHasMore(true);
+        await fetchAllDistributors(1, true);
+      }
     } catch (error) {
       console.error('No nearby distributors:', error);
-      // Fall back to all distributors
-      setIsNearbyMode(false);
-      fetchAllDistributors(1, true);
+      setNoLocalResults(true);
+      await fetchAllDistributors(1, true);
     } finally {
       setLoading(false);
     }
@@ -150,18 +160,43 @@ const Distributors = () => {
   }, [page]);
 
   const searchByPincode = async () => {
-    if (!searchPincode) {
-      alert('Please enter a pincode');
+    if (!searchPincode && !searchCity) {
+      alert('Please enter a pincode or city name');
       return;
     }
 
     setLoading(true);
+    setNoLocalResults(false);
+    setIsNearbyMode(false);
     try {
-      const response = await api.get(`/users/distributors/nearby?pincode=${searchPincode}&distance=${maxDistance}`);
-      setDistributors(response.data.distributors || []);
+      let results: Distributor[] = [];
+
+      if (searchPincode) {
+        const response = await api.get(`/users/distributors/nearby?pincode=${searchPincode}&distance=${maxDistance}`);
+        results = response.data.distributors || [];
+      }
+
+      if (searchCity && searchCity.trim()) {
+        const response = await api.get(`/users/distributors?search=${encodeURIComponent(searchCity.trim())}&limit=50`);
+        const cityResults = response.data.distributors || [];
+        // Merge with pincode results, avoiding duplicates
+        const existingIds = new Set(results.map((d: Distributor) => d._id));
+        cityResults.forEach((d: Distributor) => {
+          if (!existingIds.has(d._id)) results.push(d);
+        });
+      }
+
+      setDistributors(results);
+      setHasMore(false);
+
+      if (results.length === 0) {
+        setNoLocalResults(true);
+        await fetchAllDistributors(1, true);
+      }
     } catch (error) {
       console.error('Error searching distributors:', error);
-      alert('No distributors found in this area');
+      setNoLocalResults(true);
+      await fetchAllDistributors(1, true);
     } finally {
       setLoading(false);
     }
@@ -310,7 +345,7 @@ const Distributors = () => {
 
           <div className="search-options">
             <div className="search-by-pincode">
-              <h3>Search by Pincode</h3>
+              <h3>Search by Pincode or City</h3>
               <div className="search-inputs">
                 <input
                   type="text"
@@ -318,6 +353,13 @@ const Distributors = () => {
                   value={searchPincode}
                   onChange={(e) => setSearchPincode(e.target.value)}
                   maxLength={6}
+                />
+
+                <input
+                  type="text"
+                  placeholder="Enter city name"
+                  value={searchCity}
+                  onChange={(e) => setSearchCity(e.target.value)}
                 />
 
                 <select
@@ -331,7 +373,7 @@ const Distributors = () => {
                 </select>
 
                 <button onClick={searchByPincode} className="btn-search">
-                  Search
+                  <FiSearch size={16} /> Search
                 </button>
               </div>
             </div>
@@ -365,15 +407,35 @@ const Distributors = () => {
             </div>
           )}
           <div className="section-header">
-            <h2>{activeSearch ? 'Search Results' : isNearbyMode ? `Distributors Near ${userLocation?.city || 'You'}` : 'Available Distributors'}</h2>
+            <h2>{activeSearch ? 'Search Results' : isNearbyMode && !noLocalResults ? `Distributors Near ${userLocation?.city || 'You'}` : noLocalResults ? 'Distributors' : 'Available Distributors'}</h2>
             <p>{distributors.length} distributors found</p>
           </div>
-          
-          {distributors.length === 0 ? (
+
+          {/* "We're expanding" banner when no local results */}
+          {noLocalResults && (
+            <div className="no-local-banner">
+              <div className="no-local-banner-icon">
+                <FiMapPin size={32} />
+              </div>
+              <h3>We're not in {userLocation?.city || 'your area'} yet!</h3>
+              <p>We are expanding our network rapidly and will be providing service in your area very soon. Stay tuned!</p>
+              <span className="no-local-banner-tag">Coming Soon</span>
+            </div>
+          )}
+
+          {/* "See other area distributors" label */}
+          {noLocalResults && distributors.length > 0 && (
+            <div className="other-area-header">
+              <h3>See Distributors from Other Areas</h3>
+              <p>Browse distributors available in other cities</p>
+            </div>
+          )}
+
+          {distributors.length === 0 && !noLocalResults ? (
             <div className="no-distributors">
               <p>No distributors found. Try adjusting your search criteria.</p>
             </div>
-          ) : (
+          ) : distributors.length > 0 ? (
             <div className="distributors-grid">
               {distributors.map((distributor) => (
                 <div key={distributor._id} className="distributor-card">
@@ -433,7 +495,7 @@ const Distributors = () => {
                 </div>
               ))}
             </div>
-          )}
+          ) : null}
 
           {/* Load More Button */}
           {hasMore && !loading && (
@@ -486,7 +548,7 @@ const Distributors = () => {
               <div className="mobile-filter-content">
                 <div className="mobile-search-options">
                   <div className="search-by-pincode">
-                    <h4>Search by Pincode</h4>
+                    <h4>Search by Pincode or City</h4>
                     <div className="search-inputs-mobile">
                       <input
                         type="text"
@@ -494,6 +556,13 @@ const Distributors = () => {
                         value={searchPincode}
                         onChange={(e) => setSearchPincode(e.target.value)}
                         maxLength={6}
+                      />
+
+                      <input
+                        type="text"
+                        placeholder="Enter city name"
+                        value={searchCity}
+                        onChange={(e) => setSearchCity(e.target.value)}
                       />
 
                       <select

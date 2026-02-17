@@ -991,3 +991,171 @@ iframe.goog-te-banner-frame {
     flex-wrap: wrap;
   }
 }
+
+/* ========================================
+   No Local Results / Expanding Network Banner
+   ======================================== */
+
+.no-local-banner {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 50%, #fcd34d 100%);
+  border: 1px solid #f59e0b;
+  border-radius: 16px;
+  padding: 2rem 2.5rem;
+  text-align: center;
+  margin-bottom: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.no-local-banner::before {
+  content: '';
+  position: absolute;
+  top: -30px;
+  right: -30px;
+  width: 120px;
+  height: 120px;
+  background: rgba(245, 158, 11, 0.15);
+  border-radius: 50%;
+}
+
+.no-local-banner::after {
+  content: '';
+  position: absolute;
+  bottom: -20px;
+  left: -20px;
+  width: 80px;
+  height: 80px;
+  background: rgba(245, 158, 11, 0.1);
+  border-radius: 50%;
+}
+
+.no-local-banner-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  background: #f59e0b;
+  color: white;
+  border-radius: 50%;
+  margin-bottom: 1rem;
+}
+
+.no-local-banner h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #92400e;
+  margin: 0 0 0.5rem;
+}
+
+.no-local-banner p {
+  font-size: 0.95rem;
+  color: #78350f;
+  margin: 0 0 1rem;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.5;
+}
+
+.no-local-banner-tag {
+  display: inline-block;
+  background: #f59e0b;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 4px 16px;
+  border-radius: 20px;
+}
+
+/* Compact variant for homepage sections */
+.no-local-banner-compact {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  text-align: left;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.no-local-banner-compact .no-local-banner-icon {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  margin-bottom: 0;
+}
+
+.no-local-banner-compact h3 {
+  font-size: 1rem;
+  margin-bottom: 0.2rem;
+}
+
+.no-local-banner-compact p {
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.no-local-banner-compact .no-local-banner-tag {
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+/* Other area distributors/products header */
+.other-area-header {
+  padding: 1rem 0;
+  margin-bottom: 1rem;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.other-area-header h3 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 0.25rem;
+}
+
+.other-area-header p {
+  font-size: 0.9rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .no-local-banner {
+    padding: 1.5rem 1rem;
+    border-radius: 12px;
+  }
+
+  .no-local-banner h3 {
+    font-size: 1.1rem;
+  }
+
+  .no-local-banner p {
+    font-size: 0.85rem;
+  }
+
+  .no-local-banner-icon {
+    width: 44px;
+    height: 44px;
+  }
+
+  .no-local-banner-compact {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .no-local-banner-compact .no-local-banner-tag {
+    margin-left: 0;
+  }
+
+  .other-area-header {
+    padding: 0.75rem 0;
+  }
+
+  .other-area-header h3 {
+    font-size: 1rem;
+  }
+}
