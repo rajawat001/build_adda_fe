@@ -128,10 +128,8 @@ export default function Home() {
       setNoLocalProducts(false);
       const params: any = { limit: 8 };
       if (userLocation) {
-        params.lat = userLocation.lat;
-        params.lng = userLocation.lng;
         params.pincode = userLocation.pincode;
-        params.distance = 50;
+        params.city = userLocation.city;
       }
       const response = await productService.getProducts(params);
 
@@ -175,7 +173,7 @@ export default function Home() {
       let response;
       if (userLocation) {
         response = await api.get(
-          `/users/distributors/nearby?lat=${userLocation.lat}&lng=${userLocation.lng}&pincode=${userLocation.pincode}&distance=50`
+          `/users/distributors/nearby?pincode=${userLocation.pincode}&city=${encodeURIComponent(userLocation.city)}`
         );
       } else {
         response = await api.get('/users/distributors?limit=6');
@@ -586,7 +584,7 @@ export default function Home() {
                       <FiMapPin size={14} />
                       <span>{distributor.city}, {distributor.state}</span>
                     </div>
-                    {distributor.distance != null && (
+                    {distributor.distance != null && distributor.distance > 0 && (
                       <div className="info-item">
                         <FiTruck size={14} />
                         <span>{distributor.distance.toFixed(1)} km away</span>

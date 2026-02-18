@@ -129,15 +129,13 @@ const Products = () => {
       if (appliedFilters.maxPrice) params.maxPrice = appliedFilters.maxPrice;
       if (appliedSearch) params.search = appliedSearch;
 
-      // Location-based filtering (server-side)
+      // Location-based filtering (server-side) — pincode/city only, no coordinates
       const hasLocationFilter = !!(appliedFilters.pincode?.trim() || userLocation);
       if (appliedFilters.pincode && appliedFilters.pincode.trim()) {
         params.pincode = appliedFilters.pincode.trim();
       } else if (userLocation) {
-        params.lat = userLocation.lat;
-        params.lng = userLocation.lng;
         params.pincode = userLocation.pincode;
-        params.distance = 50;
+        params.city = userLocation.city;
       }
 
       const response = await productService.getAllProducts(params);

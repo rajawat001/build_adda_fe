@@ -97,7 +97,7 @@ const Distributors = () => {
     setNoLocalResults(false);
     try {
       const response = await api.get(
-        `/users/distributors/nearby?lat=${userLocation.lat}&lng=${userLocation.lng}&pincode=${userLocation.pincode}&distance=${maxDistance}`
+        `/users/distributors/nearby?pincode=${userLocation.pincode}&city=${encodeURIComponent(userLocation.city)}`
       );
       const results = response.data.distributors || [];
       if (results.length > 0) {
@@ -213,7 +213,7 @@ const Distributors = () => {
     setIsNearbyMode(true);
     try {
       const response = await api.get(
-        `/users/distributors/nearby?lat=${userLocation.lat}&lng=${userLocation.lng}&pincode=${userLocation.pincode}&distance=${maxDistance}`
+        `/users/distributors/nearby?pincode=${userLocation.pincode}&city=${encodeURIComponent(userLocation.city)}`
       );
       setDistributors(response.data.distributors || []);
       setHasMore(false);
@@ -477,7 +477,7 @@ const Distributors = () => {
                       <span>{distributor.state} - {distributor.pincode}</span>
                     </div>
 
-                    {distributor.distance && (
+                    {distributor.distance != null && distributor.distance > 0 && (
                       <div className="distance-badge">
                         <FiMapPin size={14} /> {distributor.distance.toFixed(1)} km away
                       </div>
