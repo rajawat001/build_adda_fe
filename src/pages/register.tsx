@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
 import SEO from '../components/SEO';
 import { sendRegisterOTP, verifyRegisterOTP } from '../services/email-auth.service';
@@ -8,6 +9,9 @@ import { getLocationDetails } from '../utils/location';
 import OTPInput from '../components/common/OTPInput';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import type { MapPickerLocation } from '../components/MapPicker';
+
+const MapPicker = dynamic(() => import('../components/MapPicker'), { ssr: false });
 
 interface ValidationErrors {
   name?: string;
@@ -81,6 +85,8 @@ export default function Register() {
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
   const [availableCities, setAvailableCities] = useState<string[]>([]);
   const [otpError, setOtpError] = useState('');
+  const [showMap, setShowMap] = useState(false);
+  const [mapMounted, setMapMounted] = useState(false);
 
   const validateName = (name: string): string | null => {
     if (!name || !name.trim()) return 'Name is required';
@@ -205,6 +211,27 @@ export default function Register() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleMapLocationSelect = (loc: MapPickerLocation) => {
+    const matchedState = indianStates.find(
+      s => s.toLowerCase() === loc.state.toLowerCase()
+    ) || '';
+    const cities = matchedState ? indianStatesAndCities[matchedState] || [] : [];
+    setAvailableCities(cities);
+    const matchedCity = cities.find(
+      c => c.toLowerCase() === loc.city.toLowerCase()
+    ) || '';
+
+    setFormData(prev => ({
+      ...prev,
+      address: loc.address,
+      city: matchedCity || loc.city,
+      state: matchedState || loc.state,
+      pincode: loc.pincode,
+      location: { type: 'Point', coordinates: [loc.lng, loc.lat] },
+    }));
+    setShowMap(false);
   };
 
   // Step 1: Validate form and send OTP
@@ -462,9 +489,42 @@ export default function Register() {
                     {validationErrors.address && <span className="validation-error">{validationErrors.address}</span>}
                   </div>
 
-                  <button type="button" className="btn-location" onClick={handleGetLocation}>
-                    Capture Current Location
-                  </button>
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.5rem' }}>
+                    <button type="button" className="btn-location" onClick={handleGetLocation} disabled={loading}>
+                      Capture Current Location
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-map-toggle"
+                      onClick={() => {
+                        const next = !showMap;
+                        setShowMap(next);
+                        if (next) setMapMounted(true);
+                      }}
+                    >
+                      {showMap ? 'Hide Map' : 'Pick Location on Map'}
+                    </button>
+                  </div>
+
+                  {mapMounted && (
+                    <div style={showMap ? {} : { overflow: 'hidden', height: 0, opacity: 0, pointerEvents: 'none' as const }}>
+                      <MapPicker
+                        initialLat={
+                          formData.location?.coordinates?.[1] && formData.location.coordinates[1] !== 0
+                            ? formData.location.coordinates[1]
+                            : undefined
+                        }
+                        initialLng={
+                          formData.location?.coordinates?.[0] && formData.location.coordinates[0] !== 0
+                            ? formData.location.coordinates[0]
+                            : undefined
+                        }
+                        onLocationSelect={handleMapLocationSelect}
+                        height="350px"
+                        visible={showMap}
+                      />
+                    </div>
+                  )}
 
                   <button type="submit" className="btn-submit" disabled={loading}>
                     {loading ? 'Sending Verification...' : 'Continue & Verify Email'}

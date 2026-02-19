@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
+import dynamic from 'next/dynamic';
 import SEO from '../components/SEO';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
@@ -7,6 +8,9 @@ import { createOrder, initiatePhonepePayment } from '../services/order.service';
 import authService from '../services/auth.service';
 import { useCart } from '../context/CartContext';
 import api from '../services/api';
+import type { MapPickerLocation } from '../components/MapPicker';
+
+const MapPicker = dynamic(() => import('../components/MapPicker'), { ssr: false });
 
 interface Address {
   _id?: string;
@@ -17,6 +21,8 @@ interface Address {
   state: string;
   pincode: string;
   isDefault: boolean;
+  latitude?: number;
+  longitude?: number;
 }
 
 export default function Checkout() {
@@ -58,7 +64,9 @@ export default function Checkout() {
       address: '',
       city: 'Jaipur',
       state: 'Rajasthan',
-      pincode: ''
+      pincode: '',
+      latitude: 0,
+      longitude: 0
     },
     couponCode: '',
     paymentMethod: 'COD'
@@ -70,7 +78,9 @@ export default function Checkout() {
     city: '',
     state: '',
     pincode: '',
-    isDefault: false
+    isDefault: false,
+    latitude: 0,
+    longitude: 0
   });
   const [discount, setDiscount] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -87,6 +97,10 @@ export default function Checkout() {
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [cityError, setCityError] = useState<string>('');
   const [pincodeWarning, setPincodeWarning] = useState<string>('');
+  const [showMapNewAddr, setShowMapNewAddr] = useState(false);
+  const [mapNewAddrMounted, setMapNewAddrMounted] = useState(false);
+  const [showMapInline, setShowMapInline] = useState(false);
+  const [mapInlineMounted, setMapInlineMounted] = useState(false);
   const [serviceAreas, setServiceAreas] = useState<{ state: string; cities: string[] }[]>([{ state: 'Rajasthan', cities: ['Jaipur'] }]);
 
   useEffect(() => {
@@ -150,7 +164,9 @@ export default function Checkout() {
         address: address.address,
         city: address.city,
         state: address.state,
-        pincode: address.pincode
+        pincode: address.pincode,
+        latitude: address.latitude || 0,
+        longitude: address.longitude || 0
       }
     }));
   };
@@ -230,7 +246,9 @@ export default function Checkout() {
         city: '',
         state: '',
         pincode: '',
-        isDefault: false
+        isDefault: false,
+        latitude: 0,
+        longitude: 0
       });
       setAddressFieldErrors({
         fullName: '',
@@ -249,6 +267,7 @@ export default function Checkout() {
     const address = savedAddresses.find(addr => addr._id === addressId);
     if (address) {
       setNewAddress(address);
+      setShowMapNewAddr(false);
       setShowAddressForm(true);
     }
   };
@@ -276,7 +295,9 @@ export default function Checkout() {
         city: '',
         state: '',
         pincode: '',
-        isDefault: false
+        isDefault: false,
+        latitude: 0,
+        longitude: 0
       });
       setAddressFieldErrors({
         fullName: '',
@@ -308,7 +329,9 @@ export default function Checkout() {
             address: '',
             city: '',
             state: '',
-            pincode: ''
+            pincode: '',
+            latitude: 0,
+            longitude: 0
           }
         }));
       }
@@ -725,6 +748,38 @@ export default function Checkout() {
                       className={addressFieldErrors.address ? 'input-error' : ''}
                     />
                     {addressFieldErrors.address && <span className="validation-error">{addressFieldErrors.address}</span>}
+                    <button
+                      type="button"
+                      className="btn-map-toggle"
+                      onClick={() => {
+                        const next = !showMapNewAddr;
+                        setShowMapNewAddr(next);
+                        if (next) setMapNewAddrMounted(true);
+                      }}
+                      style={{ marginTop: '0.5rem' }}
+                    >
+                      {showMapNewAddr ? 'Hide Map' : 'Pick on Map'}
+                    </button>
+                    {mapNewAddrMounted && (
+                      <div style={showMapNewAddr ? {} : { overflow: 'hidden', height: 0, opacity: 0, pointerEvents: 'none' as const }}>
+                        <MapPicker
+                          onLocationSelect={(loc: MapPickerLocation) => {
+                            setNewAddress(prev => ({
+                              ...prev,
+                              address: loc.address,
+                              city: loc.city,
+                              state: loc.state,
+                              pincode: loc.pincode,
+                              latitude: loc.lat,
+                              longitude: loc.lng,
+                            }));
+                            setShowMapNewAddr(false);
+                          }}
+                          height="300px"
+                          visible={showMapNewAddr}
+                        />
+                      </div>
+                    )}
                   </div>
                   <div className="form-row">
                     <div className="form-group">
@@ -832,6 +887,41 @@ export default function Checkout() {
                       placeholder="Street address, building, apartment, etc."
                       rows={3}
                     />
+                    <button
+                      type="button"
+                      className="btn-map-toggle"
+                      onClick={() => {
+                        const next = !showMapInline;
+                        setShowMapInline(next);
+                        if (next) setMapInlineMounted(true);
+                      }}
+                      style={{ marginTop: '0.5rem' }}
+                    >
+                      {showMapInline ? 'Hide Map' : 'Pick on Map'}
+                    </button>
+                    {mapInlineMounted && (
+                      <div style={showMapInline ? {} : { overflow: 'hidden', height: 0, opacity: 0, pointerEvents: 'none' as const }}>
+                        <MapPicker
+                          onLocationSelect={(loc: MapPickerLocation) => {
+                            setFormData(prev => ({
+                              ...prev,
+                              shippingAddress: {
+                                ...prev.shippingAddress,
+                                address: loc.address,
+                                city: loc.city,
+                                state: loc.state,
+                                pincode: loc.pincode,
+                                latitude: loc.lat,
+                                longitude: loc.lng,
+                              }
+                            }));
+                            setShowMapInline(false);
+                          }}
+                          height="300px"
+                          visible={showMapInline}
+                        />
+                      </div>
+                    )}
                   </div>
 
                   <div className="form-group">

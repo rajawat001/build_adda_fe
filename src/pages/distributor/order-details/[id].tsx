@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import dynamic from 'next/dynamic';
 import DistributorLayout from '../../../components/distributor/Layout';
 import { Button, Badge } from '../../../components/ui';
 import api from '../../../services/api';
@@ -12,6 +13,8 @@ import {
   FiX,
   FiSave,
 } from 'react-icons/fi';
+
+const LocationPreview = dynamic(() => import('../../../components/LocationPreview'), { ssr: false });
 
 // Update the OrderDetails interface
 interface OrderDetails {
@@ -35,6 +38,8 @@ interface OrderDetails {
     city: string;
     state: string;
     pincode: string;
+    latitude?: number;
+    longitude?: number;
   };
   paymentMethod: string;
   paymentStatus: string;
@@ -593,6 +598,27 @@ const OrderDetailsPage = () => {
                 </p>
                 <p className="address-phone">Phone: {order.shippingAddress.phone}</p>
               </div>
+              {order.shippingAddress.latitude && order.shippingAddress.longitude ? (
+                <>
+                  <LocationPreview
+                    latitude={order.shippingAddress.latitude}
+                    longitude={order.shippingAddress.longitude}
+                    height="200px"
+                  />
+                  <a
+                    href={`https://www.google.com/maps/dir/?api=1&destination=${order.shippingAddress.latitude},${order.shippingAddress.longitude}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-navigate"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                      <circle cx="12" cy="10" r="3"/>
+                    </svg>
+                    Navigate to Location
+                  </a>
+                </>
+              ) : null}
             </div>
 
             {/* Order Items */}
@@ -1138,6 +1164,29 @@ const OrderDetailsPage = () => {
           margin-top: 8px;
           font-weight: 500;
           color: var(--text-primary) !important;
+        }
+
+        .btn-navigate {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          margin-top: 12px;
+          padding: 10px 20px;
+          background: #4caf50;
+          color: white;
+          font-size: 14px;
+          font-weight: 600;
+          border: none;
+          border-radius: 8px;
+          text-decoration: none;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .btn-navigate:hover {
+          background: #43a047;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
         }
 
         .order-items {

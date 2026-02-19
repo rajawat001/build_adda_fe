@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import DistributorLayout from '../../components/distributor/Layout';
 import { Button, Card, Loading, Badge } from '../../components/ui';
 import { useIsMobile } from '../../hooks';
 import { FiEdit, FiSave, FiX, FiUser, FiMail, FiPhone, FiMapPin, FiCheck, FiClock, FiStar } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import api from '../../services/api';
+import type { MapPickerLocation } from '../../components/MapPicker';
+
+const MapPicker = dynamic(() => import('../../components/MapPicker'), { ssr: false });
 
 interface DistributorProfile {
   _id: string;
@@ -22,6 +26,10 @@ interface DistributorProfile {
   createdAt: string;
   rating: number;
   reviewCount: number;
+  location?: {
+    type: string;
+    coordinates: number[];
+  };
 }
 
 const Profile = () => {
@@ -37,7 +45,10 @@ const Profile = () => {
     city: '',
     state: '',
     pincode: '',
+    location: { type: 'Point' as const, coordinates: [0, 0] },
   });
+  const [showMap, setShowMap] = useState(false);
+  const [mapMounted, setMapMounted] = useState(false);
 
   useEffect(() => {
     fetchProfile();
@@ -55,6 +66,9 @@ const Profile = () => {
         city: distributorData.city,
         state: distributorData.state,
         pincode: distributorData.pincode,
+        location: distributorData.location
+          ? { type: 'Point' as const, coordinates: distributorData.location.coordinates }
+          : { type: 'Point' as const, coordinates: [0, 0] },
       });
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -89,9 +103,25 @@ const Profile = () => {
         city: profile.city,
         state: profile.state,
         pincode: profile.pincode,
+        location: profile.location
+          ? { type: 'Point' as const, coordinates: profile.location.coordinates }
+          : { type: 'Point' as const, coordinates: [0, 0] },
       });
     }
+    setShowMap(false);
     setEditMode(false);
+  };
+
+  const handleMapLocationSelect = (loc: MapPickerLocation) => {
+    setFormData(prev => ({
+      ...prev,
+      address: loc.address,
+      city: loc.city,
+      state: loc.state,
+      pincode: loc.pincode,
+      location: { type: 'Point', coordinates: [loc.lng, loc.lat] },
+    }));
+    setShowMap(false);
   };
 
   if (loading) {
@@ -294,6 +324,41 @@ const Profile = () => {
                 <p className="text-xs text-[var(--text-tertiary)] mt-1">Enter 6-digit pincode</p>
               </div>
 
+              {/* Map Picker */}
+              <div>
+                <button
+                  type="button"
+                  className="btn-map-toggle"
+                  onClick={() => {
+                    const next = !showMap;
+                    setShowMap(next);
+                    if (next) setMapMounted(true);
+                  }}
+                >
+                  <FiMapPin />
+                  {showMap ? 'Hide Map' : 'Set Location on Map'}
+                </button>
+                {mapMounted && (
+                  <div style={showMap ? {} : { overflow: 'hidden', height: 0, opacity: 0, pointerEvents: 'none' as const }}>
+                    <MapPicker
+                      initialLat={
+                        formData.location?.coordinates?.[1] && formData.location.coordinates[1] !== 0
+                          ? formData.location.coordinates[1]
+                          : undefined
+                      }
+                      initialLng={
+                        formData.location?.coordinates?.[0] && formData.location.coordinates[0] !== 0
+                          ? formData.location.coordinates[0]
+                          : undefined
+                      }
+                      onLocationSelect={handleMapLocationSelect}
+                      height={isMobile ? '300px' : '400px'}
+                      visible={showMap}
+                    />
+                  </div>
+                )}
+              </div>
+
               {/* Desktop Form Actions */}
               {!isMobile && (
                 <div className="flex justify-end gap-3 pt-4 border-t border-[var(--border-primary)]">
@@ -353,6 +418,14 @@ const Profile = () => {
                 value={profile.pincode}
                 isMobile={isMobile}
               />
+              {profile.location?.coordinates?.[0] && profile.location.coordinates[0] !== 0 && (
+                <InfoRow
+                  icon={<FiMapPin />}
+                  label="Location"
+                  value={`${profile.location.coordinates[1]?.toFixed(4)}, ${profile.location.coordinates[0]?.toFixed(4)}`}
+                  isMobile={isMobile}
+                />
+              )}
               {profile.gstNumber && (
                 <InfoRow
                   label="GST Number"

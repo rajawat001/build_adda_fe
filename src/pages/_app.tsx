@@ -12,6 +12,7 @@ import CartConflictModal from '../components/CartConflictModal';
 import ChatWidget from '../components/ChatWidget';
 import InstallPWA from '../components/common/InstallPWA';
 import 'react-toastify/dist/ReactToastify.css';
+import 'leaflet/dist/leaflet.css';
 import '../styles/globals.css';
 import '../styles/theme.css';
 import '../styles/home.css';
@@ -59,6 +60,22 @@ export default function App({ Component, pageProps }: AppProps) {
         }
       });
     }
+  }, []);
+
+  // Suppress DOM errors caused by browser extensions (Google Translate, Grammarly, etc.)
+  // that modify React-managed text nodes, causing removeChild/insertBefore failures
+  useEffect(() => {
+    const handler = (event: ErrorEvent) => {
+      if (
+        event.error?.name === 'NotFoundError' &&
+        event.error?.message?.includes('removeChild')
+      ) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    };
+    window.addEventListener('error', handler);
+    return () => window.removeEventListener('error', handler);
   }, []);
 
   return (
