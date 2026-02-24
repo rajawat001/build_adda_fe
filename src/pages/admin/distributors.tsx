@@ -79,7 +79,7 @@ const DistributorsManagement: React.FC = () => {
   const [selectedDistributor, setSelectedDistributor] = useState<Distributor | null>(null);
   const [editFormData, setEditFormData] = useState({
     businessName: '',
-    ownerName: '',
+    name: '',
     email: '',
     phone: '',
     city: '',
@@ -518,7 +518,7 @@ const DistributorsManagement: React.FC = () => {
       setSelectedDistributor(distributor);
       setEditFormData({
         businessName: distributor.businessName || '',
-        ownerName: distributor.ownerName || distributor.name || '',
+        name: distributor.ownerName || distributor.name || '',
         email: distributor.email || '',
         phone: distributor.phone || '',
         city: distributor.city || '',
@@ -900,8 +900,8 @@ const DistributorsManagement: React.FC = () => {
                         <input
                           type="text"
                           className="form-input"
-                          value={editFormData.ownerName}
-                          onChange={(e) => setEditFormData({ ...editFormData, ownerName: e.target.value })}
+                          value={editFormData.name}
+                          onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
                           required
                         />
                       </div>
