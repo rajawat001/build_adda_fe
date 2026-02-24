@@ -4,6 +4,7 @@ import SEO from '../components/SEO';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import authService, { User } from '../services/auth.service';
+import { getApiErrorMessage, scrollToError } from '../utils/api-error';
 
 interface Address {
   _id?: string;
@@ -104,7 +105,7 @@ const Profile = () => {
       setEditing(false);
       fetchProfile();
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Error updating profile');
+      alert(getApiErrorMessage(error, 'Error updating profile'));
     }
   };
 
@@ -203,7 +204,8 @@ const Profile = () => {
       // Clear success message after 3 seconds
       setTimeout(() => setSuccess(''), 3000);
     } catch (error: any) {
-      setError(error.response?.data?.error || error.response?.data?.message || 'Error saving address');
+      setError(getApiErrorMessage(error, 'Error saving address'));
+      scrollToError();
     }
   };
 
@@ -215,7 +217,7 @@ const Profile = () => {
       alert('Address deleted successfully');
       fetchProfile();
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Error deleting address');
+      alert(getApiErrorMessage(error, 'Error deleting address'));
     }
   };
 
@@ -522,7 +524,8 @@ const Profile = () => {
                               fetchProfile();
                               setTimeout(() => setSuccess(''), 3000);
                             } catch (error: any) {
-                              setError(error.response?.data?.message || 'Error setting default address');
+                              setError(getApiErrorMessage(error, 'Error setting default address'));
+                              scrollToError();
                             }
                           }}
                           className="btn-set-default"

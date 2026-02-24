@@ -10,6 +10,7 @@ import ExportButton from '../../components/admin/ExportButton';
 import ConfirmDialog from '../../components/admin/ConfirmDialog';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../services/api';
+import { getApiErrorMessage } from '../../utils/api-error';
 
 interface Distributor {
   _id: string;
@@ -543,7 +544,7 @@ const DistributorsManagement: React.FC = () => {
       setSelectedDistributor(null);
     } catch (error: any) {
       console.error('Update distributor failed:', error);
-      alert(error.response?.data?.message || 'Failed to update distributor');
+      alert(getApiErrorMessage(error, 'Failed to update distributor'));
     } finally {
       setActionLoading(false);
     }

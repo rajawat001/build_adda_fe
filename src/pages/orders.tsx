@@ -132,7 +132,7 @@ const Orders = () => {
       fetchOrders();
     } catch (error: any) {
       console.error('Error cancelling order:', error);
-      alert(error.response?.data?.error || 'Failed to cancel order');
+      alert(error.response?.data?.error || error.response?.data?.message || 'Failed to cancel order');
     }
   };
 

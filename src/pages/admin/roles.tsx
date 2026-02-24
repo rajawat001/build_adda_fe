@@ -5,6 +5,7 @@ import StatCard from '../../components/admin/StatCard';
 import ConfirmDialog from '../../components/admin/ConfirmDialog';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../services/api';
+import { getApiErrorMessage, scrollToError } from '../../utils/api-error';
 
 interface Role {
   _id: string;
@@ -182,7 +183,8 @@ const RolesManagement: React.FC = () => {
       setRoles(response.data.roles || []);
     } catch (err: any) {
       console.error('Error fetching roles:', err);
-      setError(err.response?.data?.message || 'Failed to load roles');
+      setError(getApiErrorMessage(err, 'Failed to load roles'));
+      scrollToError();
     } finally {
       setLoading(false);
     }
@@ -257,7 +259,7 @@ const RolesManagement: React.FC = () => {
       setShowModal(false);
     } catch (err: any) {
       console.error('Save role failed:', err);
-      alert(err.response?.data?.message || 'Failed to save role');
+      alert(getApiErrorMessage(err, 'Failed to save role'));
     } finally {
       setActionLoading(false);
     }
@@ -282,7 +284,7 @@ const RolesManagement: React.FC = () => {
           await fetchStats();
         } catch (err: any) {
           console.error('Delete failed:', err);
-          alert(err.response?.data?.message || 'Failed to delete role');
+          alert(getApiErrorMessage(err, 'Failed to delete role'));
         } finally {
           setActionLoading(false);
           setConfirmDialog(prev => ({ ...prev, isOpen: false }));

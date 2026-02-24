@@ -6,6 +6,7 @@ import Footer from '../../components/Footer';
 import ProductCard from '../../components/ProductCard';
 import productService from '../../services/product.service';
 import { Product, Category } from '../../types';
+import { getApiErrorMessage, scrollToError } from '../../utils/api-error';
 
 const CategoryPage: React.FC = () => {
   const router = useRouter();

@@ -3,6 +3,7 @@ import { FiShield, FiMail, FiPhone, FiEdit, FiCheck, FiX, FiSearch, FiUser } fro
 import AdminLayout from '../../components/admin/Layout';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../services/api';
+import { getApiErrorMessage } from '../../utils/api-error';
 
 interface AssignedRole {
   _id: string;
@@ -123,7 +124,7 @@ const AdminUsersManagement: React.FC = () => {
       setSelectedUser(null);
     } catch (error: any) {
       console.error('Assign role failed:', error);
-      alert(error.response?.data?.message || 'Failed to assign role');
+      alert(getApiErrorMessage(error, 'Failed to assign role'));
     } finally {
       setActionLoading(false);
     }

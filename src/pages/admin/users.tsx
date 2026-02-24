@@ -10,6 +10,7 @@ import ExportButton from '../../components/admin/ExportButton';
 import ConfirmDialog from '../../components/admin/ConfirmDialog';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../services/api';
+import { getApiErrorMessage } from '../../utils/api-error';
 
 interface User {
   _id: string;
@@ -466,7 +467,7 @@ const UsersManagement: React.FC = () => {
       setSelectedUser(null);
     } catch (error: any) {
       console.error('Update user failed:', error);
-      alert(error.response?.data?.message || 'Failed to update user');
+      alert(getApiErrorMessage(error, 'Failed to update user'));
     } finally {
       setActionLoading(false);
     }

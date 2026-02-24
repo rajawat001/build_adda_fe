@@ -9,6 +9,7 @@ import authService from '../services/auth.service';
 import { useCart } from '../context/CartContext';
 import api from '../services/api';
 import type { MapPickerLocation } from '../components/MapPicker';
+import { getApiErrorMessage, scrollToError } from '../utils/api-error';
 
 const MapPicker = dynamic(() => import('../components/MapPicker'), { ssr: false });
 
@@ -259,7 +260,8 @@ export default function Checkout() {
         pincode: ''
       });
     } catch (error: any) {
-      setAddressError(error.response?.data?.error || error.response?.data?.message || 'Error adding address');
+      setAddressError(getApiErrorMessage(error, 'Error adding address'));
+      scrollToError();
     }
   };
 
@@ -308,7 +310,8 @@ export default function Checkout() {
         pincode: ''
       });
     } catch (error: any) {
-      setAddressError(error.response?.data?.error || error.response?.data?.message || 'Error updating address');
+      setAddressError(getApiErrorMessage(error, 'Error updating address'));
+      scrollToError();
     }
   };
 
@@ -336,7 +339,7 @@ export default function Checkout() {
         }));
       }
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Error deleting address');
+      alert(getApiErrorMessage(error, 'Error deleting address'));
     }
   };
 
@@ -346,7 +349,7 @@ export default function Checkout() {
       alert('Default address updated');
       await fetchUserProfile();
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Error setting default address');
+      alert(getApiErrorMessage(error, 'Error setting default address'));
     }
   };
 
@@ -517,7 +520,7 @@ export default function Checkout() {
         }
       }
     } catch (error: any) {
-      const serverMessage = error.response?.data?.error || error.response?.data?.message || '';
+      const serverMessage = getApiErrorMessage(error, '');
       if (serverMessage.toLowerCase().includes('delivery not available')) {
         setCityError(serverMessage);
       } else {

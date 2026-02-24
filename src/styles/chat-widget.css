@@ -488,7 +488,7 @@
 }
 
 .cw-ai-input::placeholder {
-  color: #9ca3af;
+  color: #5c6066;
 }
 
 .cw-ai-send-btn {
@@ -594,7 +594,7 @@
 
 .cw-form-group input::placeholder,
 .cw-form-group textarea::placeholder {
-  color: #9ca3af;
+  color: #5c6066;
 }
 
 .cw-submit-btn {
@@ -766,7 +766,7 @@
 }
 
 .cw-thread-reply-input::placeholder {
-  color: #9ca3af;
+  color: #5c6066;
 }
 
 .cw-thread-reply-send {

@@ -1723,6 +1723,11 @@
     border-radius: 8px !important;
   }
 
+  /* Preserve left padding for inputs with icons so text doesn't overlap the icon */
+  .input-with-icon input {
+    padding-left: 2.75rem !important;
+  }
+
   /* Form actions */
   .form-actions {
     gap: 8px !important;
@@ -2157,7 +2162,7 @@
 
   input::placeholder,
   textarea::placeholder {
-    color: #999 !important;
+    color: #5c6066 !important;
   }
 
   /* ── Footer text — MUST stay light (dark bg) ── */

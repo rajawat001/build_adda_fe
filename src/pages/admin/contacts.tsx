@@ -7,6 +7,7 @@ import FilterPanel, { FilterOption } from '../../components/admin/FilterPanel';
 import ConfirmDialog from '../../components/admin/ConfirmDialog';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../services/api';
+import { getApiErrorMessage } from '../../utils/api-error';
 
 interface ThreadMessage {
   _id: string;
@@ -175,7 +176,7 @@ const ContactsManagement: React.FC = () => {
       setReplyText('');
       await fetchStats();
     } catch (error: any) {
-      setReplyError(error.response?.data?.error || error.message || 'Failed to send reply');
+      setReplyError(getApiErrorMessage(error, 'Failed to send reply'));
     } finally {
       setReplyLoading(false);
     }

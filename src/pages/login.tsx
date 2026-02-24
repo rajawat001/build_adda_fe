@@ -2,15 +2,40 @@ import { useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
+import { FiMail, FiLock, FiEye, FiEyeOff } from 'react-icons/fi';
 import SEO from '../components/SEO';
 import { login } from '../services/auth.service';
 import { sendLoginOTP, verifyLoginOTP } from '../services/email-auth.service';
 import OTPInput from '../components/common/OTPInput';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import AuthIllustration from '../components/AuthIllustration';
+import SuccessTruck from '../components/SuccessTruck';
+import { getApiErrorMessage, scrollToError } from '../utils/api-error';
 
 type AuthMode = 'password' | 'otp';
 type OTPStep = 'email' | 'verify';
+
+// Animation variants
+const panelVariants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { type: 'spring' as const, damping: 22, stiffness: 100, staggerChildren: 0.07 },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 14 },
+  visible: { opacity: 1, y: 0, transition: { type: 'spring' as const, damping: 20, stiffness: 120 } },
+};
+
+const tabContentVariants = {
+  enter: (dir: number) => ({ opacity: 0, x: dir * 50, rotateY: dir * 6 }),
+  center: { opacity: 1, x: 0, rotateY: 0 },
+  exit: (dir: number) => ({ opacity: 0, x: dir * -50, rotateY: dir * -6 }),
+};
 
 export default function Login() {
   const router = useRouter();
@@ -22,6 +47,9 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState<{ email?: string; password?: string }>({});
   const [otpError, setOtpError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [loginSuccess, setLoginSuccess] = useState(false);
+  const [tabDirection, setTabDirection] = useState(1);
 
   const validateEmail = (email: string): string | null => {
     if (!email) return 'Email is required';
@@ -66,21 +94,23 @@ export default function Login() {
     localStorage.setItem('role', user.role);
     window.dispatchEvent(new Event('userLogin'));
 
-    if (user.role === 'admin') {
-      router.push('/admin/dashboard');
-    } else if (user.role === 'distributor') {
-      // Redirect to subscription page if account not approved (needs to complete payment)
-      if (needsSubscription || user.isApproved === false) {
-        router.push('/distributor/subscription');
+    setLoginSuccess(true);
+
+    setTimeout(() => {
+      if (user.role === 'admin') {
+        router.push('/admin/dashboard');
+      } else if (user.role === 'distributor') {
+        if (needsSubscription || user.isApproved === false) {
+          router.push('/distributor/subscription');
+        } else {
+          router.push('/distributor/dashboard');
+        }
       } else {
-        router.push('/distributor/dashboard');
+        router.push('/');
       }
-    } else {
-      router.push('/');
-    }
+    }, 2000);
   };
 
-  // Password Login
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -102,15 +132,17 @@ export default function Login() {
         });
         setValidationErrors(backendErrors);
         setError('Please fix the validation errors below');
+        scrollToError();
       } else {
-        setError(err.response?.data?.message || err.message || 'Login failed. Please try again.');
+        const msg = getApiErrorMessage(err, 'Login failed. Please try again.');
+        setError(msg);
+        scrollToError();
       }
     } finally {
       setLoading(false);
     }
   };
 
-  // OTP Login - Send
   const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -126,13 +158,13 @@ export default function Login() {
       setOtpStep('verify');
       setError('');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to send OTP. Please try again.');
+      setError(getApiErrorMessage(err, 'Failed to send OTP. Please try again.'));
+      scrollToError();
     } finally {
       setLoading(false);
     }
   };
 
-  // OTP Login - Verify
   const handleVerifyOTP = async (otp: string) => {
     setOtpError('');
     setLoading(true);
@@ -143,7 +175,7 @@ export default function Login() {
         handleLoginSuccess(response.user, response.needsSubscription);
       }
     } catch (err: any) {
-      setOtpError(err.response?.data?.message || 'Invalid OTP. Please try again.');
+      setOtpError(getApiErrorMessage(err, 'Invalid OTP. Please try again.'));
     } finally {
       setLoading(false);
     }
@@ -153,7 +185,7 @@ export default function Login() {
     try {
       await sendLoginOTP(otpEmail);
     } catch (err: any) {
-      setOtpError(err.response?.data?.message || 'Failed to resend OTP.');
+      setOtpError(getApiErrorMessage(err, 'Failed to resend OTP.'));
     }
   };
 
@@ -166,144 +198,261 @@ export default function Login() {
       />
       <Header />
 
-      <div className="login-page">
-        <div className="login-container">
-          <h1>Login to BuildAdda</h1>
+      <div className="auth-layout">
+        <AuthIllustration
+          theme="user"
+          scene="login"
+          title="Welcome back"
+          subtitle="Access your building materials marketplace"
+        />
 
-          {/* Auth Mode Tabs */}
-          <div className="auth-tabs">
-            <button
-              className={`auth-tab ${authMode === 'password' ? 'active' : ''}`}
-              onClick={() => { setAuthMode('password'); setError(''); setOtpStep('email'); }}
+        <motion.div
+          className="auth-form-panel"
+          variants={panelVariants}
+          initial="hidden"
+          animate="visible"
+          style={{ perspective: 1200 }}
+        >
+          <motion.div className="login-logo" variants={itemVariants}>
+            <img src="/buildAddaBrandImage.png" alt="BuildAdda" />
+          </motion.div>
+
+          <motion.h1 variants={itemVariants}>Sign in</motion.h1>
+          <motion.p className="auth-form-subtitle" variants={itemVariants}>
+            Welcome to BuildAdda logistics platform
+          </motion.p>
+
+          {loginSuccess ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ type: 'spring', damping: 18, stiffness: 120 }}
             >
-              Password
-            </button>
-            <button
-              className={`auth-tab ${authMode === 'otp' ? 'active' : ''}`}
-              onClick={() => { setAuthMode('otp'); setError(''); setValidationErrors({}); }}
-            >
-              Email OTP
-            </button>
-          </div>
-
-          <AnimatePresence mode="wait">
-            {authMode === 'password' ? (
-              <motion.div
-                key="password"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                transition={{ duration: 0.2 }}
-              >
-                {error && <div className="error-message">{error}</div>}
-
-                <form onSubmit={handlePasswordSubmit} noValidate>
-                  <div className="form-group">
-                    <label htmlFor="email">Email</label>
-                    <input
-                      id="email"
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      className={validationErrors.email ? 'input-error' : ''}
-                      autoComplete="email"
-                      required
-                    />
-                    {validationErrors.email && (
-                      <span className="validation-error">{validationErrors.email}</span>
-                    )}
-                  </div>
-
-                  <div className="form-group">
-                    <label htmlFor="password">Password</label>
-                    <input
-                      id="password"
-                      type="password"
-                      name="password"
-                      value={formData.password}
-                      onChange={handleChange}
-                      className={validationErrors.password ? 'input-error' : ''}
-                      autoComplete="current-password"
-                      required
-                    />
-                    {validationErrors.password && (
-                      <span className="validation-error">{validationErrors.password}</span>
-                    )}
-                  </div>
-
-                  <div style={{ textAlign: 'right', marginBottom: '16px' }}>
-                    <Link href="/forgot-password" style={{ fontSize: '13px', color: '#FF6B35' }}>
-                      Forgot Password?
-                    </Link>
-                  </div>
-
-                  <button type="submit" className="btn-submit" disabled={loading}>
-                    {loading ? 'Logging in...' : 'Login'}
-                  </button>
-                </form>
+              <div className="auth-success">
+                <div className="auth-success-icon">{'\u2713'}</div>
+                <h2>Login successful!</h2>
+                <p>Redirecting you now...</p>
+              </div>
+              <SuccessTruck color="#2c3e50" />
+            </motion.div>
+          ) : (
+            <>
+              {/* Auth Mode Tabs */}
+              <motion.div className="auth-tabs" variants={itemVariants}>
+                <button
+                  className={`auth-tab ${authMode === 'password' ? 'active' : ''}`}
+                  onClick={() => { setAuthMode('password'); setTabDirection(-1); setError(''); setOtpStep('email'); }}
+                >
+                  Password
+                </button>
+                <button
+                  className={`auth-tab ${authMode === 'otp' ? 'active' : ''}`}
+                  onClick={() => { setAuthMode('otp'); setTabDirection(1); setError(''); setValidationErrors({}); }}
+                >
+                  Email OTP
+                </button>
               </motion.div>
-            ) : (
-              <motion.div
-                key="otp"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.2 }}
-              >
-                {otpStep === 'email' ? (
-                  <>
-                    {error && <div className="error-message">{error}</div>}
 
-                    <form onSubmit={handleSendOTP} noValidate>
-                      <div className="form-group">
-                        <label htmlFor="otpEmail">Email Address</label>
-                        <input
-                          id="otpEmail"
-                          type="email"
-                          value={otpEmail}
-                          onChange={(e) => { setOtpEmail(e.target.value); setError(''); }}
-                          placeholder="Enter your registered email"
-                          autoComplete="email"
-                          required
-                        />
-                      </div>
+              <AnimatePresence mode="wait" custom={tabDirection}>
+                {authMode === 'password' ? (
+                  <motion.div
+                    key="password"
+                    custom={tabDirection}
+                    variants={tabContentVariants}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                    style={{ perspective: 1200 }}
+                  >
+                    {error && (
+                      <motion.div
+                        className="error-message"
+                        initial={{ opacity: 0, y: -8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        {error}
+                      </motion.div>
+                    )}
 
-                      <button type="submit" className="btn-submit" disabled={loading}>
-                        {loading ? 'Sending OTP...' : 'Send OTP'}
-                      </button>
+                    <form onSubmit={handlePasswordSubmit} noValidate>
+                      <motion.div
+                        className="form-group"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.05 }}
+                      >
+                        <label htmlFor="email">E-mail</label>
+                        <div className="input-with-icon">
+                          <span className="input-icon-left"><FiMail /></span>
+                          <input
+                            id="email"
+                            type="email"
+                            name="email"
+                            value={formData.email}
+                            onChange={handleChange}
+                            className={validationErrors.email ? 'input-error' : ''}
+                            placeholder="you@example.com"
+                            autoComplete="email"
+                            required
+                          />
+                        </div>
+                        {validationErrors.email && (
+                          <span className="validation-error">{validationErrors.email}</span>
+                        )}
+                      </motion.div>
+
+                      <motion.div
+                        className="form-group"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 }}
+                      >
+                        <label htmlFor="password">Password</label>
+                        <div className="input-with-icon">
+                          <span className="input-icon-left"><FiLock /></span>
+                          <input
+                            id="password"
+                            type={showPassword ? 'text' : 'password'}
+                            name="password"
+                            value={formData.password}
+                            onChange={handleChange}
+                            className={`${validationErrors.password ? 'input-error' : ''} ${showPassword ? 'password-input' : ''}`}
+                            placeholder="Enter your password"
+                            autoComplete="current-password"
+                            required
+                          />
+                          <button
+                            type="button"
+                            className="password-toggle"
+                            onClick={() => setShowPassword(!showPassword)}
+                            aria-label={showPassword ? 'Hide password' : 'Show password'}
+                          >
+                            {showPassword ? <FiEyeOff /> : <FiEye />}
+                          </button>
+                        </div>
+                        {validationErrors.password && (
+                          <span className="validation-error">{validationErrors.password}</span>
+                        )}
+                      </motion.div>
+
+                      <motion.div
+                        style={{ textAlign: 'right', marginBottom: '14px' }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.15 }}
+                      >
+                        <Link href="/forgot-password" style={{ fontSize: '12px', color: '#FF6B35', fontWeight: 600 }}>
+                          Forgot Password?
+                        </Link>
+                      </motion.div>
+
+                      <motion.button
+                        type="submit"
+                        className="btn-submit"
+                        disabled={loading}
+                        whileHover={!loading ? { scale: 1.01 } : {}}
+                        whileTap={!loading ? { scale: 0.98 } : {}}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                      >
+                        {loading ? <><span className="btn-spinner" />Signing in...</> : 'Sign in'}
+                      </motion.button>
                     </form>
-                  </>
+                  </motion.div>
                 ) : (
-                  <>
-                    <button
-                      className="btn-back"
-                      onClick={() => { setOtpStep('email'); setOtpError(''); }}
-                    >
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M19 12H5M12 19l-7-7 7-7"/>
-                      </svg>
-                      Change Email
-                    </button>
+                  <motion.div
+                    key="otp"
+                    custom={tabDirection}
+                    variants={tabContentVariants}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                    style={{ perspective: 1200 }}
+                  >
+                    {otpStep === 'email' ? (
+                      <>
+                        {error && (
+                          <motion.div
+                            className="error-message"
+                            initial={{ opacity: 0, y: -8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                          >
+                            {error}
+                          </motion.div>
+                        )}
 
-                    <OTPInput
-                      onComplete={handleVerifyOTP}
-                      onResend={handleResendOTP}
-                      error={otpError}
-                      loading={loading}
-                      email={otpEmail}
-                      purpose="login"
-                    />
-                  </>
+                        <form onSubmit={handleSendOTP} noValidate>
+                          <motion.div
+                            className="form-group"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.05 }}
+                          >
+                            <label htmlFor="otpEmail">E-mail</label>
+                            <div className="input-with-icon">
+                              <span className="input-icon-left"><FiMail /></span>
+                              <input
+                                id="otpEmail"
+                                type="email"
+                                value={otpEmail}
+                                onChange={(e) => { setOtpEmail(e.target.value); setError(''); }}
+                                placeholder="Enter your registered email"
+                                autoComplete="email"
+                                required
+                              />
+                            </div>
+                          </motion.div>
+
+                          <motion.button
+                            type="submit"
+                            className="btn-submit"
+                            disabled={loading}
+                            whileHover={!loading ? { scale: 1.01 } : {}}
+                            whileTap={!loading ? { scale: 0.98 } : {}}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.1 }}
+                          >
+                            {loading ? <><span className="btn-spinner" />Sending OTP...</> : 'Send OTP'}
+                          </motion.button>
+                        </form>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          className="btn-back"
+                          onClick={() => { setOtpStep('email'); setOtpError(''); }}
+                        >
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M19 12H5M12 19l-7-7 7-7"/>
+                          </svg>
+                          Change Email
+                        </button>
+
+                        <OTPInput
+                          onComplete={handleVerifyOTP}
+                          onResend={handleResendOTP}
+                          error={otpError}
+                          loading={loading}
+                          email={otpEmail}
+                          purpose="login"
+                        />
+                      </>
+                    )}
+                  </motion.div>
                 )}
-              </motion.div>
-            )}
-          </AnimatePresence>
+              </AnimatePresence>
 
-          <p className="login-footer">
-            Don't have an account? <Link href="/register">Register here</Link>
-          </p>
-        </div>
+              <motion.p className="login-footer" variants={itemVariants}>
+                Don't have an account? <Link href="/register">Sign up</Link>
+              </motion.p>
+            </>
+          )}
+        </motion.div>
       </div>
       <Footer />
     </>

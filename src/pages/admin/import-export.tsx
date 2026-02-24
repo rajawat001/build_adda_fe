@@ -19,6 +19,7 @@ import {
   FiDatabase
 } from 'react-icons/fi';
 import api from '../../services/api';
+import { getApiErrorMessage } from '../../utils/api-error';
 
 interface CollectionStats {
   users: number;
@@ -190,7 +191,7 @@ const ImportExportPage: React.FC = () => {
       }
     } catch (error: any) {
       console.error('Import failed:', error);
-      showMessage('error', error.response?.data?.message || `Failed to import ${collection}`);
+      showMessage('error', getApiErrorMessage(error, `Failed to import ${collection}`));
     } finally {
       setImportingItem(null);
     }
@@ -213,7 +214,7 @@ const ImportExportPage: React.FC = () => {
       }
     } catch (error: any) {
       console.error('Import all failed:', error);
-      showMessage('error', error.response?.data?.message || 'Failed to import all data');
+      showMessage('error', getApiErrorMessage(error, 'Failed to import all data'));
     } finally {
       setImportingAll(false);
     }

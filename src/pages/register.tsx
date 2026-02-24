@@ -3,13 +3,17 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
+import { FiUser, FiMail, FiLock, FiEye, FiEyeOff, FiPhone, FiHash, FiBriefcase, FiCheck, FiShoppingBag, FiPackage, FiArrowLeft } from 'react-icons/fi';
 import SEO from '../components/SEO';
 import { sendRegisterOTP, verifyRegisterOTP } from '../services/email-auth.service';
 import { getLocationDetails } from '../utils/location';
 import OTPInput from '../components/common/OTPInput';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import AuthIllustration from '../components/AuthIllustration';
+import SuccessTruck from '../components/SuccessTruck';
 import type { MapPickerLocation } from '../components/MapPicker';
+import { getApiErrorMessage, scrollToError } from '../utils/api-error';
 
 const MapPicker = dynamic(() => import('../components/MapPicker'), { ssr: false });
 
@@ -26,6 +30,40 @@ interface ValidationErrors {
 }
 
 type RegisterStep = 'details' | 'verify' | 'success';
+
+// Panel entrance with spring stagger
+const panelVariants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { type: 'spring' as const, damping: 22, stiffness: 100, staggerChildren: 0.07 },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 14 },
+  visible: { opacity: 1, y: 0, transition: { type: 'spring' as const, damping: 20, stiffness: 120 } },
+};
+
+// 3D slide transition for wizard steps
+const slideVariants = {
+  enter: (direction: number) => ({
+    opacity: 0,
+    x: direction * 60,
+    rotateY: direction * 6,
+  }),
+  center: {
+    opacity: 1,
+    x: 0,
+    rotateY: 0,
+  },
+  exit: (direction: number) => ({
+    opacity: 0,
+    x: direction * -60,
+    rotateY: direction * -6,
+  }),
+};
 
 // Indian states and their cities
 const indianStatesAndCities: Record<string, string[]> = {
@@ -67,6 +105,8 @@ const indianStates = Object.keys(indianStatesAndCities).sort();
 export default function Register() {
   const router = useRouter();
   const [step, setStep] = useState<RegisterStep>('details');
+  const [formStep, setFormStep] = useState(1); // 1=Account, 2=Contact, 3=Location
+  const [direction, setDirection] = useState(1); // 1=forward, -1=back
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -87,6 +127,7 @@ export default function Register() {
   const [otpError, setOtpError] = useState('');
   const [showMap, setShowMap] = useState(false);
   const [mapMounted, setMapMounted] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const validateName = (name: string): string | null => {
     if (!name || !name.trim()) return 'Name is required';
@@ -131,32 +172,58 @@ export default function Register() {
     return null;
   };
 
-  const validateForm = (): boolean => {
+  // Per-step validation
+  const validateStep1 = (): boolean => {
     const errors: ValidationErrors = {};
-
     const nameError = validateName(formData.name);
+    if (nameError) errors.name = nameError;
+    if (formData.role === 'distributor' && !formData.businessName?.trim()) {
+      errors.businessName = 'Business name is required';
+    }
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const validateStep2 = (): boolean => {
+    const errors: ValidationErrors = {};
     const emailError = validateEmail(formData.email);
     const phoneError = validatePhone(formData.phone);
     const passwordError = validatePassword(formData.password);
-    const pincodeError = validatePincode(formData.pincode);
-    const addressError = validateAddress(formData.address);
-
-    if (nameError) errors.name = nameError;
     if (emailError) errors.email = emailError;
     if (phoneError) errors.phone = phoneError;
     if (passwordError) errors.password = passwordError;
-    if (pincodeError) errors.pincode = pincodeError;
-    if (addressError) errors.address = addressError;
-
-    if (!formData.state?.trim()) errors.state = 'State is required';
-    if (!formData.city?.trim()) errors.city = 'City is required';
-
-    if (formData.role === 'distributor') {
-      if (!formData.businessName?.trim()) errors.businessName = 'Business name is required';
-    }
-
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
+  };
+
+  const validateStep3 = (): boolean => {
+    const errors: ValidationErrors = {};
+    if (!formData.state?.trim()) errors.state = 'State is required';
+    if (!formData.city?.trim()) errors.city = 'City is required';
+    const pincodeError = validatePincode(formData.pincode);
+    const addressError = validateAddress(formData.address);
+    if (pincodeError) errors.pincode = pincodeError;
+    if (addressError) errors.address = addressError;
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleNextStep = () => {
+    let valid = false;
+    if (formStep === 1) valid = validateStep1();
+    else if (formStep === 2) valid = validateStep2();
+    if (valid) {
+      setDirection(1);
+      setFormStep(prev => prev + 1);
+      setError('');
+    }
+  };
+
+  const handlePrevStep = () => {
+    setDirection(-1);
+    setFormStep(prev => prev - 1);
+    setValidationErrors({});
+    setError('');
   };
 
   const handleStateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -234,24 +301,23 @@ export default function Register() {
     setShowMap(false);
   };
 
-  // Step 1: Validate form and send OTP
   const handleSubmitDetails = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (!validateForm()) return;
+    if (!validateStep3()) return;
     setLoading(true);
 
     try {
       await sendRegisterOTP(formData.email);
       setStep('verify');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to send verification code. Please try again.');
+      setError(getApiErrorMessage(err, 'Failed to send verification code. Please try again.'));
+      scrollToError();
     } finally {
       setLoading(false);
     }
   };
 
-  // Step 2: Verify OTP and complete registration
   const handleVerifyOTP = async (otp: string) => {
     setOtpError('');
     setLoading(true);
@@ -283,7 +349,6 @@ export default function Register() {
         window.dispatchEvent(new Event('userLogin'));
         setStep('success');
 
-        // Auto-redirect after showing success
         setTimeout(() => {
           if (response.user.role === 'distributor') {
             router.push('/distributor/subscription');
@@ -293,7 +358,7 @@ export default function Register() {
         }, 2000);
       }
     } catch (err: any) {
-      setOtpError(err.response?.data?.message || 'Verification failed. Please try again.');
+      setOtpError(getApiErrorMessage(err, 'Verification failed. Please try again.'));
     } finally {
       setLoading(false);
     }
@@ -303,17 +368,37 @@ export default function Register() {
     try {
       await sendRegisterOTP(formData.email);
     } catch (err: any) {
-      setOtpError(err.response?.data?.message || 'Failed to resend OTP.');
+      setOtpError(getApiErrorMessage(err, 'Failed to resend OTP.'));
     }
   };
 
+  // 5-step progress: Account(1) -> Contact(2) -> Location(3) -> Verify(4) -> Done(5)
+  const getOverallStep = (): number => {
+    if (step === 'details') return formStep;
+    if (step === 'verify') return 4;
+    return 5;
+  };
+
   const getStepStatus = (s: number) => {
-    const steps: Record<RegisterStep, number> = { details: 1, verify: 2, success: 3 };
-    const current = steps[step];
+    const current = getOverallStep();
     if (s < current) return 'completed';
     if (s === current) return 'active';
     return '';
   };
+
+  const handleRoleCardKeyDown = (e: React.KeyboardEvent, role: string) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      if (role === 'user') {
+        setFormData({ ...formData, role: 'user', businessName: '' });
+      } else {
+        setFormData({ ...formData, role: 'distributor' });
+      }
+    }
+  };
+
+  const theme = formData.role === 'distributor' ? 'distributor' : 'user';
+  const stepLabels = ['Account', 'Contact', 'Location', 'Verify', 'Done'];
 
   return (
     <>
@@ -324,115 +409,256 @@ export default function Register() {
       />
       <Header />
 
-      <div className="login-page">
-        <div className="login-container">
-          <h1>Register at BuildAdda</h1>
+      <div className="auth-layout">
+        <AuthIllustration
+          theme={theme}
+          scene={theme === 'distributor' ? 'revenue' : 'bungalow'}
+          title={theme === 'distributor' ? 'Grow your business' : 'Start building'}
+          subtitle={theme === 'distributor' ? 'Sell building materials to thousands of buyers' : 'Shop quality building materials at the best prices'}
+        />
 
-          {/* Step Progress */}
-          <div className="step-progress">
-            <div className="step-item">
-              <div className={`step-circle ${getStepStatus(1)}`}>
-                {getStepStatus(1) === 'completed' ? '\u2713' : '1'}
-              </div>
-              <span className={`step-label ${getStepStatus(1)}`}>Details</span>
-            </div>
-            <div className={`step-connector ${getStepStatus(1) === 'completed' ? 'completed' : ''}`} />
-            <div className="step-item">
-              <div className={`step-circle ${getStepStatus(2)}`}>
-                {getStepStatus(2) === 'completed' ? '\u2713' : '2'}
-              </div>
-              <span className={`step-label ${getStepStatus(2)}`}>Verify</span>
-            </div>
-            <div className={`step-connector ${getStepStatus(2) === 'completed' ? 'completed' : ''}`} />
-            <div className="step-item">
-              <div className={`step-circle ${getStepStatus(3)}`}>
-                {getStepStatus(3) === 'completed' ? '\u2713' : '3'}
-              </div>
-              <span className={`step-label ${getStepStatus(3)}`}>Done</span>
-            </div>
-          </div>
+        <motion.div
+          className="auth-form-panel"
+          variants={panelVariants}
+          initial="hidden"
+          animate="visible"
+          style={{ perspective: 1200 }}
+        >
+          <motion.div className="login-logo" variants={itemVariants}>
+            <img src="/buildAddaBrandImage.png" alt="BuildAdda" />
+          </motion.div>
 
-          <AnimatePresence mode="wait">
-            {step === 'details' && (
+          <motion.h1 variants={itemVariants}>Sign up</motion.h1>
+          <motion.p className="auth-form-subtitle" variants={itemVariants}>
+            Register as a member to experience
+          </motion.p>
+
+          {/* 5-Step Progress */}
+          <motion.div className="step-progress" variants={itemVariants}>
+            {stepLabels.map((label, i) => (
+              <React.Fragment key={label}>
+                {i > 0 && (
+                  <div className={`step-connector ${getStepStatus(i + 1) === 'completed' || getStepStatus(i) === 'completed' ? 'completed' : ''}`} />
+                )}
+                <div className="step-item">
+                  <div className={`step-circle ${getStepStatus(i + 1)}`}>
+                    {getStepStatus(i + 1) === 'completed' ? '\u2713' : i + 1}
+                  </div>
+                  <span className={`step-label ${getStepStatus(i + 1)}`}>{label}</span>
+                </div>
+              </React.Fragment>
+            ))}
+          </motion.div>
+
+          <AnimatePresence mode="wait" custom={direction}>
+            {step === 'details' && formStep === 1 && (
               <motion.div
-                key="details"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                transition={{ duration: 0.25 }}
+                key="step-1"
+                custom={direction}
+                variants={slideVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                style={{ perspective: 1200 }}
               >
                 {error && <div className="error-message">{error}</div>}
 
-                <form onSubmit={handleSubmitDetails} noValidate>
+                <div>
+                  {/* Role Selector Cards */}
                   <div className="form-group">
-                    <label htmlFor="role">Register As</label>
-                    <select id="role" name="role" value={formData.role} onChange={handleChange}>
-                      <option value="user">User</option>
-                      <option value="distributor">Distributor</option>
-                    </select>
+                    <label>Register as</label>
+                    <div className="role-selector">
+                      <div
+                        className={`role-card ${formData.role === 'user' ? 'selected' : ''}`}
+                        onClick={() => setFormData({ ...formData, role: 'user', businessName: '' })}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => handleRoleCardKeyDown(e, 'user')}
+                      >
+                        <div className="role-card-check"><FiCheck size={12} /></div>
+                        <div className="role-card-icon"><FiShoppingBag size={22} /></div>
+                        <p className="role-card-title">Buyer</p>
+                        <p className="role-card-desc">Shop building materials</p>
+                      </div>
+                      <div
+                        className={`role-card ${formData.role === 'distributor' ? 'selected' : ''}`}
+                        onClick={() => setFormData({ ...formData, role: 'distributor' })}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => handleRoleCardKeyDown(e, 'distributor')}
+                      >
+                        <div className="role-card-check"><FiCheck size={12} /></div>
+                        <div className="role-card-icon"><FiPackage size={22} /></div>
+                        <p className="role-card-title">Distributor</p>
+                        <p className="role-card-desc">Sell your products</p>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="form-group">
-                    <label htmlFor="name">Name</label>
-                    <input
-                      id="name" type="text" name="name" value={formData.name}
-                      onChange={handleChange}
-                      className={validationErrors.name ? 'input-error' : ''}
-                      autoComplete="name" required
-                    />
+                    <label htmlFor="name">Full name</label>
+                    <div className="input-with-icon">
+                      <span className="input-icon-left"><FiUser /></span>
+                      <input
+                        id="name" type="text" name="name" value={formData.name}
+                        onChange={handleChange}
+                        className={validationErrors.name ? 'input-error' : ''}
+                        placeholder="Your full name"
+                        autoComplete="name" required
+                      />
+                    </div>
                     {validationErrors.name && <span className="validation-error">{validationErrors.name}</span>}
                   </div>
 
-                  {formData.role === 'distributor' && (
-                    <div className="form-group">
-                      <label htmlFor="businessName">Business Name</label>
-                      <input
-                        id="businessName" type="text" name="businessName"
-                        value={formData.businessName} onChange={handleChange}
-                        className={validationErrors.businessName ? 'input-error' : ''}
-                        autoComplete="organization" required
-                      />
-                      {validationErrors.businessName && <span className="validation-error">{validationErrors.businessName}</span>}
-                    </div>
-                  )}
+                  <AnimatePresence>
+                    {formData.role === 'distributor' && (
+                      <motion.div
+                        key="businessName"
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        style={{ overflow: 'hidden' }}
+                      >
+                        <div className="form-group">
+                          <label htmlFor="businessName">Business name</label>
+                          <div className="input-with-icon">
+                            <span className="input-icon-left"><FiBriefcase /></span>
+                            <input
+                              id="businessName" type="text" name="businessName"
+                              value={formData.businessName} onChange={handleChange}
+                              className={validationErrors.businessName ? 'input-error' : ''}
+                              placeholder="Your business name"
+                              autoComplete="organization" required
+                            />
+                          </div>
+                          {validationErrors.businessName && <span className="validation-error">{validationErrors.businessName}</span>}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
 
+                  <motion.button
+                    type="button"
+                    className="btn-submit"
+                    onClick={handleNextStep}
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    Continue
+                  </motion.button>
+                </div>
+              </motion.div>
+            )}
+
+            {step === 'details' && formStep === 2 && (
+              <motion.div
+                key="step-2"
+                custom={direction}
+                variants={slideVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                style={{ perspective: 1200 }}
+              >
+                <button type="button" className="btn-back-step" onClick={handlePrevStep}>
+                  <FiArrowLeft size={16} /> Back
+                </button>
+
+                {error && <div className="error-message">{error}</div>}
+
+                <div>
                   <div className="form-group">
                     <label htmlFor="email">Email</label>
-                    <input
-                      id="email" type="email" name="email" value={formData.email}
-                      onChange={handleChange}
-                      className={validationErrors.email ? 'input-error' : ''}
-                      autoComplete="email" required
-                    />
+                    <div className="input-with-icon">
+                      <span className="input-icon-left"><FiMail /></span>
+                      <input
+                        id="email" type="email" name="email" value={formData.email}
+                        onChange={handleChange}
+                        className={validationErrors.email ? 'input-error' : ''}
+                        placeholder="you@example.com"
+                        autoComplete="email" required
+                      />
+                    </div>
                     {validationErrors.email && <span className="validation-error">{validationErrors.email}</span>}
                   </div>
 
                   <div className="form-group">
-                    <label htmlFor="phone">Phone</label>
-                    <input
-                      id="phone" type="tel" name="phone" value={formData.phone}
-                      onChange={handleChange}
-                      className={validationErrors.phone ? 'input-error' : ''}
-                      placeholder="10-digit mobile number"
-                      autoComplete="tel" required
-                    />
+                    <label htmlFor="phone">Phone number</label>
+                    <div className="input-with-icon">
+                      <span className="input-icon-left"><FiPhone /></span>
+                      <input
+                        id="phone" type="tel" name="phone" value={formData.phone}
+                        onChange={handleChange}
+                        className={validationErrors.phone ? 'input-error' : ''}
+                        placeholder="10-digit mobile number"
+                        autoComplete="tel" required
+                      />
+                    </div>
                     {validationErrors.phone && <span className="validation-error">{validationErrors.phone}</span>}
                   </div>
 
                   <div className="form-group">
                     <label htmlFor="password">Password</label>
-                    <input
-                      id="password" type="password" name="password"
-                      value={formData.password} onChange={handleChange}
-                      className={validationErrors.password ? 'input-error' : ''}
-                      autoComplete="new-password" required
-                    />
+                    <div className="input-with-icon">
+                      <span className="input-icon-left"><FiLock /></span>
+                      <input
+                        id="password"
+                        type={showPassword ? 'text' : 'password'}
+                        name="password"
+                        value={formData.password} onChange={handleChange}
+                        className={`${validationErrors.password ? 'input-error' : ''} ${showPassword ? 'password-input' : ''}`}
+                        placeholder="Create a strong password"
+                        autoComplete="new-password" required
+                      />
+                      <button
+                        type="button"
+                        className="password-toggle"
+                        onClick={() => setShowPassword(!showPassword)}
+                        aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      >
+                        {showPassword ? <FiEyeOff /> : <FiEye />}
+                      </button>
+                    </div>
                     {validationErrors.password && <span className="validation-error">{validationErrors.password}</span>}
                     <small className="field-hint">
-                      Must be 8+ characters with uppercase, lowercase, number, and special character
+                      8+ characters with uppercase, lowercase, number & special character
                     </small>
                   </div>
 
+                  <motion.button
+                    type="button"
+                    className="btn-submit"
+                    onClick={handleNextStep}
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    Continue
+                  </motion.button>
+                </div>
+              </motion.div>
+            )}
+
+            {step === 'details' && formStep === 3 && (
+              <motion.div
+                key="step-3"
+                custom={direction}
+                variants={slideVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                style={{ perspective: 1200 }}
+              >
+                <button type="button" className="btn-back-step" onClick={handlePrevStep}>
+                  <FiArrowLeft size={16} /> Back
+                </button>
+
+                {error && <div className="error-message">{error}</div>}
+
+                <form onSubmit={handleSubmitDetails} noValidate>
                   <div className="form-group">
                     <label htmlFor="state">State</label>
                     <select
@@ -440,7 +666,7 @@ export default function Register() {
                       onChange={handleStateChange}
                       className={validationErrors.state ? 'input-error' : ''} required
                     >
-                      <option value="">Select State</option>
+                      <option value="">Select state</option>
                       {indianStates.map(state => (
                         <option key={state} value={state}>{state}</option>
                       ))}
@@ -456,7 +682,7 @@ export default function Register() {
                       className={validationErrors.city ? 'input-error' : ''}
                       disabled={!formData.state} required
                     >
-                      <option value="">Select City</option>
+                      <option value="">Select city</option>
                       {availableCities.map(city => (
                         <option key={city} value={city}>{city}</option>
                       ))}
@@ -467,18 +693,21 @@ export default function Register() {
 
                   <div className="form-group">
                     <label htmlFor="pincode">Pincode</label>
-                    <input
-                      id="pincode" type="text" name="pincode"
-                      value={formData.pincode} onChange={handleChange}
-                      className={validationErrors.pincode ? 'input-error' : ''}
-                      placeholder="6-digit pincode" maxLength={6}
-                      autoComplete="postal-code" required
-                    />
+                    <div className="input-with-icon">
+                      <span className="input-icon-left"><FiHash /></span>
+                      <input
+                        id="pincode" type="text" name="pincode"
+                        value={formData.pincode} onChange={handleChange}
+                        className={validationErrors.pincode ? 'input-error' : ''}
+                        placeholder="6-digit pincode" maxLength={6}
+                        autoComplete="postal-code" required
+                      />
+                    </div>
                     {validationErrors.pincode && <span className="validation-error">{validationErrors.pincode}</span>}
                   </div>
 
                   <div className="form-group">
-                    <label htmlFor="address">Street Address</label>
+                    <label htmlFor="address">Street address</label>
                     <textarea
                       id="address" name="address" value={formData.address}
                       onChange={handleChange}
@@ -489,7 +718,7 @@ export default function Register() {
                     {validationErrors.address && <span className="validation-error">{validationErrors.address}</span>}
                   </div>
 
-                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.5rem' }}>
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.75rem' }}>
                     <button type="button" className="btn-location" onClick={handleGetLocation} disabled={loading}>
                       Capture Current Location
                     </button>
@@ -526,9 +755,15 @@ export default function Register() {
                     </div>
                   )}
 
-                  <button type="submit" className="btn-submit" disabled={loading}>
-                    {loading ? 'Sending Verification...' : 'Continue & Verify Email'}
-                  </button>
+                  <motion.button
+                    type="submit"
+                    className="btn-submit"
+                    disabled={loading}
+                    whileHover={!loading ? { scale: 1.01 } : {}}
+                    whileTap={!loading ? { scale: 0.98 } : {}}
+                  >
+                    {loading ? <><span className="btn-spinner" />Sending verification...</> : 'Continue & verify email'}
+                  </motion.button>
                 </form>
               </motion.div>
             )}
@@ -536,19 +771,20 @@ export default function Register() {
             {step === 'verify' && (
               <motion.div
                 key="verify"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.25 }}
+                initial={{ opacity: 0, x: 50, rotateY: 5 }}
+                animate={{ opacity: 1, x: 0, rotateY: 0 }}
+                exit={{ opacity: 0, x: -50, rotateY: -5 }}
+                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                style={{ perspective: 1200 }}
               >
                 <button
                   className="btn-back"
-                  onClick={() => { setStep('details'); setOtpError(''); }}
+                  onClick={() => { setStep('details'); setFormStep(3); setDirection(-1); setOtpError(''); }}
                 >
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
                     <path d="M19 12H5M12 19l-7-7 7-7"/>
                   </svg>
-                  Back to Details
+                  Back to details
                 </button>
 
                 <OTPInput
@@ -565,13 +801,13 @@ export default function Register() {
             {step === 'success' && (
               <motion.div
                 key="success"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3 }}
+                initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ type: 'spring', damping: 18, stiffness: 120 }}
               >
                 <div className="auth-success">
                   <div className="auth-success-icon">{'\u2713'}</div>
-                  <h2>Registration Successful!</h2>
+                  <h2>Registration successful!</h2>
                   <p>
                     {formData.role === 'distributor'
                       ? 'Your account is created. Redirecting to subscription...'
@@ -579,16 +815,17 @@ export default function Register() {
                     }
                   </p>
                 </div>
+                <SuccessTruck color={formData.role === 'distributor' ? '#FF6B35' : '#2c3e50'} />
               </motion.div>
             )}
           </AnimatePresence>
 
           {step !== 'success' && (
-            <p className="login-footer">
-              Already have an account? <Link href="/login">Login here</Link>
-            </p>
+            <motion.p className="login-footer" variants={itemVariants}>
+              Already a member? <Link href="/login">Sign in</Link>
+            </motion.p>
           )}
-        </div>
+        </motion.div>
       </div>
       <Footer />
     </>

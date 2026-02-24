@@ -5,6 +5,7 @@ import SEO from '../../components/SEO';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import orderService from '../../services/order.service';
+import { getApiErrorMessage, scrollToError } from '../../utils/api-error';
 
 interface OrderItem {
   product: string;

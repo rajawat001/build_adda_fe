@@ -633,7 +633,7 @@
 /* Hover Effects for Interactive Elements */
 .search-inputs input::placeholder,
 .search-inputs select option:first-child {
-  color: #999;
+  color: #5c6066;
 }
 
 .btn-search:disabled,

@@ -18,6 +18,7 @@ import DataTable, { Column } from '../../components/admin/DataTable';
 import ConfirmDialog from '../../components/admin/ConfirmDialog';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../services/api';
+import { getApiErrorMessage } from '../../utils/api-error';
 
 interface SubscriptionPlan {
   _id: string;
@@ -177,7 +178,7 @@ const SubscriptionPlansManagement: React.FC = () => {
       setShowModal(false);
     } catch (error: any) {
       console.error('Save plan failed:', error);
-      alert(error.response?.data?.message || 'Failed to save plan');
+      alert(getApiErrorMessage(error, 'Failed to save plan'));
     } finally {
       setActionLoading(false);
     }
@@ -196,7 +197,7 @@ const SubscriptionPlansManagement: React.FC = () => {
           await fetchData();
         } catch (error: any) {
           console.error('Delete failed:', error);
-          alert(error.response?.data?.message || 'Failed to delete plan');
+          alert(getApiErrorMessage(error, 'Failed to delete plan'));
         } finally {
           setActionLoading(false);
           setConfirmDialog({ ...confirmDialog, isOpen: false });
@@ -229,7 +230,7 @@ const SubscriptionPlansManagement: React.FC = () => {
       setSelectedSubscription(null);
     } catch (error: any) {
       console.error('Extend failed:', error);
-      alert(error.response?.data?.message || 'Failed to extend subscription');
+      alert(getApiErrorMessage(error, 'Failed to extend subscription'));
     } finally {
       setActionLoading(false);
     }
@@ -250,7 +251,7 @@ const SubscriptionPlansManagement: React.FC = () => {
           await fetchData();
         } catch (error: any) {
           console.error('Cancel failed:', error);
-          alert(error.response?.data?.message || 'Failed to cancel subscription');
+          alert(getApiErrorMessage(error, 'Failed to cancel subscription'));
         } finally {
           setActionLoading(false);
           setConfirmDialog({ ...confirmDialog, isOpen: false });

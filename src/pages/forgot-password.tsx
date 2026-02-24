@@ -2,9 +2,13 @@ import { useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
+import { FiMail, FiLock } from 'react-icons/fi';
 import SEO from '../components/SEO';
 import { sendResetOTP, verifyResetOTP, resetPasswordWithOTP } from '../services/email-auth.service';
 import OTPInput from '../components/common/OTPInput';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
+import { getApiErrorMessage, scrollToError } from '../utils/api-error';
 
 type ResetStep = 'email' | 'otp' | 'password' | 'success';
 
@@ -56,7 +60,8 @@ export default function ForgotPassword() {
       await sendResetOTP(email);
       setStep('otp');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Error sending OTP. Please try again.');
+      setError(getApiErrorMessage(err, 'Error sending OTP. Please try again.'));
+      scrollToError();
     } finally {
       setLoading(false);
     }
@@ -71,7 +76,7 @@ export default function ForgotPassword() {
       await verifyResetOTP(email, otp);
       setStep('password');
     } catch (err: any) {
-      setOtpError(err.response?.data?.message || 'Invalid OTP. Please try again.');
+      setOtpError(getApiErrorMessage(err, 'Invalid OTP. Please try again.'));
     } finally {
       setLoading(false);
     }
@@ -81,7 +86,7 @@ export default function ForgotPassword() {
     try {
       await sendResetOTP(email);
     } catch (err: any) {
-      setOtpError(err.response?.data?.message || 'Failed to resend OTP.');
+      setOtpError(getApiErrorMessage(err, 'Failed to resend OTP.'));
     }
   };
 
@@ -113,7 +118,8 @@ export default function ForgotPassword() {
       setStep('success');
       setTimeout(() => router.push('/login'), 3000);
     } catch (err: any) {
-      setPasswordError(err.response?.data?.message || 'Failed to reset password. Please try again.');
+      setPasswordError(getApiErrorMessage(err, 'Failed to reset password. Please try again.'));
+      scrollToError();
     } finally {
       setLoading(false);
     }
@@ -135,10 +141,20 @@ export default function ForgotPassword() {
         title="Forgot Password"
         description="Reset your BuildAdda account password"
       />
+      <Header />
 
       <div className="login-page">
-        <div className="login-container">
-          <h1>Reset Password</h1>
+        <motion.div
+          className="login-container"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, ease: 'easeOut' }}
+        >
+          <div className="login-logo">
+            <img src="/buildAddaBrandImage.png" alt="BuildAdda" />
+          </div>
+
+          <h1>Reset your password</h1>
 
           {/* Step Progress */}
           <div className="step-progress">
@@ -174,25 +190,28 @@ export default function ForgotPassword() {
                 exit={{ opacity: 0, x: 20 }}
                 transition={{ duration: 0.25 }}
               >
-                <p className="subtitle" style={{ textAlign: 'center', color: '#6c757d', marginBottom: '24px', fontSize: '14px' }}>
-                  Enter your email address and we'll send you an OTP to reset your password.
+                <p style={{ textAlign: 'center', color: '#6d7175', marginBottom: '20px', fontSize: '13px' }}>
+                  Enter your email and we'll send you an OTP to reset your password.
                 </p>
 
                 {error && <div className="error-message">{error}</div>}
 
                 <form onSubmit={handleSendOTP} noValidate>
                   <div className="form-group">
-                    <label htmlFor="email">Email Address</label>
-                    <input
-                      id="email"
-                      type="email"
-                      name="email"
-                      value={email}
-                      onChange={(e) => { setEmail(e.target.value); setError(''); }}
-                      placeholder="Enter your email"
-                      autoComplete="email"
-                      required
-                    />
+                    <label htmlFor="email">Email address</label>
+                    <div className="input-with-icon">
+                      <span className="input-icon-left"><FiMail /></span>
+                      <input
+                        id="email"
+                        type="email"
+                        name="email"
+                        value={email}
+                        onChange={(e) => { setEmail(e.target.value); setError(''); }}
+                        placeholder="you@example.com"
+                        autoComplete="email"
+                        required
+                      />
+                    </div>
                   </div>
 
                   <button type="submit" className="btn-submit" disabled={loading}>
@@ -250,16 +269,19 @@ export default function ForgotPassword() {
 
                 <form onSubmit={handleResetPassword} noValidate>
                   <div className="form-group">
-                    <label htmlFor="newPassword">New Password</label>
-                    <input
-                      id="newPassword"
-                      type="password"
-                      value={newPassword}
-                      onChange={(e) => { setNewPassword(e.target.value); setPasswordError(''); }}
-                      placeholder="Enter new password"
-                      autoComplete="new-password"
-                      required
-                    />
+                    <label htmlFor="newPassword">New password</label>
+                    <div className="input-with-icon">
+                      <span className="input-icon-left"><FiLock /></span>
+                      <input
+                        id="newPassword"
+                        type="password"
+                        value={newPassword}
+                        onChange={(e) => { setNewPassword(e.target.value); setPasswordError(''); }}
+                        placeholder="Enter new password"
+                        autoComplete="new-password"
+                        required
+                      />
+                    </div>
                     {newPassword && (
                       <>
                         <div className="password-strength">
@@ -287,16 +309,19 @@ export default function ForgotPassword() {
                   </div>
 
                   <div className="form-group">
-                    <label htmlFor="confirmPassword">Confirm Password</label>
-                    <input
-                      id="confirmPassword"
-                      type="password"
-                      value={confirmPassword}
-                      onChange={(e) => { setConfirmPassword(e.target.value); setPasswordError(''); }}
-                      placeholder="Confirm new password"
-                      autoComplete="new-password"
-                      required
-                    />
+                    <label htmlFor="confirmPassword">Confirm password</label>
+                    <div className="input-with-icon">
+                      <span className="input-icon-left"><FiLock /></span>
+                      <input
+                        id="confirmPassword"
+                        type="password"
+                        value={confirmPassword}
+                        onChange={(e) => { setConfirmPassword(e.target.value); setPasswordError(''); }}
+                        placeholder="Confirm new password"
+                        autoComplete="new-password"
+                        required
+                      />
+                    </div>
                     {confirmPassword && newPassword !== confirmPassword && (
                       <span className="validation-error">Passwords do not match</span>
                     )}
@@ -331,8 +356,9 @@ export default function ForgotPassword() {
               Remember your password? <Link href="/login">Login here</Link>
             </p>
           )}
-        </div>
+        </motion.div>
       </div>
+      <Footer />
     </>
   );
 }

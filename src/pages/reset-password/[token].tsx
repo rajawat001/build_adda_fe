@@ -1,8 +1,13 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
+import { FiLock } from 'react-icons/fi';
 import SEO from '../../components/SEO';
 import api from '../../services/api';
+import Header from '../../components/Header';
+import Footer from '../../components/Footer';
+import { getApiErrorMessage, scrollToError } from '../../utils/api-error';
 
 export default function ResetPassword() {
   const router = useRouter();
@@ -35,7 +40,6 @@ export default function ResetPassword() {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
 
-    // Clear validation error for this field
     if (validationErrors[name as keyof typeof validationErrors]) {
       setValidationErrors({ ...validationErrors, [name]: '' });
     }
@@ -45,7 +49,6 @@ export default function ResetPassword() {
     e.preventDefault();
     setError('');
 
-    // Validate
     const errors = {
       password: '',
       confirmPassword: ''
@@ -74,17 +77,13 @@ export default function ResetPassword() {
 
       setSuccess(true);
 
-      // Redirect to login after 3 seconds
       setTimeout(() => {
         router.push('/login');
       }, 3000);
     } catch (err: any) {
       console.error('Reset password error:', err);
-      setError(
-        err.response?.data?.message ||
-        err.response?.data?.error ||
-        'Error resetting password. The link may have expired.'
-      );
+      setError(getApiErrorMessage(err, 'Error resetting password. The link may have expired.'));
+      scrollToError();
     } finally {
       setLoading(false);
     }
@@ -94,19 +93,25 @@ export default function ResetPassword() {
     return (
       <>
         <SEO title="Password Reset Successful" />
+        <Header />
         <div className="login-page">
-          <div className="login-container">
-            <div className="success-state">
-              <div className="success-icon">✓</div>
-              <h2>Password Reset Successful!</h2>
-              <p>Your password has been successfully reset.</p>
-              <p className="info-text">You will be redirected to login page...</p>
-              <Link href="/login" className="btn-submit">
+          <motion.div
+            className="login-container"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+          >
+            <div className="auth-success">
+              <div className="auth-success-icon">{'\u2713'}</div>
+              <h2>Password reset successful!</h2>
+              <p>Your password has been updated. Redirecting to login...</p>
+              <Link href="/login" className="btn-submit" style={{ display: 'inline-block', textAlign: 'center', textDecoration: 'none', marginTop: '12px' }}>
                 Go to Login
               </Link>
             </div>
-          </div>
+          </motion.div>
         </div>
+        <Footer />
       </>
     );
   }
@@ -114,47 +119,67 @@ export default function ResetPassword() {
   return (
     <>
       <SEO title="Reset Password" />
+      <Header />
 
       <div className="login-page">
-        <div className="login-container">
-          <h1>Reset Your Password</h1>
-          <p className="subtitle">Enter your new password below</p>
+        <motion.div
+          className="login-container"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, ease: 'easeOut' }}
+        >
+          <div className="login-logo">
+            <img src="/buildAddaBrandImage.png" alt="BuildAdda" />
+          </div>
+
+          <h1>Set new password</h1>
+          <p style={{ textAlign: 'center', color: '#6d7175', marginBottom: '20px', fontSize: '13px' }}>
+            Enter your new password below
+          </p>
 
           {error && <div className="error-message">{error}</div>}
 
           <form onSubmit={handleSubmit} noValidate>
             <div className="form-group">
-              <label htmlFor="password">New Password</label>
-              <input
-                id="password"
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                className={validationErrors.password ? 'input-error' : ''}
-                autoComplete="new-password"
-                required
-              />
+              <label htmlFor="password">New password</label>
+              <div className="input-with-icon">
+                <span className="input-icon-left"><FiLock /></span>
+                <input
+                  id="password"
+                  type="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  className={validationErrors.password ? 'input-error' : ''}
+                  placeholder="Enter new password"
+                  autoComplete="new-password"
+                  required
+                />
+              </div>
               {validationErrors.password && (
                 <span className="validation-error">{validationErrors.password}</span>
               )}
               <small className="field-hint">
-                Must be 8+ characters with uppercase, lowercase, number, and special character
+                8+ characters with uppercase, lowercase, number & special character
               </small>
             </div>
 
             <div className="form-group">
-              <label htmlFor="confirmPassword">Confirm New Password</label>
-              <input
-                id="confirmPassword"
-                type="password"
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                className={validationErrors.confirmPassword ? 'input-error' : ''}
-                autoComplete="new-password"
-                required
-              />
+              <label htmlFor="confirmPassword">Confirm password</label>
+              <div className="input-with-icon">
+                <span className="input-icon-left"><FiLock /></span>
+                <input
+                  id="confirmPassword"
+                  type="password"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  className={validationErrors.confirmPassword ? 'input-error' : ''}
+                  placeholder="Confirm new password"
+                  autoComplete="new-password"
+                  required
+                />
+              </div>
               {validationErrors.confirmPassword && (
                 <span className="validation-error">{validationErrors.confirmPassword}</span>
               )}
@@ -168,8 +193,9 @@ export default function ResetPassword() {
           <p className="login-footer">
             Remember your password? <Link href="/login">Login here</Link>
           </p>
-        </div>
+        </motion.div>
       </div>
+      <Footer />
     </>
   );
 }

@@ -10,6 +10,7 @@ import ExportButton from '../../components/admin/ExportButton';
 import ConfirmDialog from '../../components/admin/ConfirmDialog';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../services/api';
+import { getApiErrorMessage } from '../../utils/api-error';
 
 interface Product {
   _id: string;
@@ -406,7 +407,7 @@ const ProductsManagement: React.FC = () => {
       setSelectedProduct(null);
     } catch (error: any) {
       console.error('Update product failed:', error);
-      alert(error.response?.data?.message || 'Failed to update product');
+      alert(getApiErrorMessage(error, 'Failed to update product'));
     } finally {
       setActionLoading(false);
     }

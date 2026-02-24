@@ -663,6 +663,41 @@ a:hover {
 }
 
 /* ==================
+   GLOBAL PLACEHOLDER VISIBILITY
+   Ensures all placeholder text is clearly visible on both mobile & desktop
+   ================== */
+input::placeholder,
+textarea::placeholder,
+select::placeholder {
+  color: #8c9196;
+  opacity: 1;
+  font-weight: 400;
+}
+
+/* WebKit browsers */
+input::-webkit-input-placeholder,
+textarea::-webkit-input-placeholder {
+  color: #8c9196;
+  opacity: 1;
+  font-weight: 400;
+}
+
+/* Firefox */
+input::-moz-placeholder,
+textarea::-moz-placeholder {
+  color: #8c9196;
+  opacity: 1;
+  font-weight: 400;
+}
+
+/* IE/Edge */
+input:-ms-input-placeholder,
+textarea:-ms-input-placeholder {
+  color: #8c9196;
+  font-weight: 400;
+}
+
+/* ==================
    UTILITY CLASSES
    ================== */
 .text-center {
@@ -1190,7 +1225,7 @@ iframe.goog-te-banner-frame {
 }
 
 .map-picker-search-input::placeholder {
-  color: var(--text-light);
+  color: #5c6066;
 }
 
 .map-picker-search-btn {

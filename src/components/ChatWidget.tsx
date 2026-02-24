@@ -8,6 +8,7 @@ import {
 } from 'react-icons/fi';
 import api from '../services/api';
 import { getUser } from '../utils/auth';
+import { getApiErrorMessage } from '../utils/api-error';
 
 // ─── FAQ Data ─────────────────────────────────────────────────────────────────
 
@@ -388,7 +389,7 @@ const ChatWidget: React.FC = () => {
         setFormData({ name: '', email: '', message: '' });
       }
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to send message. Please try again.');
+      setError(getApiErrorMessage(err, 'Failed to send message. Please try again.'));
     } finally {
       setSending(false);
     }
@@ -410,7 +411,7 @@ const ChatWidget: React.FC = () => {
       setReplyText('');
       await fetchThread();
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to send message. Please try again.');
+      setError(getApiErrorMessage(err, 'Failed to send message. Please try again.'));
     } finally {
       setSending(false);
     }

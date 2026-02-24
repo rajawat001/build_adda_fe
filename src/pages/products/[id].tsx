@@ -12,6 +12,7 @@ import { Product } from '../../types';
 import { useCart } from '../../context/CartContext';
 import ShareSheet from '../../components/ShareSheet';
 import Toast from '../../components/Toast';
+import { getApiErrorMessage, scrollToError } from '../../utils/api-error';
 import {
   FiHeart, FiCheckCircle, FiXCircle, FiShoppingCart, FiZap,
   FiChevronLeft, FiChevronRight, FiX, FiZoomIn, FiShare2, FiTruck, FiShield, FiPackage,

@@ -4,6 +4,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import api from '../services/api';
 import { FiFacebook, FiInstagram, FiLinkedin, FiYoutube } from 'react-icons/fi';
+import { getApiErrorMessage, scrollToError } from '../utils/api-error';
 import { FaXTwitter } from 'react-icons/fa6';
 
 const contactJsonLd = {
@@ -115,7 +116,8 @@ const ContactPage: React.FC = () => {
       // Clear success message after 5 seconds
       setTimeout(() => setSuccess(false), 5000);
     } catch (err: any) {
-      setError(err.response?.data?.error || err.message || 'Failed to send message. Please try again.');
+      setError(getApiErrorMessage(err, 'Failed to send message. Please try again.'));
+      scrollToError();
     } finally {
       setLoading(false);
     }

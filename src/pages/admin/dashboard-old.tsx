@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import SEO from '../../components/SEO';
 import api  from '../../services/api';
+import { getApiErrorMessage } from '../../utils/api-error';
 
 interface AdminStats {
   totalRevenue: number;
@@ -169,7 +170,7 @@ const AdminDashboard = () => {
       });
       fetchData();
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Error creating coupon');
+      alert(getApiErrorMessage(error, 'Error creating coupon'));
     }
   };
 
