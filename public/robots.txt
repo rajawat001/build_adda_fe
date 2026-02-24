@@ -1,54 +1,121 @@
 # BuildAdda - Robots.txt
 # https://www.buildadda.in/robots.txt
 
-# Allow all bots to crawl the site
+# ───────────────────────────────────────
+# Default rules for all bots
+# ───────────────────────────────────────
 User-agent: *
 Allow: /
 
-# Allow sitemap API (must be before Disallow /api/)
+# Public pages to crawl
+Allow: /products
+Allow: /products/
+Allow: /distributor/
+Allow: /distributors
+Allow: /about
+Allow: /contact
+Allow: /faq
+Allow: /privacy
+Allow: /terms
+Allow: /shipping
+Allow: /returns
+
+# Sitemap API endpoint
 Allow: /api/sitemap.xml
 
-# Disallow admin and user dashboard pages
+# Block private/internal pages
 Disallow: /admin/
-Disallow: /user/
-Disallow: /distributor/
 Disallow: /api/
-
-# Disallow cart and checkout (no need to index)
+Disallow: /distributor/dashboard
+Disallow: /distributor/orders
+Disallow: /distributor/products
+Disallow: /distributor/analytics
+Disallow: /distributor/profile
+Disallow: /user/
 Disallow: /cart
 Disallow: /checkout
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /profile
+Disallow: /orders
+Disallow: /wishlist
+Disallow: /notifications
 
-# Allow products and distributors
-Allow: /products
-Allow: /distributors
+# Block query parameter variations that create duplicate content
+Disallow: /*?sort=
+Disallow: /*?page=
+Disallow: /*&sort=
+Disallow: /*&page=
 
-# Sitemap locations
-Sitemap: https://www.buildadda.in/sitemap.xml
+# Crawl delay to be respectful
+Crawl-delay: 1
 
-# Google-specific rules
+# ───────────────────────────────────────
+# Google
+# ───────────────────────────────────────
 User-agent: Googlebot
 Allow: /
 Allow: /api/sitemap.xml
+Allow: /products/
+Allow: /distributor/
 Disallow: /admin/
 Disallow: /api/
+Disallow: /cart
+Disallow: /checkout
+Disallow: /distributor/dashboard
+Disallow: /distributor/orders
+Disallow: /distributor/products
+Disallow: /distributor/analytics
+Disallow: /distributor/profile
 
-# Bing-specific rules
+User-agent: Googlebot-Image
+Allow: /
+
+# ───────────────────────────────────────
+# Bing
+# ───────────────────────────────────────
 User-agent: Bingbot
 Allow: /
 Allow: /api/sitemap.xml
+Allow: /products/
+Allow: /distributor/
 Disallow: /admin/
 Disallow: /api/
+Disallow: /cart
+Disallow: /checkout
+Disallow: /distributor/dashboard
 
-# Yandex-specific rules
+# ───────────────────────────────────────
+# Yandex
+# ───────────────────────────────────────
 User-agent: Yandex
 Allow: /
 Allow: /api/sitemap.xml
 Disallow: /admin/
 Disallow: /api/
+Disallow: /cart
+Disallow: /checkout
+Crawl-delay: 2
 
-# Block bad bots (optional - add as needed)
+# ───────────────────────────────────────
+# Rate-limit aggressive SEO bots
+# ───────────────────────────────────────
 User-agent: AhrefsBot
 Crawl-delay: 10
 
 User-agent: SemrushBot
 Crawl-delay: 10
+
+User-agent: DotBot
+Crawl-delay: 10
+
+User-agent: MJ12bot
+Crawl-delay: 10
+
+# ───────────────────────────────────────
+# Sitemaps
+# ───────────────────────────────────────
+Sitemap: https://www.buildadda.in/sitemap.xml
+Sitemap: https://www.buildadda.in/api/sitemap.xml

@@ -104,7 +104,7 @@ function ProductCard({ product, onAddToCart, onAddToWishlist, showWishlist = tru
 
   return (
     <div className="product-card">
-      <Link href={`/products/${product._id}`} className="product-image-link">
+      <Link href={`/products/${product.slug || product._id}`} className="product-image-link">
         <div className="product-image">
           {(product.image && product.image.startsWith('http')) ? (
             <Image
@@ -135,12 +135,12 @@ function ProductCard({ product, onAddToCart, onAddToWishlist, showWishlist = tru
       </Link>
 
       <div className="product-info">
-        <Link href={`/products/${product._id}`} className="product-title-link">
+        <Link href={`/products/${product.slug || product._id}`} className="product-title-link">
           <h3>{product.name}</h3>
         </Link>
         <p className="category">{categoryName}</p>
         <p className="distributor">
-          By: <Link href={`/distributor/${product.distributor._id}`}>
+          By: <Link href={`/distributor/${product.distributor.slug || product.distributor._id}`}>
             {product.distributor.businessName}
           </Link>
         </p>

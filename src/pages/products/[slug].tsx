@@ -286,11 +286,11 @@ interface SSRProductMeta {
 }
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
-  const { id } = context.params || {};
+  const { slug } = context.params || {};
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
   try {
-    const res = await axios.get(`${API_URL}/products/${id}`, { timeout: 5000 });
+    const res = await axios.get(`${API_URL}/products/${slug}`, { timeout: 5000 });
     const data = res.data;
     const product = data.product || data.data?.product || data;
 
@@ -309,7 +309,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
           image,
           category,
           inStock: (product.stock || 0) >= (product.minQuantity || 1),
-          id: product._id || id || '',
+          id: product.slug || product._id || slug || '',
         } as SSRProductMeta,
       },
     };
@@ -321,7 +321,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 // ─── Main Page Component ───
 export default function ProductDetail({ ssrMeta }: { ssrMeta: SSRProductMeta | null }) {
   const router = useRouter();
-  const { id } = router.query;
+  const { slug: id } = router.query;
   const { addToCart } = useCart();
 
   const [product, setProduct] = useState<Product | null>(null);
@@ -509,7 +509,7 @@ export default function ProductDetail({ ssrMeta }: { ssrMeta: SSRProductMeta | n
       name: product.name,
       description: product.description,
       image: allImages.length > 0 ? allImages : (product.image ? [product.image] : undefined),
-      url: `https://www.buildadda.in/products/${product._id}`,
+      url: `https://www.buildadda.in/products/${product.slug || product._id}`,
       sku: product._id,
       mpn: product._id,
       brand: product.brand ? { '@type': 'Brand', name: product.brand } : { '@type': 'Brand', name: 'BuildAdda' },
@@ -525,9 +525,9 @@ export default function ProductDetail({ ssrMeta }: { ssrMeta: SSRProductMeta | n
         seller: {
           '@type': 'Organization',
           name: distributor?.businessName || 'BuildAdda',
-          url: distributor ? `https://www.buildadda.in/distributor/${distributor._id}` : 'https://www.buildadda.in'
+          url: distributor ? `https://www.buildadda.in/distributor/${distributor.slug || distributor._id}` : 'https://www.buildadda.in'
         },
-        url: `https://www.buildadda.in/products/${product._id}`,
+        url: `https://www.buildadda.in/products/${product.slug || product._id}`,
         priceValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         shippingDetails: {
           '@type': 'OfferShippingDetails',
@@ -564,7 +564,7 @@ export default function ProductDetail({ ssrMeta }: { ssrMeta: SSRProductMeta | n
             { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.buildadda.in' },
             { '@type': 'ListItem', position: 2, name: 'Products', item: 'https://www.buildadda.in/products' },
             ...(category ? [{ '@type': 'ListItem', position: 3, name: category, item: `https://www.buildadda.in/products?category=${category}` }] : []),
-            { '@type': 'ListItem', position: category ? 4 : 3, name: product.name, item: `https://www.buildadda.in/products/${product._id}` },
+            { '@type': 'ListItem', position: category ? 4 : 3, name: product.name, item: `https://www.buildadda.in/products/${product.slug || product._id}` },
           ],
         },
       ],
@@ -628,7 +628,7 @@ export default function ProductDetail({ ssrMeta }: { ssrMeta: SSRProductMeta | n
         title={`${product.name} - Buy Online at Best Price | BuildAdda`}
         description={`Buy ${product.name} online at ₹${product.price.toLocaleString('en-IN')}${category ? ` in ${category} category` : ''}. ${inStock ? 'In stock' : 'Out of stock'}. ${product.description?.substring(0, 120) || ''}`}
         keywords={`${product.name}, buy ${product.name} online, ${product.name} price, ${category ? category + ' ' : ''}building materials`}
-        canonicalUrl={`https://www.buildadda.in/products/${product._id}`}
+        canonicalUrl={`https://www.buildadda.in/products/${product.slug || product._id}`}
         ogImage={allImages[0] || product.image || undefined}
         ogType="product"
         jsonLd={productJsonLd}
@@ -763,7 +763,7 @@ export default function ProductDetail({ ssrMeta }: { ssrMeta: SSRProductMeta | n
             {distributor && (
               <div className="pdp-seller">
                 <span className="pdp-seller-label">Sold by</span>
-                <Link href={`/distributor/${distributor._id}`} className="pdp-seller-name">{distributor.businessName}</Link>
+                <Link href={`/distributor/${distributor.slug || distributor._id}`} className="pdp-seller-name">{distributor.businessName}</Link>
               </div>
             )}
 
@@ -968,7 +968,7 @@ export default function ProductDetail({ ssrMeta }: { ssrMeta: SSRProductMeta | n
         onClose={() => setShowShareSheet(false)}
         title={product.name}
         text={`Check out ${product.name} at ₹${product.price.toLocaleString('en-IN')} on BuildAdda`}
-        url={typeof window !== 'undefined' ? window.location.href : `https://www.buildadda.in/products/${product._id}`}
+        url={typeof window !== 'undefined' ? window.location.href : `https://www.buildadda.in/products/${product.slug || product._id}`}
         image={allImages[0] || product.image}
       />
 

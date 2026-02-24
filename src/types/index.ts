@@ -1,6 +1,7 @@
 // Shared Product interface
 export interface Product {
   _id: string;
+  slug?: string;
   name: string;
   description: string;
   price: number;
@@ -10,6 +11,7 @@ export interface Product {
   category: string | { _id: string; name: string };
   distributor: {
     _id: string;
+    slug?: string;
     businessName: string;
     city?: string;
     state?: string;

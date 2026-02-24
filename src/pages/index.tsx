@@ -566,7 +566,7 @@ export default function Home() {
                 <div
                   key={distributor._id}
                   className="distributor-card-modern"
-                  onClick={() => router.push(`/distributor/${distributor._id}`)}
+                  onClick={() => router.push(`/distributor/${distributor.slug || distributor._id}`)}
                 >
                   <div className="distributor-header">
                     <div className="distributor-avatar">

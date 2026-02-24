@@ -12,6 +12,7 @@ const MapPicker = dynamic(() => import('../../components/MapPicker'), { ssr: fal
 
 interface DistributorProfile {
   _id: string;
+  slug?: string;
   businessName: string;
   name: string;
   email: string;
@@ -379,6 +380,13 @@ const Profile = () => {
                 value={profile.businessName}
                 isMobile={isMobile}
               />
+              {profile.slug && (
+                <InfoRow
+                  label="Profile URL"
+                  value={`/distributor/${profile.slug}`}
+                  isMobile={isMobile}
+                />
+              )}
               <InfoRow
                 icon={<FiUser />}
                 label="Contact Person"

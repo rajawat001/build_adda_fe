@@ -9,6 +9,7 @@ import { FiFilter, FiX, FiMapPin, FiSearch, FiMail, FiPhone, FiNavigation, FiSta
 
 interface Distributor {
   _id: string;
+  slug?: string;
   businessName: string;
   email: string;
   phone: string;
@@ -225,8 +226,8 @@ const Distributors = () => {
     }
   };
 
-  const viewDistributor = (distributorId: string) => {
-    router.push(`/distributor/${distributorId}`);
+  const viewDistributor = (distributorSlug: string) => {
+    router.push(`/distributor/${distributorSlug}`);
   };
 
   const renderRating = (rating: number = 0) => {
@@ -487,7 +488,7 @@ const Distributors = () => {
                   <div className="card-footer">
                     <button
                       className="btn-view-profile"
-                      onClick={() => viewDistributor(distributor._id)}
+                      onClick={() => viewDistributor(distributor.slug || distributor._id)}
                     >
                       View Profile & Products <FiArrowRight size={16} />
                     </button>

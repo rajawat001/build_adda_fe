@@ -95,6 +95,7 @@ const ProductForm = () => {
     specifications: [],
   });
 
+  const [productSlug, setProductSlug] = useState<string>('');
   const [newImages, setNewImages] = useState<File[]>([]);
   const [newImagePreviews, setNewImagePreviews] = useState<string[]>([]);
   const [existingImages, setExistingImages] = useState<string[]>([]);
@@ -118,6 +119,7 @@ const ProductForm = () => {
       const product = response.data.products.find((p: any) => p._id === id);
 
       if (product) {
+        setProductSlug(product.slug || '');
         setFormData({
           name: product.name,
           description: product.description,
@@ -388,6 +390,11 @@ const ProductForm = () => {
                       className={inputClass(!!errors.name)}
                     />
                     {errors.name && <p className="text-[var(--error)] text-sm mt-1">{errors.name}</p>}
+                    {isEditing && productSlug && (
+                      <p className="text-xs text-[var(--text-tertiary)] mt-1 font-mono">
+                        URL: /products/{productSlug}
+                      </p>
+                    )}
                   </div>
 
                   {/* Description */}

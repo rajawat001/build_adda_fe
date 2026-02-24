@@ -14,6 +14,7 @@ import { getApiErrorMessage } from '../../utils/api-error';
 
 interface Distributor {
   _id: string;
+  slug?: string;
   businessName: string;
   ownerName: string;
   name?: string; // API returns 'name' instead of 'ownerName'
@@ -260,6 +261,11 @@ const DistributorsManagement: React.FC = () => {
           </div>
           <div>
             <div style={{ fontWeight: 500, color: 'var(--admin-text-primary)' }}>{value}</div>
+            {row.slug && (
+              <div style={{ fontSize: '0.7rem', color: 'var(--admin-text-tertiary)', marginBottom: '0.1rem', fontFamily: 'monospace' }}>
+                /{row.slug}
+              </div>
+            )}
             <div style={{ fontSize: '0.75rem', color: 'var(--admin-text-secondary)' }}>
               {row.ownerName || row.name || '-'}
             </div>
@@ -727,6 +733,11 @@ const DistributorsManagement: React.FC = () => {
                       <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--admin-text-primary)', marginBottom: '0.25rem' }}>
                         {selectedDistributor.businessName}
                       </h3>
+                      {selectedDistributor.slug && (
+                        <div style={{ fontSize: '0.8rem', color: 'var(--admin-text-tertiary)', marginBottom: '0.25rem', fontFamily: 'monospace' }}>
+                          /{selectedDistributor.slug}
+                        </div>
+                      )}
                       <div style={{ fontSize: '0.875rem', color: 'var(--admin-text-secondary)', marginBottom: '0.5rem' }}>
                         Owner: {selectedDistributor.ownerName || selectedDistributor.name || '-'}
                       </div>
@@ -883,6 +894,20 @@ const DistributorsManagement: React.FC = () => {
 
                 <form onSubmit={handleUpdateDistributor}>
                   <div className="modal-body" style={{ padding: '1.5rem' }}>
+                    {selectedDistributor.slug && (
+                      <div style={{
+                        background: 'var(--admin-bg-secondary)',
+                        borderRadius: '8px',
+                        padding: '0.75rem 1rem',
+                        marginBottom: '1rem',
+                        fontSize: '0.875rem'
+                      }}>
+                        <span style={{ color: 'var(--admin-text-secondary)' }}>Slug: </span>
+                        <span style={{ color: 'var(--admin-text-primary)', fontWeight: 500, fontFamily: 'monospace' }}>
+                          {selectedDistributor.slug}
+                        </span>
+                      </div>
+                    )}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
                       <div className="form-group">
                         <label className="form-label">Business Name *</label>

@@ -239,7 +239,7 @@ export default function Header() {
     try {
       const data = await getProductsByCategory(categoryId);
       const products = Array.isArray(data) ? data : data.products || [];
-      const grouped: Record<string, { distributorId: string; businessName: string; city: string; products: any[] }> = {};
+      const grouped: Record<string, { distributorId: string; distributorSlug: string; businessName: string; city: string; products: any[] }> = {};
 
       products.forEach((p: any) => {
         const dist = p.distributor;
@@ -248,6 +248,7 @@ export default function Header() {
         if (!grouped[name]) {
           grouped[name] = {
             distributorId: dist._id || '',
+            distributorSlug: dist.slug || '',
             businessName: name,
             city: dist.city || dist.address?.city || '',
             products: []
@@ -255,6 +256,7 @@ export default function Header() {
         }
         grouped[name].products.push({
           _id: p._id,
+          slug: p.slug || '',
           name: p.name,
           price: p.price,
           image: p.image || p.images?.[0] || ''
@@ -534,7 +536,7 @@ export default function Header() {
                               <div key={group.distributorId} className="mega-menu-distributor-group">
                                 <h4 className="distributor-name">
                                   <Link
-                                    href={`/distributor/${group.distributorId}`}
+                                    href={`/distributor/${group.distributorSlug || group.distributorId}`}
                                     onClick={handleMegaMenuClose}
                                   >
                                     {group.businessName}
@@ -545,7 +547,7 @@ export default function Header() {
                                   {group.products.slice(0, 5).map((product: any) => (
                                     <li key={product._id}>
                                       <Link
-                                        href={`/products/${product._id}`}
+                                        href={`/products/${product.slug || product._id}`}
                                         className="mega-menu-product-link"
                                         onClick={handleMegaMenuClose}
                                       >

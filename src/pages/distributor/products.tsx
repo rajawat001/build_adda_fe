@@ -24,6 +24,7 @@ import api from '../../services/api';
 
 interface Product {
   _id: string;
+  slug?: string;
   name: string;
   description: string;
   price: number;
@@ -232,9 +233,12 @@ const Products = () => {
             <Badge variant="default" size="sm" className="mb-2">
               {product.category}
             </Badge>
-            <h3 className={`${isMobile ? 'text-base' : 'text-lg'} font-semibold text-[var(--text-primary)] mb-1 line-clamp-1`}>
+            <h3 className={`${isMobile ? 'text-base' : 'text-lg'} font-semibold text-[var(--text-primary)] mb-0.5 line-clamp-1`}>
               {product.name}
             </h3>
+            {product.slug && (
+              <p className="text-xs text-[var(--text-tertiary)] font-mono mb-0.5">/{product.slug}</p>
+            )}
             <p className="text-sm text-[var(--text-secondary)] line-clamp-2">{product.description}</p>
           </div>
 

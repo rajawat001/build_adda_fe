@@ -44,7 +44,7 @@ export default function Cart() {
               {currentDistributor && (
                 <div className="cart-distributor-info">
                   <span className="distributor-label">Shopping from:</span>
-                  <Link href={`/distributor/${currentDistributor._id}`}>
+                  <Link href={`/distributor/${currentDistributor.slug || currentDistributor._id}`}>
                     <span className="distributor-name">{currentDistributor.businessName}</span>
                   </Link>
                   <button
@@ -66,7 +66,7 @@ export default function Cart() {
                     <div key={item._id} className="cart-item">
                       <img src={item.image || '/placeholder.jpg'} alt={item.name} />
                       <div className="item-details">
-                        <Link href={`/products/${item._id}`}>
+                        <Link href={`/products/${item.slug || item._id}`}>
                           <h3>{item.name}</h3>
                         </Link>
                         <p className="price">

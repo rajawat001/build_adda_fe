@@ -14,6 +14,7 @@ import { getApiErrorMessage } from '../../utils/api-error';
 
 interface Product {
   _id: string;
+  slug?: string;
   name: string;
   description: string;
   price: number;
@@ -27,6 +28,7 @@ interface Product {
   };
   distributor: {
     _id: string;
+    slug?: string;
     businessName: string;
   };
   images: string[];
@@ -210,6 +212,11 @@ const ProductsManagement: React.FC = () => {
           }} />
           <div>
             <div style={{ fontWeight: 500, color: 'var(--admin-text-primary)', marginBottom: '0.25rem' }}>{value}</div>
+            {row.slug && (
+              <div style={{ fontSize: '0.7rem', color: 'var(--admin-text-tertiary)', marginBottom: '0.15rem', fontFamily: 'monospace' }}>
+                /{row.slug}
+              </div>
+            )}
             <div style={{ fontSize: '0.75rem', color: 'var(--admin-text-secondary)' }}>
               {row.distributor.businessName}
             </div>
@@ -375,7 +382,9 @@ const ProductsManagement: React.FC = () => {
   ];
 
   const handleViewProduct = (productId: string) => {
-    window.open(`/product/${productId}`, '_blank');
+    const product = products.find(p => p._id === productId);
+    const slug = product?.slug || productId;
+    window.open(`/products/${slug}`, '_blank');
   };
 
   const handleEditProduct = (productId: string) => {
@@ -490,9 +499,14 @@ const ProductsManagement: React.FC = () => {
 
           {/* Product Info */}
           <div style={{ padding: '1rem' }}>
-            <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--admin-text-primary)', marginBottom: '0.5rem' }}>
+            <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--admin-text-primary)', marginBottom: '0.25rem' }}>
               {product.name}
             </h3>
+            {product.slug && (
+              <div style={{ fontSize: '0.7rem', color: 'var(--admin-text-tertiary)', marginBottom: '0.25rem', fontFamily: 'monospace' }}>
+                /{product.slug}
+              </div>
+            )}
             <div style={{ fontSize: '0.75rem', color: 'var(--admin-text-secondary)', marginBottom: '0.75rem' }}>
               {product.distributor.businessName}
             </div>
@@ -695,6 +709,22 @@ const ProductsManagement: React.FC = () => {
                             border: '1px solid var(--admin-border-primary)'
                           }}
                         />
+                      </div>
+                    )}
+
+                    {/* Slug Info */}
+                    {selectedProduct.slug && (
+                      <div style={{
+                        background: 'var(--admin-bg-secondary)',
+                        borderRadius: '8px',
+                        padding: '0.75rem 1rem',
+                        marginBottom: '1rem',
+                        fontSize: '0.875rem'
+                      }}>
+                        <span style={{ color: 'var(--admin-text-secondary)' }}>Slug: </span>
+                        <span style={{ color: 'var(--admin-text-primary)', fontWeight: 500, fontFamily: 'monospace' }}>
+                          {selectedProduct.slug}
+                        </span>
                       </div>
                     )}
 

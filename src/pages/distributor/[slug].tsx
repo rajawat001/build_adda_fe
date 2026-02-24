@@ -14,6 +14,7 @@ import styles from '../../styles/distributor-profile.module.css';
 
 interface Distributor {
   _id: string;
+  slug?: string;
   businessName: string;
   name: string;
   email: string;
@@ -41,11 +42,11 @@ interface SSRDistributorMeta {
 }
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
-  const { id } = context.params || {};
+  const { slug } = context.params || {};
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
   try {
-    const res = await axios.get(`${API_URL}/users/distributors/${id}`, { timeout: 5000 });
+    const res = await axios.get(`${API_URL}/users/distributors/${slug}`, { timeout: 5000 });
     const dist = res.data.distributor || res.data;
 
     return {
@@ -56,7 +57,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
           city: dist.city || '',
           state: dist.state || '',
           profileImage: dist.profileImage || '',
-          id: dist._id || id || '',
+          id: dist.slug || dist._id || slug || '',
         } as SSRDistributorMeta,
       },
     };
@@ -67,7 +68,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
 const DistributorProfile = ({ ssrMeta }: { ssrMeta: SSRDistributorMeta | null }) => {
   const router = useRouter();
-  const { id } = router.query;
+  const { slug: id } = router.query;
 
   const [distributor, setDistributor] = useState<Distributor | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
@@ -145,10 +146,10 @@ const DistributorProfile = ({ ssrMeta }: { ssrMeta: SSRDistributorMeta | null })
     const schema: any = {
       '@context': 'https://schema.org',
       '@type': 'LocalBusiness',
-      '@id': `https://www.buildadda.in/distributor/${distributor._id}`,
+      '@id': `https://www.buildadda.in/distributor/${distributor.slug || distributor._id}`,
       name: distributor.businessName,
       description: distributor.description || `${distributor.businessName} - Building Materials Distributor in ${distributor.city}, ${distributor.state}`,
-      url: `https://www.buildadda.in/distributor/${distributor._id}`,
+      url: `https://www.buildadda.in/distributor/${distributor.slug || distributor._id}`,
       telephone: distributor.phone,
       email: distributor.email,
       address: {
@@ -200,7 +201,7 @@ const DistributorProfile = ({ ssrMeta }: { ssrMeta: SSRDistributorMeta | null })
         itemOffered: {
           '@type': 'Product',
           name: product.name,
-          url: `https://www.buildadda.in/products/${product._id}`
+          url: `https://www.buildadda.in/products/${product.slug || product._id}`
         }
       }));
     }
@@ -255,7 +256,7 @@ const DistributorProfile = ({ ssrMeta }: { ssrMeta: SSRDistributorMeta | null })
         title={`${distributor.businessName} - Building Materials Distributor in ${distributor.city}`}
         description={distributor.description || `Shop building materials from ${distributor.businessName} in ${distributor.city}, ${distributor.state}. ${products.length} products available. Verified distributor on BuildAdda.`}
         ogImage={distributor.profileImage || undefined}
-        canonicalUrl={`https://www.buildadda.in/distributor/${distributor._id}`}
+        canonicalUrl={`https://www.buildadda.in/distributor/${distributor.slug || distributor._id}`}
         jsonLd={distributorJsonLd || undefined}
       />
       <Header />
@@ -455,7 +456,7 @@ const DistributorProfile = ({ ssrMeta }: { ssrMeta: SSRDistributorMeta | null })
         onClose={() => setShowShareSheet(false)}
         title={distributor.businessName}
         text={`Check out ${distributor.businessName} - Building Materials Distributor in ${distributor.city} on BuildAdda`}
-        url={typeof window !== 'undefined' ? window.location.href : `https://www.buildadda.in/distributor/${distributor._id}`}
+        url={typeof window !== 'undefined' ? window.location.href : `https://www.buildadda.in/distributor/${distributor.slug || distributor._id}`}
         image={distributor.profileImage}
       />
 

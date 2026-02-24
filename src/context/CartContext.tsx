@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 // Types
 interface CartItem {
   _id: string;
+  slug?: string;
   name: string;
   price: number;
   realPrice?: number;
@@ -15,6 +16,7 @@ interface CartItem {
   stock: number;
   distributor: {
     _id: string;
+    slug?: string;
     businessName: string;
     city?: string;
     state?: string;
@@ -30,7 +32,7 @@ interface CartContextType {
   cart: CartItem[];
   cartCount: number;
   cartTotal: number;
-  currentDistributor: { _id: string; businessName: string; city?: string; pincode?: string } | null;
+  currentDistributor: { _id: string; slug?: string; businessName: string; city?: string; pincode?: string } | null;
   addToCart: (product: any, quantity?: number) => void;
   removeFromCart: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
@@ -130,6 +132,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const productDistributor = product.distributor?._id
         ? {
             _id: product.distributor._id,
+            slug: product.distributor.slug,
             businessName: product.distributor.businessName || 'Unknown',
             city: product.distributor.city,
             state: product.distributor.state
@@ -138,6 +141,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       const newItem: CartItem = {
         _id: product._id,
+        slug: product.slug,
         name: product.name,
         price: product.price,
         realPrice: product.realPrice,
@@ -170,6 +174,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const productDistributor = pendingItem.product.distributor?._id
       ? {
           _id: pendingItem.product.distributor._id,
+          slug: pendingItem.product.distributor.slug,
           businessName: pendingItem.product.distributor.businessName || 'Unknown',
           city: pendingItem.product.distributor.city,
           state: pendingItem.product.distributor.state
@@ -178,6 +183,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     const newItem: CartItem = {
       _id: pendingItem.product._id,
+      slug: pendingItem.product.slug,
       name: pendingItem.product.name,
       price: pendingItem.product.price,
       realPrice: pendingItem.product.realPrice,
