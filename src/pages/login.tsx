@@ -256,6 +256,7 @@ export default function Login() {
                   shape="rectangular"
                   text="continue_with"
                   width={320}
+                  useOneTap
                 />
               </div>
               <div style={{

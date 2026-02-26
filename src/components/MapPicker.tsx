@@ -98,9 +98,9 @@ const MapPicker: React.FC<MapPickerProps> = ({
     setIsGeocoding(false);
   }, []);
 
-  // Initialize Leaflet map imperatively (NOT react-leaflet) to avoid DOM conflicts
+  // Initialize Leaflet map — deferred until visible to avoid blank tiles
   useEffect(() => {
-    if (!mapContainerRef.current || mapRef.current) return;
+    if (!visible || !mapContainerRef.current || mapRef.current) return;
 
     const map = L.map(mapContainerRef.current, {
       center: [defaultLat, defaultLng],
@@ -123,6 +123,9 @@ const MapPicker: React.FC<MapPickerProps> = ({
 
     mapRef.current = map;
 
+    // Ensure tiles load after container is fully laid out
+    setTimeout(() => map.invalidateSize(), 100);
+
     // Initial reverse geocode if coordinates provided
     if (hasInitial) {
       handleMoveEnd(defaultLat, defaultLng);
@@ -132,13 +135,20 @@ const MapPicker: React.FC<MapPickerProps> = ({
       if (geocodeTimeoutRef.current) clearTimeout(geocodeTimeoutRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [visible]);
 
-  // Invalidate map size when becoming visible
+  // Re-invalidate map size when becoming visible again (after hide/show)
   useEffect(() => {
     if (visible && mapRef.current) {
-      const timers = [100, 300, 600].map(delay =>
-        setTimeout(() => mapRef.current?.invalidateSize(), delay)
+      const timers = [50, 200, 500, 1000].map(delay =>
+        setTimeout(() => {
+          if (mapRef.current) {
+            mapRef.current.invalidateSize();
+            // Force tile reload by nudging the view
+            const center = mapRef.current.getCenter();
+            mapRef.current.setView(center, mapRef.current.getZoom(), { animate: false });
+          }
+        }, delay)
       );
       return () => timers.forEach(t => clearTimeout(t));
     }
