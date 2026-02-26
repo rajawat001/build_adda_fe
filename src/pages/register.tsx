@@ -4,9 +4,10 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiUser, FiMail, FiLock, FiEye, FiEyeOff, FiPhone, FiHash, FiBriefcase, FiCheck, FiShoppingBag, FiPackage, FiArrowLeft } from 'react-icons/fi';
+import { GoogleLogin } from '@react-oauth/google';
 import SEO from '../components/SEO';
+import { googleAuth, googleRegisterDistributor } from '../services/auth.service';
 import { sendRegisterOTP, verifyRegisterOTP } from '../services/email-auth.service';
-import { getLocationDetails } from '../utils/location';
 import OTPInput from '../components/common/OTPInput';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
@@ -128,6 +129,105 @@ export default function Register() {
   const [showMap, setShowMap] = useState(false);
   const [mapMounted, setMapMounted] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [googleCredential, setGoogleCredential] = useState<string | null>(null);
+
+
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    if (!credentialResponse?.credential) {
+      setError('Google sign-in failed. Please try again.');
+      return;
+    }
+
+    if (formData.role === 'distributor') {
+      // Store credential and jump to distributor details step
+      setGoogleCredential(credentialResponse.credential);
+      setDirection(1);
+      setFormStep(4); // Google distributor details step
+      setError('');
+      return;
+    }
+
+    // For buyer: create account directly
+    setLoading(true);
+    setError('');
+    try {
+      const response = await googleAuth(credentialResponse.credential);
+      if (response.user) {
+        localStorage.setItem('user', JSON.stringify({
+          _id: response.user._id,
+          name: response.user.name,
+          email: response.user.email,
+          role: response.user.role,
+        }));
+        localStorage.setItem('role', response.user.role);
+        window.dispatchEvent(new Event('userLogin'));
+        setStep('success');
+        setTimeout(() => router.push('/'), 2000);
+      }
+    } catch (err: any) {
+      setError(getApiErrorMessage(err, 'Google sign-up failed. Please try again.'));
+      scrollToError();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleDistributorSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    // Validate distributor fields
+    const errors: ValidationErrors = {};
+    if (!formData.businessName?.trim()) errors.businessName = 'Business name is required';
+    const phoneError = validatePhone(formData.phone);
+    if (phoneError) errors.phone = phoneError;
+    if (!formData.state?.trim()) errors.state = 'State is required';
+    if (!formData.city?.trim()) errors.city = 'City is required';
+    const pincodeError = validatePincode(formData.pincode);
+    if (pincodeError) errors.pincode = pincodeError;
+    const addressError = validateAddress(formData.address);
+    if (addressError) errors.address = addressError;
+    setValidationErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+
+    if (!googleCredential) {
+      setError('Google session expired. Please try again.');
+      setFormStep(1);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await googleRegisterDistributor({
+        credential: googleCredential,
+        businessName: formData.businessName,
+        phone: formData.phone,
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        pincode: formData.pincode,
+        location: formData.location.coordinates[0] !== 0 ? formData.location : undefined,
+      });
+
+      if (response.user) {
+        localStorage.setItem('user', JSON.stringify({
+          _id: response.user._id,
+          name: response.user.name,
+          email: response.user.email,
+          role: response.user.role,
+        }));
+        localStorage.setItem('role', response.user.role);
+        window.dispatchEvent(new Event('userLogin'));
+        setStep('success');
+        setTimeout(() => router.push('/distributor/plan-selection'), 2000);
+      }
+    } catch (err: any) {
+      setError(getApiErrorMessage(err, 'Registration failed. Please try again.'));
+      scrollToError();
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const validateName = (name: string): string | null => {
     if (!name || !name.trim()) return 'Name is required';
@@ -243,42 +343,6 @@ export default function Register() {
     }
   };
 
-  const handleGetLocation = async () => {
-    try {
-      setLoading(true);
-      const locationDetails = await getLocationDetails();
-      const matchedState = indianStates.find(
-        s => s.toLowerCase() === locationDetails.state.toLowerCase()
-      ) || '';
-      const cities = matchedState ? indianStatesAndCities[matchedState] || [] : [];
-      setAvailableCities(cities);
-      const matchedCity = cities.find(
-        c => c.toLowerCase() === locationDetails.city.toLowerCase()
-      ) || '';
-
-      setFormData({
-        ...formData,
-        location: {
-          type: 'Point',
-          coordinates: [locationDetails.coordinates.longitude, locationDetails.coordinates.latitude]
-        },
-        pincode: locationDetails.pincode,
-        address: locationDetails.address,
-        city: matchedCity,
-        state: matchedState
-      });
-
-      if (matchedState && matchedCity) {
-        alert(`Location captured successfully!\nPincode: ${locationDetails.pincode}\nCity: ${matchedCity}, ${matchedState}`);
-      } else {
-        alert(`Location captured!\nPincode: ${locationDetails.pincode}\nPlease select your state and city from the dropdowns.`);
-      }
-    } catch (error: any) {
-      alert('Unable to get location. Please enable location services and try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleMapLocationSelect = (loc: MapPickerLocation) => {
     const matchedState = indianStates.find(
@@ -298,6 +362,7 @@ export default function Register() {
       pincode: loc.pincode,
       location: { type: 'Point', coordinates: [loc.lng, loc.lat] },
     }));
+    // Collapse the map after confirming location
     setShowMap(false);
   };
 
@@ -373,8 +438,12 @@ export default function Register() {
   };
 
   // 5-step progress: Account(1) -> Contact(2) -> Location(3) -> Verify(4) -> Done(5)
+  // Google flow for distributor: Account(1) -> GoogleDistDetails(formStep=4 maps to step 3) -> Done(5)
   const getOverallStep = (): number => {
-    if (step === 'details') return formStep;
+    if (step === 'details') {
+      if (formStep === 4) return 3; // Google distributor details maps to Location step visually
+      return Math.min(formStep, 3);
+    }
     if (step === 'verify') return 4;
     return 5;
   };
@@ -548,6 +617,27 @@ export default function Register() {
                   >
                     Continue
                   </motion.button>
+
+                  {/* Google Sign-Up Divider & Button */}
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: '12px',
+                    margin: '16px 0 12px',
+                  }}>
+                    <div style={{ flex: 1, height: '1px', background: 'var(--border-primary, #e5e7eb)' }} />
+                    <span style={{ fontSize: '12px', color: 'var(--text-secondary, #6b7280)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>or</span>
+                    <div style={{ flex: 1, height: '1px', background: 'var(--border-primary, #e5e7eb)' }} />
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'center' }}>
+                    <GoogleLogin
+                      onSuccess={handleGoogleSuccess}
+                      onError={() => setError('Google sign-up failed. Please try again.')}
+                      theme="outline"
+                      size="large"
+                      shape="rectangular"
+                      text="continue_with"
+                      width={320}
+                    />
+                  </div>
                 </div>
               </motion.div>
             )}
@@ -718,42 +808,53 @@ export default function Register() {
                     {validationErrors.address && <span className="validation-error">{validationErrors.address}</span>}
                   </div>
 
-                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.75rem' }}>
-                    <button type="button" className="btn-location" onClick={handleGetLocation} disabled={loading}>
-                      Capture Current Location
-                    </button>
-                    <button
-                      type="button"
-                      className="btn-map-toggle"
-                      onClick={() => {
-                        const next = !showMap;
-                        setShowMap(next);
-                        if (next) setMapMounted(true);
-                      }}
-                    >
-                      {showMap ? 'Hide Map' : 'Pick Location on Map'}
-                    </button>
+                  <div style={{ marginBottom: '0.75rem' }}>
+                    {formData.location.coordinates[0] !== 0 && formData.location.coordinates[1] !== 0 && !showMap && (
+                      <div style={{
+                        display: 'flex', alignItems: 'center', gap: '8px',
+                        padding: '10px 14px', borderRadius: '10px',
+                        background: '#f0fdf4', border: '1px solid #bbf7d0',
+                        marginBottom: '10px', fontSize: '13px', color: '#166534',
+                      }}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+                        <span style={{ flex: 1 }}>Location pinned successfully</span>
+                        <button type="button" onClick={() => setShowMap(true)} style={{
+                          background: 'none', border: 'none', color: '#2563eb',
+                          fontSize: '13px', fontWeight: 600, cursor: 'pointer', padding: 0,
+                          textDecoration: 'underline',
+                        }}>Change</button>
+                      </div>
+                    )}
+                    {!(formData.location.coordinates[0] !== 0 && formData.location.coordinates[1] !== 0 && !showMap) && (
+                      <button
+                        type="button"
+                        className="btn-map-toggle"
+                        onClick={() => { setShowMap(!showMap); if (!showMap) setMapMounted(true); }}
+                        style={{ marginBottom: showMap ? '10px' : 0, width: '100%' }}
+                      >
+                        {showMap ? 'Hide Map' : 'Pick Location on Map'}
+                      </button>
+                    )}
+                    {mapMounted && (
+                      <div style={showMap ? {} : { overflow: 'hidden', height: 0, opacity: 0, pointerEvents: 'none' as const }}>
+                        <MapPicker
+                          initialLat={
+                            formData.location?.coordinates?.[1] && formData.location.coordinates[1] !== 0
+                              ? formData.location.coordinates[1]
+                              : undefined
+                          }
+                          initialLng={
+                            formData.location?.coordinates?.[0] && formData.location.coordinates[0] !== 0
+                              ? formData.location.coordinates[0]
+                              : undefined
+                          }
+                          onLocationSelect={handleMapLocationSelect}
+                          height="300px"
+                          visible={showMap}
+                        />
+                      </div>
+                    )}
                   </div>
-
-                  {mapMounted && (
-                    <div style={showMap ? {} : { overflow: 'hidden', height: 0, opacity: 0, pointerEvents: 'none' as const }}>
-                      <MapPicker
-                        initialLat={
-                          formData.location?.coordinates?.[1] && formData.location.coordinates[1] !== 0
-                            ? formData.location.coordinates[1]
-                            : undefined
-                        }
-                        initialLng={
-                          formData.location?.coordinates?.[0] && formData.location.coordinates[0] !== 0
-                            ? formData.location.coordinates[0]
-                            : undefined
-                        }
-                        onLocationSelect={handleMapLocationSelect}
-                        height="350px"
-                        visible={showMap}
-                      />
-                    </div>
-                  )}
 
                   <motion.button
                     type="submit"
@@ -763,6 +864,178 @@ export default function Register() {
                     whileTap={!loading ? { scale: 0.98 } : {}}
                   >
                     {loading ? <><span className="btn-spinner" />Sending verification...</> : 'Continue & verify email'}
+                  </motion.button>
+                </form>
+              </motion.div>
+            )}
+
+            {/* Google Distributor: Collect business details after Google auth */}
+            {step === 'details' && formStep === 4 && (
+              <motion.div
+                key="step-google-dist"
+                custom={direction}
+                variants={slideVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                style={{ perspective: 1200 }}
+              >
+                <button type="button" className="btn-back-step" onClick={() => { setFormStep(1); setDirection(-1); setGoogleCredential(null); setValidationErrors({}); setError(''); }}>
+                  <FiArrowLeft size={16} /> Back
+                </button>
+
+                <div style={{ background: 'var(--bg-secondary, #f0fdf4)', border: '1px solid #bbf7d0', borderRadius: '10px', padding: '12px 14px', marginBottom: '16px', fontSize: '13px', color: '#166534', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <FiCheck size={16} style={{ flexShrink: 0 }} />
+                  <span>Google account connected. Complete your business details below.</span>
+                </div>
+
+                {error && <div className="error-message">{error}</div>}
+
+                <form onSubmit={handleGoogleDistributorSubmit} noValidate>
+                  <div className="form-group">
+                    <label htmlFor="gd-businessName">Business name</label>
+                    <div className="input-with-icon">
+                      <span className="input-icon-left"><FiBriefcase /></span>
+                      <input
+                        id="gd-businessName" type="text" name="businessName"
+                        value={formData.businessName} onChange={handleChange}
+                        className={validationErrors.businessName ? 'input-error' : ''}
+                        placeholder="Your business name" required
+                      />
+                    </div>
+                    {validationErrors.businessName && <span className="validation-error">{validationErrors.businessName}</span>}
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="gd-phone">Phone number</label>
+                    <div className="input-with-icon">
+                      <span className="input-icon-left"><FiPhone /></span>
+                      <input
+                        id="gd-phone" type="tel" name="phone"
+                        value={formData.phone} onChange={handleChange}
+                        className={validationErrors.phone ? 'input-error' : ''}
+                        placeholder="10-digit mobile number" required
+                      />
+                    </div>
+                    {validationErrors.phone && <span className="validation-error">{validationErrors.phone}</span>}
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                    <div className="form-group">
+                      <label htmlFor="gd-state">State</label>
+                      <select
+                        id="gd-state" name="state" value={formData.state}
+                        onChange={handleStateChange}
+                        className={validationErrors.state ? 'input-error' : ''} required
+                      >
+                        <option value="">Select state</option>
+                        {indianStates.map(state => (
+                          <option key={state} value={state}>{state}</option>
+                        ))}
+                      </select>
+                      {validationErrors.state && <span className="validation-error">{validationErrors.state}</span>}
+                    </div>
+
+                    <div className="form-group">
+                      <label htmlFor="gd-city">City</label>
+                      <select
+                        id="gd-city" name="city" value={formData.city}
+                        onChange={handleChange}
+                        className={validationErrors.city ? 'input-error' : ''}
+                        disabled={!formData.state} required
+                      >
+                        <option value="">Select city</option>
+                        {availableCities.map(city => (
+                          <option key={city} value={city}>{city}</option>
+                        ))}
+                      </select>
+                      {validationErrors.city && <span className="validation-error">{validationErrors.city}</span>}
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="gd-pincode">Pincode</label>
+                    <div className="input-with-icon">
+                      <span className="input-icon-left"><FiHash /></span>
+                      <input
+                        id="gd-pincode" type="text" name="pincode"
+                        value={formData.pincode} onChange={handleChange}
+                        className={validationErrors.pincode ? 'input-error' : ''}
+                        placeholder="6-digit pincode" maxLength={6} required
+                      />
+                    </div>
+                    {validationErrors.pincode && <span className="validation-error">{validationErrors.pincode}</span>}
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="gd-address">Street address</label>
+                    <textarea
+                      id="gd-address" name="address" value={formData.address}
+                      onChange={handleChange}
+                      className={validationErrors.address ? 'input-error' : ''}
+                      placeholder="House/Flat no, Building, Street, Landmark"
+                      rows={3} required
+                    />
+                    {validationErrors.address && <span className="validation-error">{validationErrors.address}</span>}
+                  </div>
+
+                  <div style={{ marginBottom: '0.75rem' }}>
+                    {formData.location.coordinates[0] !== 0 && formData.location.coordinates[1] !== 0 && !showMap && (
+                      <div style={{
+                        display: 'flex', alignItems: 'center', gap: '8px',
+                        padding: '10px 14px', borderRadius: '10px',
+                        background: '#f0fdf4', border: '1px solid #bbf7d0',
+                        marginBottom: '10px', fontSize: '13px', color: '#166534',
+                      }}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+                        <span style={{ flex: 1 }}>Location pinned successfully</span>
+                        <button type="button" onClick={() => setShowMap(true)} style={{
+                          background: 'none', border: 'none', color: '#2563eb',
+                          fontSize: '13px', fontWeight: 600, cursor: 'pointer', padding: 0,
+                          textDecoration: 'underline',
+                        }}>Change</button>
+                      </div>
+                    )}
+                    {!(formData.location.coordinates[0] !== 0 && formData.location.coordinates[1] !== 0 && !showMap) && (
+                      <button
+                        type="button"
+                        className="btn-map-toggle"
+                        onClick={() => { setShowMap(!showMap); if (!showMap) setMapMounted(true); }}
+                        style={{ marginBottom: showMap ? '10px' : 0, width: '100%' }}
+                      >
+                        {showMap ? 'Hide Map' : 'Pick Location on Map'}
+                      </button>
+                    )}
+                    {mapMounted && (
+                      <div style={showMap ? {} : { overflow: 'hidden', height: 0, opacity: 0, pointerEvents: 'none' as const }}>
+                        <MapPicker
+                          initialLat={
+                            formData.location?.coordinates?.[1] && formData.location.coordinates[1] !== 0
+                              ? formData.location.coordinates[1]
+                              : undefined
+                          }
+                          initialLng={
+                            formData.location?.coordinates?.[0] && formData.location.coordinates[0] !== 0
+                              ? formData.location.coordinates[0]
+                              : undefined
+                          }
+                          onLocationSelect={handleMapLocationSelect}
+                          height="300px"
+                          visible={showMap}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  <motion.button
+                    type="submit"
+                    className="btn-submit"
+                    disabled={loading}
+                    whileHover={!loading ? { scale: 1.01 } : {}}
+                    whileTap={!loading ? { scale: 0.98 } : {}}
+                  >
+                    {loading ? <><span className="btn-spinner" />Creating account...</> : 'Complete Registration'}
                   </motion.button>
                 </form>
               </motion.div>

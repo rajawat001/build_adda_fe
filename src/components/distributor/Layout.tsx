@@ -147,16 +147,14 @@ const DistributorLayout = ({ children, title = 'Distributor Panel' }: LayoutProp
       } else if (isUserApproved && userPlanType === 'none' && !isOnAllowedPath) {
         // Approved but no plan selected: go to plan selection
         router.push('/distributor/plan-selection');
-      } else if (isUserApproved && userPlanType === 'subscription' && !hasActive && !isOnAllowedPath) {
-        // Subscription expired
-        router.push('/distributor/subscription');
       }
+      // Note: approved distributors with expired/missing subscriptions can still
+      // access the dashboard — a renewal banner is shown instead of blocking access
     } catch (error: any) {
       console.error('Error checking subscription:', error);
-      const currentPath = router.pathname;
-      const allowedPaths = ['/distributor/subscription', '/distributor/plan-selection', '/distributor/wallet', '/distributor/commission-payment'];
-      if (!allowedPaths.some(p => currentPath.startsWith(p))) {
-        router.push('/distributor/plan-selection');
+      // Only redirect on auth failure (401), not on transient network errors
+      if (error.response?.status === 401) {
+        router.push('/login');
       }
     } finally {
       setCheckingSubscription(false);
@@ -345,6 +343,41 @@ const DistributorLayout = ({ children, title = 'Distributor Panel' }: LayoutProp
                   }}
                 >
                   Pay Now
+                </button>
+              </div>
+            )}
+            {isApproved && planType === 'subscription' && !hasActiveSubscription && (
+              <div style={{
+                background: '#fffbeb',
+                border: '1px solid #fde68a',
+                borderRadius: '12px',
+                padding: '0.875rem 1.25rem',
+                marginBottom: '1.25rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem',
+                flexWrap: 'wrap',
+              }}>
+                <span style={{ fontSize: '1.25rem' }}>&#9888;&#65039;</span>
+                <div style={{ flex: 1, minWidth: '200px' }}>
+                  <div style={{ fontWeight: 700, color: '#92400e', fontSize: '0.875rem' }}>Subscription Expired</div>
+                  <div style={{ color: '#a16207', fontSize: '0.813rem' }}>Your subscription has expired. Renew now to continue receiving orders.</div>
+                </div>
+                <button
+                  onClick={() => router.push('/distributor/subscription')}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    background: '#f59e0b',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                    fontSize: '0.813rem',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  Renew Now
                 </button>
               </div>
             )}

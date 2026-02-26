@@ -751,18 +751,35 @@ export default function Checkout() {
                       className={addressFieldErrors.address ? 'input-error' : ''}
                     />
                     {addressFieldErrors.address && <span className="validation-error">{addressFieldErrors.address}</span>}
-                    <button
-                      type="button"
-                      className="btn-map-toggle"
-                      onClick={() => {
-                        const next = !showMapNewAddr;
-                        setShowMapNewAddr(next);
-                        if (next) setMapNewAddrMounted(true);
-                      }}
-                      style={{ marginTop: '0.5rem' }}
-                    >
-                      {showMapNewAddr ? 'Hide Map' : 'Pick on Map'}
-                    </button>
+                    {newAddress.latitude && newAddress.longitude && newAddress.latitude !== 0 && newAddress.longitude !== 0 && !showMapNewAddr ? (
+                      <div style={{
+                        display: 'flex', alignItems: 'center', gap: '8px',
+                        padding: '10px 14px', borderRadius: '10px',
+                        background: '#f0fdf4', border: '1px solid #bbf7d0',
+                        marginTop: '0.5rem', fontSize: '13px', color: '#166534',
+                      }}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+                        <span style={{ flex: 1 }}>Location pinned successfully</span>
+                        <button type="button" onClick={() => { setShowMapNewAddr(true); setMapNewAddrMounted(true); }} style={{
+                          background: 'none', border: 'none', color: '#2563eb',
+                          fontSize: '13px', fontWeight: 600, cursor: 'pointer', padding: 0,
+                          textDecoration: 'underline',
+                        }}>Change</button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        className="btn-map-toggle"
+                        onClick={() => {
+                          const next = !showMapNewAddr;
+                          setShowMapNewAddr(next);
+                          if (next) setMapNewAddrMounted(true);
+                        }}
+                        style={{ marginTop: '0.5rem' }}
+                      >
+                        {showMapNewAddr ? 'Hide Map' : 'Pick on Map'}
+                      </button>
+                    )}
                     {mapNewAddrMounted && (
                       <div style={showMapNewAddr ? {} : { overflow: 'hidden', height: 0, opacity: 0, pointerEvents: 'none' as const }}>
                         <MapPicker
@@ -890,18 +907,35 @@ export default function Checkout() {
                       placeholder="Street address, building, apartment, etc."
                       rows={3}
                     />
-                    <button
-                      type="button"
-                      className="btn-map-toggle"
-                      onClick={() => {
-                        const next = !showMapInline;
-                        setShowMapInline(next);
-                        if (next) setMapInlineMounted(true);
-                      }}
-                      style={{ marginTop: '0.5rem' }}
-                    >
-                      {showMapInline ? 'Hide Map' : 'Pick on Map'}
-                    </button>
+                    {formData.shippingAddress.latitude && formData.shippingAddress.longitude && formData.shippingAddress.latitude !== 0 && formData.shippingAddress.longitude !== 0 && !showMapInline ? (
+                      <div style={{
+                        display: 'flex', alignItems: 'center', gap: '8px',
+                        padding: '10px 14px', borderRadius: '10px',
+                        background: '#f0fdf4', border: '1px solid #bbf7d0',
+                        marginTop: '0.5rem', fontSize: '13px', color: '#166534',
+                      }}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+                        <span style={{ flex: 1 }}>Location pinned successfully</span>
+                        <button type="button" onClick={() => { setShowMapInline(true); setMapInlineMounted(true); }} style={{
+                          background: 'none', border: 'none', color: '#2563eb',
+                          fontSize: '13px', fontWeight: 600, cursor: 'pointer', padding: 0,
+                          textDecoration: 'underline',
+                        }}>Change</button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        className="btn-map-toggle"
+                        onClick={() => {
+                          const next = !showMapInline;
+                          setShowMapInline(next);
+                          if (next) setMapInlineMounted(true);
+                        }}
+                        style={{ marginTop: '0.5rem' }}
+                      >
+                        {showMapInline ? 'Hide Map' : 'Pick on Map'}
+                      </button>
+                    )}
                     {mapInlineMounted && (
                       <div style={showMapInline ? {} : { overflow: 'hidden', height: 0, opacity: 0, pointerEvents: 'none' as const }}>
                         <MapPicker

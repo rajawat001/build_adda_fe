@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
-import type { AppProps} from 'next/app';
+import type { AppProps } from 'next/app';
 import Head from 'next/head';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import '../utils/chartSetup';
 import { ThemeProvider } from '../contexts/ThemeContext';
 import { LocationProvider } from '../context/LocationContext';
@@ -80,9 +81,9 @@ export default function App({ Component, pageProps }: AppProps) {
 
   return (
     <>
-    <Head>
+      <Head>
         <link rel="icon" href="/favicon.ico" />
-        
+
         {/* PWA Meta Tags */}
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#FF6B35" />
@@ -90,43 +91,45 @@ export default function App({ Component, pageProps }: AppProps) {
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="BuildAdda" />
-        
+
         {/* Apple Touch Icons */}
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
         <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png" />
         <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192x192.png" />
         <link rel="apple-touch-icon" sizes="167x167" href="/icons/icon-192x192.png" />
-        
+
         {/* Viewport */}
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes" />
       </Head>
-    <ThemeProvider>
-      <LocationProvider>
-      <NotificationProvider>
-        <CartProvider>
-          <ToastProvider>
-            {/* PWA Install Banner */}
-              <InstallPWA />
-            <Component {...pageProps} />
-            <CartConflictModal />
-            <ChatWidget />
-            <ToastContainer
-              position="top-right"
-              autoClose={3000}
-              hideProgressBar={false}
-              newestOnTop
-              closeOnClick
-              rtl={false}
-              pauseOnFocusLoss
-              draggable
-              pauseOnHover
-              theme="colored"
-            />
-          </ToastProvider>
-        </CartProvider>
-      </NotificationProvider>
-      </LocationProvider>
-    </ThemeProvider>
+      <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ''}>
+        <ThemeProvider>
+          <LocationProvider>
+            <NotificationProvider>
+              <CartProvider>
+                <ToastProvider>
+                  {/* PWA Install Banner */}
+                  <InstallPWA />
+                  <Component {...pageProps} />
+                  <CartConflictModal />
+                  <ChatWidget />
+                  <ToastContainer
+                    position="top-right"
+                    autoClose={3000}
+                    hideProgressBar={false}
+                    newestOnTop
+                    closeOnClick
+                    rtl={false}
+                    pauseOnFocusLoss
+                    draggable
+                    pauseOnHover
+                    theme="colored"
+                  />
+                </ToastProvider>
+              </CartProvider>
+            </NotificationProvider>
+          </LocationProvider>
+        </ThemeProvider>
+      </GoogleOAuthProvider>
     </>
   );
 }

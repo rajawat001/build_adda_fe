@@ -84,6 +84,25 @@ export const deleteAddress = async (addressId: string): Promise<{success: boolea
   return response.data;
 };
 
+export const googleAuth = async (credential: string): Promise<AuthResponse> => {
+  const response = await api.post('/auth/google', { credential });
+  return response.data;
+};
+
+export const googleRegisterDistributor = async (data: {
+  credential: string;
+  businessName: string;
+  phone: string;
+  address: string;
+  city: string;
+  state: string;
+  pincode: string;
+  location?: { type: string; coordinates: number[] };
+}): Promise<AuthResponse> => {
+  const response = await api.post('/auth/google/register-distributor', data);
+  return response.data;
+};
+
 export const logout = async (): Promise<{success: boolean}> => {
   const response = await api.post('/auth/logout');
   // Clear client-side data
@@ -97,6 +116,8 @@ export const logout = async (): Promise<{success: boolean}> => {
 const authService = {
   login,
   register,
+  googleAuth,
+  googleRegisterDistributor,
   getProfile,
   updateProfile,
   addAddress,

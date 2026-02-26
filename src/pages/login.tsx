@@ -3,8 +3,9 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiMail, FiLock, FiEye, FiEyeOff } from 'react-icons/fi';
+import { GoogleLogin } from '@react-oauth/google';
 import SEO from '../components/SEO';
-import { login } from '../services/auth.service';
+import { login, googleAuth } from '../services/auth.service';
 import { sendLoginOTP, verifyLoginOTP } from '../services/email-auth.service';
 import OTPInput from '../components/common/OTPInput';
 import Header from '../components/Header';
@@ -181,6 +182,27 @@ export default function Login() {
     }
   };
 
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    if (!credentialResponse?.credential) {
+      setError('Google sign-in failed. Please try again.');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    try {
+      const response = await googleAuth(credentialResponse.credential);
+      if (response.user) {
+        handleLoginSuccess(response.user, response.needsSubscription);
+      }
+    } catch (err: any) {
+      const msg = getApiErrorMessage(err, 'Google sign-in failed. Please try again.');
+      setError(msg);
+      scrollToError();
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleResendOTP = async () => {
     try {
       await sendLoginOTP(otpEmail);
@@ -221,6 +243,31 @@ export default function Login() {
           <motion.p className="auth-form-subtitle" variants={itemVariants}>
             Welcome to BuildAdda logistics platform
           </motion.p>
+
+          {/* Google Sign-In */}
+          {!loginSuccess && (
+            <motion.div variants={itemVariants} style={{ marginBottom: '4px' }}>
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={() => setError('Google sign-in failed. Please try again.')}
+                  theme="outline"
+                  size="large"
+                  shape="rectangular"
+                  text="continue_with"
+                  width={320}
+                />
+              </div>
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: '12px',
+                margin: '16px 0 8px',
+              }}>
+                <div style={{ flex: 1, height: '1px', background: 'var(--border-primary, #e5e7eb)' }} />
+                <span style={{ fontSize: '12px', color: 'var(--text-secondary, #6b7280)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>or</span>
+                <div style={{ flex: 1, height: '1px', background: 'var(--border-primary, #e5e7eb)' }} />
+              </div>
+            </motion.div>
+          )}
 
           {loginSuccess ? (
             <motion.div
