@@ -94,7 +94,6 @@ const DistributorProfile = ({ ssrMeta }: { ssrMeta: SSRDistributorMeta | null })
       setProducts(productsResponse.data.products || []);
     } catch (error) {
       console.error('Error fetching distributor data:', error);
-      alert('Failed to load distributor information');
     } finally {
       setLoading(false);
     }

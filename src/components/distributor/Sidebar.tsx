@@ -1,9 +1,10 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useTheme } from '../../contexts/ThemeContext';
-import { FiHome, FiPackage, FiShoppingCart, FiUser, FiLogOut, FiSun, FiMoon, FiBarChart2, FiCreditCard, FiX, FiBell } from 'react-icons/fi';
+import { FiHome, FiPackage, FiShoppingCart, FiUser, FiLogOut, FiSun, FiMoon, FiBarChart2, FiCreditCard, FiX, FiBell, FiDollarSign } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import api from '../../services/api';
 
 interface SidebarProps {
   onLogout: () => void;
@@ -18,17 +19,34 @@ const Sidebar = ({ onLogout, isOpen = false, onClose, isMobile = false }: Sideba
   const currentPath = router.pathname;
   const sidebarRef = useRef<HTMLElement>(null);
   const touchStartX = useRef(0);
+  const [planType, setPlanType] = useState<string>('none');
+
+  useEffect(() => {
+    // Fetch plan type to show correct nav items
+    api.get('/auth/profile').then(res => {
+      setPlanType(res.data.user?.planType || 'none');
+    }).catch(() => {});
+  }, []);
 
   const isActive = (path: string) => {
     return currentPath === path || currentPath.startsWith(path);
   };
 
-  const menuItems = [
+  const baseMenuItems = [
     { path: '/distributor/dashboard', icon: FiHome, label: 'Dashboard' },
     { path: '/distributor/products', icon: FiPackage, label: 'Products' },
     { path: '/distributor/orders', icon: FiShoppingCart, label: 'Orders' },
     { path: '/distributor/analytics', icon: FiBarChart2, label: 'Analytics' },
-    { path: '/distributor/subscription', icon: FiCreditCard, label: 'Subscription' },
+  ];
+
+  // Show Wallet for commission distributors, Subscription for subscription distributors
+  const planMenuItem = planType === 'commission'
+    ? { path: '/distributor/wallet', icon: FiDollarSign, label: 'Wallet' }
+    : { path: '/distributor/subscription', icon: FiCreditCard, label: 'Subscription' };
+
+  const menuItems = [
+    ...baseMenuItems,
+    planMenuItem,
     { path: '/distributor/notifications', icon: FiBell, label: 'Notifications' },
     { path: '/distributor/profile', icon: FiUser, label: 'Profile' },
   ];

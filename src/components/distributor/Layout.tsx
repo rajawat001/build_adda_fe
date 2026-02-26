@@ -81,6 +81,8 @@ const DistributorLayout = ({ children, title = 'Distributor Panel' }: LayoutProp
   const [checkingSubscription, setCheckingSubscription] = useState(true);
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
   const [isApproved, setIsApproved] = useState(false);
+  const [isWalletLocked, setIsWalletLocked] = useState(false);
+  const [planType, setPlanType] = useState<string>('none');
 
   useEffect(() => {
     checkAuth();
@@ -103,36 +105,58 @@ const DistributorLayout = ({ children, title = 'Distributor Panel' }: LayoutProp
 
   const checkSubscriptionStatus = async () => {
     try {
-      // Get profile to check approval status
+      // Get profile to check approval status and plan type
       const profileRes = await api.get('/auth/profile');
-      const isUserApproved = profileRes.data.user?.isApproved || false;
-      setIsApproved(isUserApproved);
+      const user = profileRes.data.user;
+      const isUserApproved = user?.isApproved || false;
+      const userPlanType = user?.planType || 'none';
+      const userWalletLocked = user?.isWalletLocked || false;
 
-      // Get subscription status
+      setIsApproved(isUserApproved);
+      setPlanType(userPlanType);
+      setIsWalletLocked(userWalletLocked);
+
+      // Commission plan distributors: approved via plan selection, no subscription needed
+      if (userPlanType === 'commission' && isUserApproved) {
+        setHasActiveSubscription(true); // treat as "has active plan" for layout purposes
+        setCheckingSubscription(false);
+        return;
+      }
+
+      // Get subscription status for subscription-plan distributors
       let hasActive = false;
       try {
         const subRes = await api.get('/subscriptions/my-subscription');
         const subscription = subRes.data.subscription;
         hasActive = subscription && subscription.status === 'active';
       } catch (subError: any) {
-        // 404 means no active subscription, which is fine
         if (subError.response?.status !== 404) {
           console.error('Error fetching subscription:', subError);
         }
       }
       setHasActiveSubscription(hasActive);
 
-      // If not approved or no active subscription, and not on subscription page, redirect
+      // Redirect logic for non-approved/no-plan distributors
       const currentPath = router.pathname;
-      if ((!isUserApproved || !hasActive) && currentPath !== '/distributor/subscription') {
+      const allowedPaths = ['/distributor/subscription', '/distributor/plan-selection', '/distributor/wallet', '/distributor/commission-payment'];
+      const isOnAllowedPath = allowedPaths.some(p => currentPath.startsWith(p));
+
+      if (!isUserApproved && !isOnAllowedPath) {
+        // Not approved: go to plan selection
+        router.push('/distributor/plan-selection');
+      } else if (isUserApproved && userPlanType === 'none' && !isOnAllowedPath) {
+        // Approved but no plan selected: go to plan selection
+        router.push('/distributor/plan-selection');
+      } else if (isUserApproved && userPlanType === 'subscription' && !hasActive && !isOnAllowedPath) {
+        // Subscription expired
         router.push('/distributor/subscription');
       }
     } catch (error: any) {
       console.error('Error checking subscription:', error);
-      // Only redirect if it's not an authorization error for non-approved distributor
-      // (they should be allowed to access the subscription page)
-      if (router.pathname !== '/distributor/subscription') {
-        router.push('/distributor/subscription');
+      const currentPath = router.pathname;
+      const allowedPaths = ['/distributor/subscription', '/distributor/plan-selection', '/distributor/wallet', '/distributor/commission-payment'];
+      if (!allowedPaths.some(p => currentPath.startsWith(p))) {
+        router.push('/distributor/plan-selection');
       }
     } finally {
       setCheckingSubscription(false);
@@ -289,6 +313,41 @@ const DistributorLayout = ({ children, title = 'Distributor Panel' }: LayoutProp
           </div>
 
           <div className="main-content">
+            {isWalletLocked && (
+              <div style={{
+                background: '#fef2f2',
+                border: '1px solid #fecaca',
+                borderRadius: '12px',
+                padding: '0.875rem 1.25rem',
+                marginBottom: '1.25rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem',
+                flexWrap: 'wrap',
+              }}>
+                <span style={{ fontSize: '1.25rem' }}>&#128274;</span>
+                <div style={{ flex: 1, minWidth: '200px' }}>
+                  <div style={{ fontWeight: 700, color: '#991b1b', fontSize: '0.875rem' }}>Account Locked</div>
+                  <div style={{ color: '#b91c1c', fontSize: '0.813rem' }}>Your account is locked due to unpaid commission. Clear your dues to continue.</div>
+                </div>
+                <button
+                  onClick={() => router.push('/distributor/commission-payment')}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    background: '#ef4444',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                    fontSize: '0.813rem',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  Pay Now
+                </button>
+              </div>
+            )}
             {children}
           </div>
         </main>

@@ -16,10 +16,12 @@ import {
   FiGift,
   FiPercent,
   FiZap,
+  FiArrowRight,
 } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import subscriptionService from '../../services/subscription.service';
 import { format, differenceInDays } from 'date-fns';
+import Link from 'next/link';
 
 interface SubscriptionPlan {
   _id: string;
@@ -374,6 +376,30 @@ const SubscriptionPage = () => {
               </div>
             </div>
           </Card>
+        )}
+
+        {/* Commission Plan Option */}
+        {(!currentSubscription || currentSubscription.status !== 'active') && (
+          <Link href="/distributor/plan-selection" style={{ textDecoration: 'none' }}>
+            <Card className={`${isMobile ? 'p-4' : 'p-5'} bg-gradient-to-r from-emerald-50 to-green-50 border-emerald-200 cursor-pointer hover:shadow-md transition-shadow`}>
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className={`${isMobile ? 'p-2' : 'p-3'} bg-emerald-100 rounded-lg`}>
+                    <FiPercent className={`${isMobile ? 'w-5 h-5' : 'w-6 h-6'} text-emerald-600`} />
+                  </div>
+                  <div>
+                    <h3 className={`${isMobile ? 'text-sm' : 'text-base'} font-semibold text-emerald-800`}>
+                      Prefer pay-per-order? Try Commission Plan
+                    </h3>
+                    <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-emerald-600`}>
+                      No upfront cost — pay only when you earn from delivered orders.
+                    </p>
+                  </div>
+                </div>
+                <FiArrowRight className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+              </div>
+            </Card>
+          </Link>
         )}
 
         {/* Subscription Plans */}

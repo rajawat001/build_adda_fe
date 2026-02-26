@@ -18,22 +18,83 @@ import {
 import { toast } from 'react-toastify';
 import api from '../../services/api';
 
+interface ActivityItem {
+  id: string;
+  orderNumber: string;
+  status: string;
+  amount: number;
+  timestamp: string;
+  message: string;
+}
+
 interface DashboardStats {
   totalRevenue: number;
   totalOrders: number;
   totalProducts: number;
   pendingOrders: number;
   lowStockProducts: number;
+  averageOrderValue: number;
+  growth: {
+    revenue: { value: number; isPositive: boolean };
+    orders: { value: number; isPositive: boolean };
+  };
   revenueData: { month: string; revenue: number }[];
   orderData: { status: string; count: number }[];
   stockData: { product: string; stock: number }[];
+  recentActivity: ActivityItem[];
 }
+
+// Status color map for doughnut chart
+const statusColorMap: Record<string, { bg: string; border: string }> = {
+  pending: { bg: 'rgba(245, 158, 11, 0.8)', border: 'rgb(245, 158, 11)' },
+  confirmed: { bg: 'rgba(59, 130, 246, 0.8)', border: 'rgb(59, 130, 246)' },
+  processing: { bg: 'rgba(102, 126, 234, 0.8)', border: 'rgb(102, 126, 234)' },
+  shipped: { bg: 'rgba(118, 75, 162, 0.8)', border: 'rgb(118, 75, 162)' },
+  delivered: { bg: 'rgba(16, 185, 129, 0.8)', border: 'rgb(16, 185, 129)' },
+  cancelled: { bg: 'rgba(239, 68, 68, 0.8)', border: 'rgb(239, 68, 68)' },
+};
+
+// Activity dot color by order status
+const getActivityDotColor = (status: string): string => {
+  const colors: Record<string, string> = {
+    pending: 'bg-yellow-400',
+    confirmed: 'bg-blue-500',
+    processing: 'bg-indigo-500',
+    shipped: 'bg-purple-500',
+    delivered: 'bg-green-500',
+    cancelled: 'bg-red-500',
+  };
+  return colors[status] || 'bg-gray-400';
+};
+
+const formatTimeAgo = (timestamp: string): string => {
+  const now = new Date();
+  const date = new Date(timestamp);
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return `${diffHours}h ago`;
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+};
 
 const Dashboard = () => {
   const router = useRouter();
   const isMobile = useIsMobile();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const formatINR = (value: number): string => {
+    if (isMobile) {
+      if (value >= 10000000) return `₹${(value / 10000000).toFixed(1)}Cr`;
+      if (value >= 100000) return `₹${(value / 100000).toFixed(1)}L`;
+      if (value >= 1000) return `₹${(value / 1000).toFixed(0)}K`;
+    }
+    return `₹${value.toLocaleString('en-IN')}`;
+  };
 
   useEffect(() => {
     fetchStats();
@@ -144,27 +205,16 @@ const Dashboard = () => {
     },
   };
 
+  // Filter out statuses with 0 count for cleaner doughnut
+  const filteredOrderData = stats.orderData.filter(d => d.count > 0);
+
   const orderStatusChartData = {
-    labels: stats.orderData.map((d) => d.status.charAt(0).toUpperCase() + d.status.slice(1)),
+    labels: filteredOrderData.map((d) => d.status.charAt(0).toUpperCase() + d.status.slice(1)),
     datasets: [
       {
-        data: stats.orderData.map((d) => d.count),
-        backgroundColor: [
-          'rgba(102, 126, 234, 0.8)',
-          'rgba(118, 75, 162, 0.8)',
-          'rgba(16, 185, 129, 0.8)',
-          'rgba(245, 158, 11, 0.8)',
-          'rgba(239, 68, 68, 0.8)',
-          'rgba(59, 130, 246, 0.8)',
-        ],
-        borderColor: [
-          'rgb(102, 126, 234)',
-          'rgb(118, 75, 162)',
-          'rgb(16, 185, 129)',
-          'rgb(245, 158, 11)',
-          'rgb(239, 68, 68)',
-          'rgb(59, 130, 246)',
-        ],
+        data: filteredOrderData.map((d) => d.count),
+        backgroundColor: filteredOrderData.map(d => statusColorMap[d.status]?.bg || 'rgba(156, 163, 175, 0.8)'),
+        borderColor: filteredOrderData.map(d => statusColorMap[d.status]?.border || 'rgb(156, 163, 175)'),
         borderWidth: 2,
       },
     ],
@@ -250,12 +300,6 @@ const Dashboard = () => {
     },
   };
 
-  // Calculate trends (mock data for demonstration)
-  const revenueTrend = { value: 12.5, isPositive: true };
-  const ordersTrend = { value: 8.3, isPositive: true };
-  const productsTrend = { value: 3.2, isPositive: false };
-  const pendingTrend = { value: 5.1, isPositive: false };
-
   return (
     <DistributorLayout title="Dashboard">
       <OrderNotifications onNewOrder={fetchStats} />
@@ -282,18 +326,18 @@ const Dashboard = () => {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
           <StatsCard
             title="Revenue"
-            value={`₹${stats.totalRevenue.toLocaleString('en-IN')}`}
+            value={formatINR(stats.totalRevenue)}
             icon={<FiDollarSign className="w-5 h-5 md:w-6 md:h-6" />}
             color="green"
-            trend={revenueTrend}
-            subtitle="Total earnings"
+            trend={stats.growth?.revenue}
+            subtitle={`Avg: ${formatINR(stats.averageOrderValue || 0)}/order`}
           />
           <StatsCard
             title="Orders"
             value={stats.totalOrders}
             icon={<FiShoppingCart className="w-5 h-5 md:w-6 md:h-6" />}
             color="blue"
-            trend={ordersTrend}
+            trend={stats.growth?.orders}
             subtitle="All time"
           />
           <StatsCard
@@ -301,15 +345,13 @@ const Dashboard = () => {
             value={stats.totalProducts}
             icon={<FiPackage className="w-5 h-5 md:w-6 md:h-6" />}
             color="orange"
-            trend={productsTrend}
-            subtitle="Active"
+            subtitle="Active listings"
           />
           <StatsCard
             title="Pending"
             value={stats.pendingOrders}
             icon={<FiClock className="w-5 h-5 md:w-6 md:h-6" />}
             color="purple"
-            trend={pendingTrend}
             subtitle="Needs approval"
           />
         </div>
@@ -358,14 +400,26 @@ const Dashboard = () => {
             subtitle="Monthly revenue over time"
             headerAction={
               !isMobile && (
-                <Button variant="ghost" size="sm" leftIcon={<FiTrendingUp />}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  leftIcon={<FiTrendingUp />}
+                  onClick={() => router.push('/distributor/analytics')}
+                >
                   View Report
                 </Button>
               )
             }
           >
             <div style={{ height: isMobile ? '200px' : '300px' }}>
-              <Line data={revenueChartData} options={revenueChartOptions} />
+              {stats.revenueData.length > 0 ? (
+                <Line data={revenueChartData} options={revenueChartOptions} />
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full">
+                  <FiTrendingUp className="w-10 h-10 text-[var(--text-tertiary)] mb-2" />
+                  <p className="text-sm text-[var(--text-tertiary)]">No revenue data yet</p>
+                </div>
+              )}
             </div>
             {isMobile && (
               <button
@@ -381,7 +435,14 @@ const Dashboard = () => {
           {/* Order Status Distribution */}
           <Card title="Order Status" subtitle="Breakdown by status">
             <div style={{ height: isMobile ? '220px' : '300px' }}>
-              <Doughnut data={orderStatusChartData} options={orderStatusChartOptions} />
+              {filteredOrderData.length > 0 ? (
+                <Doughnut data={orderStatusChartData} options={orderStatusChartOptions} />
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full">
+                  <FiShoppingCart className="w-10 h-10 text-[var(--text-tertiary)] mb-2" />
+                  <p className="text-sm text-[var(--text-tertiary)]">No orders yet</p>
+                </div>
+              )}
             </div>
           </Card>
         </div>
@@ -436,31 +497,26 @@ const Dashboard = () => {
                 </Button>
               </div>
 
-              {/* Recent Activity */}
+              {/* Recent Activity - Desktop */}
               <div className="mt-6 pt-6 border-t border-[var(--border-primary)]">
                 <h4 className="text-sm font-semibold text-[var(--text-primary)] mb-3">Recent Activity</h4>
                 <div className="space-y-3">
-                  <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 rounded-full bg-[var(--success)] mt-2"></div>
-                    <div className="flex-1">
-                      <p className="text-sm text-[var(--text-primary)]">New order received</p>
-                      <p className="text-xs text-[var(--text-tertiary)]">2 hours ago</p>
+                  {stats.recentActivity?.slice(0, 5).map((activity) => (
+                    <div key={activity.id} className="flex items-start gap-3">
+                      <div className={`w-2 h-2 rounded-full mt-2 ${getActivityDotColor(activity.status)}`}></div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-[var(--text-primary)] truncate">{activity.message}</p>
+                        <p className="text-xs text-[var(--text-tertiary)]">
+                          {formatTimeAgo(activity.timestamp)}
+                          {' · '}
+                          <span className="font-medium">₹{activity.amount.toLocaleString('en-IN')}</span>
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 rounded-full bg-[var(--info)] mt-2"></div>
-                    <div className="flex-1">
-                      <p className="text-sm text-[var(--text-primary)]">Product updated</p>
-                      <p className="text-xs text-[var(--text-tertiary)]">5 hours ago</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 rounded-full bg-[var(--warning)] mt-2"></div>
-                    <div className="flex-1">
-                      <p className="text-sm text-[var(--text-primary)]">Low stock alert</p>
-                      <p className="text-xs text-[var(--text-tertiary)]">1 day ago</p>
-                    </div>
-                  </div>
+                  ))}
+                  {(!stats.recentActivity || stats.recentActivity.length === 0) && (
+                    <p className="text-sm text-[var(--text-tertiary)]">No recent activity</p>
+                  )}
                 </div>
               </div>
             </Card>
@@ -470,28 +526,23 @@ const Dashboard = () => {
         {/* Recent Activity - Mobile Only */}
         {isMobile && (
           <Card title="Recent Activity" className="!p-3">
-            <div className="space-y-3">
-              <div className="flex items-start gap-3 p-2 rounded-lg bg-[var(--bg-tertiary)]">
-                <div className="w-2 h-2 rounded-full bg-[var(--success)] mt-2 flex-shrink-0"></div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-[var(--text-primary)]">New order received</p>
-                  <p className="text-xs text-[var(--text-tertiary)]">2 hours ago</p>
+            <div className="space-y-2">
+              {stats.recentActivity?.slice(0, 5).map((activity) => (
+                <div key={activity.id} className="flex items-start gap-3 p-2 rounded-lg bg-[var(--bg-tertiary)]">
+                  <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${getActivityDotColor(activity.status)}`}></div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-[var(--text-primary)] truncate">{activity.message}</p>
+                    <p className="text-xs text-[var(--text-tertiary)]">
+                      {formatTimeAgo(activity.timestamp)}
+                      {' · '}
+                      <span className="font-medium">₹{activity.amount.toLocaleString('en-IN')}</span>
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-start gap-3 p-2 rounded-lg bg-[var(--bg-tertiary)]">
-                <div className="w-2 h-2 rounded-full bg-[var(--info)] mt-2 flex-shrink-0"></div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-[var(--text-primary)]">Product updated</p>
-                  <p className="text-xs text-[var(--text-tertiary)]">5 hours ago</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3 p-2 rounded-lg bg-[var(--bg-tertiary)]">
-                <div className="w-2 h-2 rounded-full bg-[var(--warning)] mt-2 flex-shrink-0"></div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-[var(--text-primary)]">Low stock alert</p>
-                  <p className="text-xs text-[var(--text-tertiary)]">1 day ago</p>
-                </div>
-              </div>
+              ))}
+              {(!stats.recentActivity || stats.recentActivity.length === 0) && (
+                <p className="text-sm text-[var(--text-tertiary)] text-center py-4">No recent activity</p>
+              )}
             </div>
           </Card>
         )}

@@ -203,7 +203,7 @@ const Analytics = () => {
       },
       tooltip: {
         callbacks: {
-          label: (context: any) => `Revenue: ₹${context.parsed.y.toLocaleString()}`,
+          label: (context: any) => `Revenue: ₹${context.parsed.y.toLocaleString('en-IN')}`,
         },
       },
     },
@@ -211,10 +211,19 @@ const Analytics = () => {
       y: {
         beginAtZero: true,
         ticks: {
-          callback: (value: any) => `₹${value.toLocaleString()}`,
+          callback: (value: any) => `₹${value.toLocaleString('en-IN')}`,
         },
       },
     },
+  };
+
+  const statusColorMap: Record<string, { bg: string; border: string }> = {
+    pending: { bg: 'rgba(245, 158, 11, 0.8)', border: 'rgb(245, 158, 11)' },
+    confirmed: { bg: 'rgba(59, 130, 246, 0.8)', border: 'rgb(59, 130, 246)' },
+    processing: { bg: 'rgba(102, 126, 234, 0.8)', border: 'rgb(102, 126, 234)' },
+    shipped: { bg: 'rgba(118, 75, 162, 0.8)', border: 'rgb(118, 75, 162)' },
+    delivered: { bg: 'rgba(16, 185, 129, 0.8)', border: 'rgb(16, 185, 129)' },
+    cancelled: { bg: 'rgba(239, 68, 68, 0.8)', border: 'rgb(239, 68, 68)' },
   };
 
   const orderStatusData = {
@@ -222,18 +231,8 @@ const Analytics = () => {
     datasets: [
       {
         data: analyticsData.orders.byStatus.map(s => s.count),
-        backgroundColor: [
-          'rgba(34, 197, 94, 0.8)',
-          'rgba(59, 130, 246, 0.8)',
-          'rgba(251, 191, 36, 0.8)',
-          'rgba(239, 68, 68, 0.8)',
-        ],
-        borderColor: [
-          'rgb(34, 197, 94)',
-          'rgb(59, 130, 246)',
-          'rgb(251, 191, 36)',
-          'rgb(239, 68, 68)',
-        ],
+        backgroundColor: analyticsData.orders.byStatus.map(s => statusColorMap[s.status]?.bg || 'rgba(156, 163, 175, 0.8)'),
+        borderColor: analyticsData.orders.byStatus.map(s => statusColorMap[s.status]?.border || 'rgb(156, 163, 175)'),
         borderWidth: 2,
       },
     ],
@@ -266,7 +265,7 @@ const Analytics = () => {
       },
       tooltip: {
         callbacks: {
-          label: (context: any) => `Revenue: ₹${context.parsed.y.toLocaleString()}`,
+          label: (context: any) => `Revenue: ₹${context.parsed.y.toLocaleString('en-IN')}`,
         },
       },
     },
@@ -274,7 +273,7 @@ const Analytics = () => {
       y: {
         beginAtZero: true,
         ticks: {
-          callback: (value: any) => `₹${value.toLocaleString()}`,
+          callback: (value: any) => `₹${value.toLocaleString('en-IN')}`,
         },
       },
     },
@@ -376,7 +375,7 @@ const Analytics = () => {
               {isMobile ? 'Revenue' : 'Total Revenue'}
             </h3>
             <p className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-[var(--text-primary)]`}>
-              ₹{isMobile ? (analyticsData.revenue.total / 100000).toFixed(1) + 'L' : analyticsData.revenue.total.toLocaleString()}
+              ₹{isMobile ? (analyticsData.revenue.total / 100000).toFixed(1) + 'L' : analyticsData.revenue.total.toLocaleString('en-IN')}
             </p>
           </Card>
 
@@ -401,7 +400,7 @@ const Analytics = () => {
               {isMobile ? 'Orders' : 'Total Orders'}
             </h3>
             <p className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-[var(--text-primary)]`}>
-              {analyticsData.orders.total.toLocaleString()}
+              {analyticsData.orders.total.toLocaleString('en-IN')}
             </p>
           </Card>
 
@@ -527,7 +526,7 @@ const Analytics = () => {
                         {product.name}
                       </h4>
                       <div className="flex justify-between mt-1 text-xs">
-                        <span className="text-[var(--text-secondary)]">{product.sales.toLocaleString()} sold</span>
+                        <span className="text-[var(--text-secondary)]">{product.sales.toLocaleString('en-IN')} sold</span>
                         <span className="text-[var(--text-primary)] font-semibold">₹{(product.revenue / 1000).toFixed(0)}K</span>
                       </div>
                     </div>
@@ -559,9 +558,9 @@ const Analytics = () => {
                         </div>
                       </td>
                       <td className="py-4 px-4 text-[var(--text-primary)] font-medium">{product.name}</td>
-                      <td className="py-4 px-4 text-right text-[var(--text-primary)]">{product.sales.toLocaleString()}</td>
+                      <td className="py-4 px-4 text-right text-[var(--text-primary)]">{product.sales.toLocaleString('en-IN')}</td>
                       <td className="py-4 px-4 text-right text-[var(--text-primary)] font-semibold">
-                        ₹{product.revenue.toLocaleString()}
+                        ₹{product.revenue.toLocaleString('en-IN')}
                       </td>
                     </tr>
                   ))}
@@ -591,7 +590,7 @@ const Analytics = () => {
                     {!isMobile && <span className="text-[var(--text-primary)] font-medium"></span>}
                   </p>
                   <p className={`text-[var(--text-primary)] font-semibold ${isMobile ? 'text-sm' : 'text-sm'}`}>
-                    ₹{isMobile ? (category.revenue / 1000).toFixed(0) + 'K' : category.revenue.toLocaleString()}
+                    ₹{isMobile ? (category.revenue / 1000).toFixed(0) + 'K' : category.revenue.toLocaleString('en-IN')}
                   </p>
                 </div>
               </div>
