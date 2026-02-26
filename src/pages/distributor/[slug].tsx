@@ -39,6 +39,8 @@ interface SSRDistributorMeta {
   state: string;
   profileImage: string;
   id: string;
+  productCount: number;
+  address: string;
 }
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
@@ -46,8 +48,12 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
   try {
-    const res = await axios.get(`${API_URL}/users/distributors/${slug}`, { timeout: 5000 });
-    const dist = res.data.distributor || res.data;
+    const [distRes, prodRes] = await Promise.all([
+      axios.get(`${API_URL}/users/distributors/${slug}`, { timeout: 5000 }),
+      axios.get(`${API_URL}/products/distributor/${slug}`, { timeout: 5000 }).catch(() => ({ data: { products: [] } })),
+    ]);
+    const dist = distRes.data.distributor || distRes.data;
+    const productCount = prodRes.data.products?.length || 0;
 
     return {
       props: {
@@ -58,6 +64,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
           state: dist.state || '',
           profileImage: dist.profileImage || '',
           id: dist.slug || dist._id || slug || '',
+          productCount,
+          address: dist.address || '',
         } as SSRDistributorMeta,
       },
     };
@@ -138,17 +146,19 @@ const DistributorProfile = ({ ssrMeta }: { ssrMeta: SSRDistributorMeta | null })
     setShowShareSheet(true);
   };
 
-  // LocalBusiness JSON-LD Schema for Google Search
+  // Combined JSON-LD Schema for Google Search (LocalBusiness + BreadcrumbList)
   const distributorJsonLd = useMemo(() => {
     if (!distributor) return null;
 
-    const schema: any = {
+    const distUrl = `https://www.buildadda.in/distributor/${distributor.slug || distributor._id}`;
+
+    const localBusiness: any = {
       '@context': 'https://schema.org',
       '@type': 'LocalBusiness',
-      '@id': `https://www.buildadda.in/distributor/${distributor.slug || distributor._id}`,
+      '@id': distUrl,
       name: distributor.businessName,
-      description: distributor.description || `${distributor.businessName} - Building Materials Distributor in ${distributor.city}, ${distributor.state}`,
-      url: `https://www.buildadda.in/distributor/${distributor.slug || distributor._id}`,
+      description: distributor.description || `${distributor.businessName} - Building Materials Distributor in ${distributor.city}, ${distributor.state}. ${products.length} products available.`,
+      url: distUrl,
       telephone: distributor.phone,
       email: distributor.email,
       address: {
@@ -158,11 +168,6 @@ const DistributorProfile = ({ ssrMeta }: { ssrMeta: SSRDistributorMeta | null })
         addressRegion: distributor.state,
         postalCode: distributor.pincode,
         addressCountry: 'IN'
-      },
-      geo: {
-        '@type': 'GeoCoordinates',
-        latitude: 26.9124,  // Default Jaipur coordinates
-        longitude: 75.7873
       },
       image: distributor.profileImage || 'https://www.buildadda.in/buildAddaBrandImage.png',
       priceRange: '₹₹',
@@ -179,12 +184,14 @@ const DistributorProfile = ({ ssrMeta }: { ssrMeta: SSRDistributorMeta | null })
       },
       sameAs: [
         'https://www.buildadda.in'
-      ]
+      ],
+      numberOfEmployees: { '@type': 'QuantitativeValue', value: 1 },
+      knowsAbout: ['building materials', 'construction supplies', 'cement', 'steel', 'bricks', 'sand', 'paint', 'tiles'],
     };
 
     // Add aggregate rating if distributor has reviews
     if (distributor.rating && distributor.reviewCount && distributor.reviewCount > 0) {
-      schema.aggregateRating = {
+      localBusiness.aggregateRating = {
         '@type': 'AggregateRating',
         ratingValue: distributor.rating,
         reviewCount: distributor.reviewCount,
@@ -193,9 +200,23 @@ const DistributorProfile = ({ ssrMeta }: { ssrMeta: SSRDistributorMeta | null })
       };
     }
 
-    // Add products offered
+    // Add product catalog
     if (products.length > 0) {
-      schema.makesOffer = products.slice(0, 10).map(product => ({
+      localBusiness.hasOfferCatalog = {
+        '@type': 'OfferCatalog',
+        name: `${distributor.businessName} Products`,
+        numberOfItems: products.length,
+        itemListElement: products.slice(0, 10).map(product => ({
+          '@type': 'Offer',
+          itemOffered: {
+            '@type': 'Product',
+            name: product.name,
+            url: `https://www.buildadda.in/products/${product.slug || product._id}`
+          }
+        }))
+      };
+
+      localBusiness.makesOffer = products.slice(0, 10).map(product => ({
         '@type': 'Offer',
         itemOffered: {
           '@type': 'Product',
@@ -205,17 +226,77 @@ const DistributorProfile = ({ ssrMeta }: { ssrMeta: SSRDistributorMeta | null })
       }));
     }
 
-    return schema;
+    // BreadcrumbList for better search appearance
+    const breadcrumb = {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        {
+          '@type': 'ListItem',
+          position: 1,
+          name: 'Home',
+          item: 'https://www.buildadda.in'
+        },
+        {
+          '@type': 'ListItem',
+          position: 2,
+          name: 'Distributors',
+          item: 'https://www.buildadda.in/distributors'
+        },
+        {
+          '@type': 'ListItem',
+          position: 3,
+          name: distributor.businessName,
+          item: distUrl
+        }
+      ]
+    };
+
+    return [localBusiness, breadcrumb];
   }, [distributor, products]);
+
+  // SSR-level JSON-LD so Google gets structured data on first render
+  const ssrJsonLd = useMemo(() => {
+    if (!ssrMeta) return undefined;
+    const distUrl = `https://www.buildadda.in/distributor/${ssrMeta.id}`;
+    return [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'LocalBusiness',
+        '@id': distUrl,
+        name: ssrMeta.businessName,
+        description: ssrMeta.description || `${ssrMeta.businessName} - Building Materials Distributor in ${ssrMeta.city}, ${ssrMeta.state}. ${ssrMeta.productCount} products available.`,
+        url: distUrl,
+        address: {
+          '@type': 'PostalAddress',
+          streetAddress: ssrMeta.address,
+          addressLocality: ssrMeta.city,
+          addressRegion: ssrMeta.state,
+          addressCountry: 'IN'
+        },
+        image: ssrMeta.profileImage || 'https://www.buildadda.in/buildAddaBrandImage.png',
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.buildadda.in' },
+          { '@type': 'ListItem', position: 2, name: 'Distributors', item: 'https://www.buildadda.in/distributors' },
+          { '@type': 'ListItem', position: 3, name: ssrMeta.businessName, item: distUrl },
+        ]
+      }
+    ];
+  }, [ssrMeta]);
 
   if (loading) {
     return (
       <>
         <SEO
-          title={ssrMeta ? `${ssrMeta.businessName} - Building Materials Distributor in ${ssrMeta.city}` : 'Loading...'}
-          description={ssrMeta ? `Shop building materials from ${ssrMeta.businessName} in ${ssrMeta.city}, ${ssrMeta.state}. Verified distributor on BuildAdda.` : 'Loading distributor profile'}
+          title={ssrMeta ? `${ssrMeta.businessName} - Building Materials Distributor in ${ssrMeta.city} | BuildAdda` : 'Loading...'}
+          description={ssrMeta ? `Shop building materials from ${ssrMeta.businessName} in ${ssrMeta.city}, ${ssrMeta.state}. ${ssrMeta.productCount} products available. Verified distributor on BuildAdda.` : 'Loading distributor profile'}
           ogImage={ssrMeta?.profileImage || undefined}
           canonicalUrl={ssrMeta ? `https://www.buildadda.in/distributor/${ssrMeta.id}` : undefined}
+          jsonLd={ssrJsonLd}
         />
         <Header />
         <div className={styles.loadingContainer}>
@@ -231,8 +312,8 @@ const DistributorProfile = ({ ssrMeta }: { ssrMeta: SSRDistributorMeta | null })
     return (
       <>
         <SEO
-          title={ssrMeta ? `${ssrMeta.businessName} | BuildAdda` : 'Not Found'}
-          description={ssrMeta ? `${ssrMeta.businessName} - Building Materials Distributor in ${ssrMeta.city}` : 'Distributor not found'}
+          title={ssrMeta ? `${ssrMeta.businessName} - Building Materials in ${ssrMeta.city} | BuildAdda` : 'Not Found'}
+          description={ssrMeta ? `${ssrMeta.businessName} - Building Materials Distributor in ${ssrMeta.city}, ${ssrMeta.state}. ${ssrMeta.productCount} products available.` : 'Distributor not found'}
           ogImage={ssrMeta?.profileImage || undefined}
           canonicalUrl={ssrMeta ? `https://www.buildadda.in/distributor/${ssrMeta.id}` : undefined}
         />
@@ -252,8 +333,9 @@ const DistributorProfile = ({ ssrMeta }: { ssrMeta: SSRDistributorMeta | null })
   return (
     <>
       <SEO
-        title={`${distributor.businessName} - Building Materials Distributor in ${distributor.city}`}
-        description={distributor.description || `Shop building materials from ${distributor.businessName} in ${distributor.city}, ${distributor.state}. ${products.length} products available. Verified distributor on BuildAdda.`}
+        title={`${distributor.businessName} - Building Materials Distributor in ${distributor.city} | BuildAdda`}
+        description={distributor.description || `Shop building materials from ${distributor.businessName} in ${distributor.city}, ${distributor.state}. ${products.length || ssrMeta?.productCount || 0} products available. Verified distributor on BuildAdda.`}
+        keywords={`${distributor.businessName}, building materials ${distributor.city}, construction supplies ${distributor.city}, ${distributor.city} distributor, building materials ${distributor.state}, cement ${distributor.city}, steel ${distributor.city}`}
         ogImage={distributor.profileImage || undefined}
         canonicalUrl={`https://www.buildadda.in/distributor/${distributor.slug || distributor._id}`}
         jsonLd={distributorJsonLd || undefined}

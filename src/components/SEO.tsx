@@ -7,7 +7,7 @@ interface SEOProps {
   ogImage?: string;
   ogType?: string;
   canonicalUrl?: string;
-  jsonLd?: object;
+  jsonLd?: object | object[];
   noindex?: boolean;
   article?: {
     publishedTime?: string;
@@ -105,22 +105,33 @@ export default function SEO({
       <meta name="HandheldFriendly" content="True" />
       <meta name="MobileOptimized" content="320" />
 
-      {/* Favicon and Icons */}
+      {/* Favicon and Icons — Google requires at least 48x48 PNG */}
       <link rel="icon" type="image/x-icon" href="/buildadda3.ico" />
-      <link rel="apple-touch-icon" sizes="180x180" href="/buildAddaBrandImage.png" />
-      <link rel="icon" type="image/png" sizes="32x32" href="/buildAddaBrandImage.png" />
-      <link rel="icon" type="image/png" sizes="16x16" href="/buildAddaBrandImage.png" />
+      <link rel="icon" type="image/png" sizes="72x72" href="/icons/icon-72x72.png" />
+      <link rel="icon" type="image/png" sizes="96x96" href="/icons/icon-96x96.png" />
+      <link rel="icon" type="image/png" sizes="144x144" href="/icons/icon-144x144.png" />
+      <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png" />
+      <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192x192.png" />
 
       {/* Alternate for different languages (if needed in future) */}
       <link rel="alternate" hrefLang="en" href={fullCanonicalUrl} />
       <link rel="alternate" hrefLang="hi" href={fullCanonicalUrl} />
 
       {/* JSON-LD Structured Data */}
-      {jsonLd && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
+      {jsonLd && (Array.isArray(jsonLd)
+        ? jsonLd.map((schema, i) => (
+            <script
+              key={i}
+              type="application/ld+json"
+              dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+            />
+          ))
+        : (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          />
+        )
       )}
     </Head>
   );
