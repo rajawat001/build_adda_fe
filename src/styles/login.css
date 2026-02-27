@@ -300,6 +300,17 @@
   max-height: 85vh;
 }
 
+/* Register page: use CSS animation instead of framer-motion to avoid
+   transform/will-change that breaks Leaflet tile rendering */
+.register-panel {
+  animation: registerFadeIn 0.4s ease both;
+}
+
+@keyframes registerFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 /* Accent gradient line on left edge */
 .auth-form-panel::before {
   content: '';
@@ -354,9 +365,18 @@
 }
 
 .login-logo img {
-  height: 46px;
+  height: 40px;
   width: auto;
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.06));
+}
+
+@media (max-width: 768px) {
+  .login-logo {
+    margin-bottom: 10px;
+  }
+  .login-logo img {
+    height: 30px;
+  }
 }
 
 .login-container h1,

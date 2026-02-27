@@ -83,6 +83,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
 
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
+  const tileLayerRef = useRef<L.TileLayer | null>(null);
   const geocodeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const [locationInfo, setLocationInfo] = useState<MapPickerLocation | null>(null);
@@ -108,9 +109,10 @@ const MapPicker: React.FC<MapPickerProps> = ({
       zoomControl: false,
     });
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(map);
+    tileLayerRef.current = tileLayer;
 
     // Debounced reverse geocode on map move
     map.on('moveend', () => {
@@ -140,13 +142,16 @@ const MapPicker: React.FC<MapPickerProps> = ({
   // Re-invalidate map size when becoming visible again (after hide/show)
   useEffect(() => {
     if (visible && mapRef.current) {
-      const timers = [50, 200, 500, 1000].map(delay =>
+      const timers = [50, 200, 500, 1000, 2000].map(delay =>
         setTimeout(() => {
           if (mapRef.current) {
             mapRef.current.invalidateSize();
-            // Force tile reload by nudging the view
             const center = mapRef.current.getCenter();
             mapRef.current.setView(center, mapRef.current.getZoom(), { animate: false });
+            // Force all tiles to re-fetch their images
+            if (tileLayerRef.current) {
+              tileLayerRef.current.redraw();
+            }
           }
         }, delay)
       );
@@ -197,6 +202,29 @@ const MapPicker: React.FC<MapPickerProps> = ({
 
   return (
     <div className="map-picker-container" translate="no">
+      {/* Leaflet tile fix — override global mobile CSS that breaks tile rendering */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        .leaflet-pane,
+        .leaflet-tile-pane,
+        .leaflet-map-pane,
+        .leaflet-tile-container,
+        .leaflet-proxy,
+        .leaflet-overlay-pane,
+        .leaflet-shadow-pane,
+        .leaflet-marker-pane {
+          overflow: visible !important;
+          max-width: none !important;
+        }
+        .leaflet-container img {
+          max-width: none !important;
+          display: inline !important;
+        }
+        .leaflet-tile {
+          width: 256px !important;
+          height: 256px !important;
+          max-width: none !important;
+        }
+      `}} />
       {/* Search bar */}
       <form className="map-picker-search" onSubmit={handleSearch}>
         <input

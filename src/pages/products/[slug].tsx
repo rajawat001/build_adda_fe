@@ -311,26 +311,33 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
           inStock: (product.stock || 0) >= (product.minQuantity || 1),
           id: product.slug || product._id || slug || '',
         } as SSRProductMeta,
+        ssrProduct: product,
       },
     };
   } catch {
-    return { props: { ssrMeta: null } };
+    return { props: { ssrMeta: null, ssrProduct: null } };
   }
 };
 
 // ─── Main Page Component ───
-export default function ProductDetail({ ssrMeta }: { ssrMeta: SSRProductMeta | null }) {
+export default function ProductDetail({ ssrMeta, ssrProduct }: { ssrMeta: SSRProductMeta | null; ssrProduct: any | null }) {
   const router = useRouter();
   const { slug: id } = router.query;
   const { addToCart } = useCart();
 
-  const [product, setProduct] = useState<Product | null>(null);
+  const [product, setProduct] = useState<Product | null>(ssrProduct || null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!ssrProduct);
   const [error, setError] = useState('');
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState(
+    ssrProduct?.minQuantity && ssrProduct.minQuantity > 1 ? ssrProduct.minQuantity : 1
+  );
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const [allImages, setAllImages] = useState<string[]>([]);
+  const [allImages, setAllImages] = useState<string[]>(
+    ssrProduct
+      ? (ssrProduct.images?.length > 0 ? ssrProduct.images : ssrProduct.image ? [ssrProduct.image] : [])
+      : []
+  );
   const [addingToCart, setAddingToCart] = useState(false);
   const [addingToWishlist, setAddingToWishlist] = useState(false);
   const [isInWishlist, setIsInWishlist] = useState(false);
@@ -346,16 +353,28 @@ export default function ProductDetail({ ssrMeta }: { ssrMeta: SSRProductMeta | n
   const minQty = product?.minQuantity || 1;
   const maxQty = product?.maxQuantity || product?.stock || 999;
 
+  // Fetch related products from SSR product on mount
+  useEffect(() => {
+    if (ssrProduct?.category) {
+      const categoryId = typeof ssrProduct.category === 'string'
+        ? ssrProduct.category
+        : ssrProduct.category._id;
+      if (categoryId) fetchRelatedProducts(categoryId);
+    }
+    checkWishlistStatus();
+  }, []);
+
+  // Client-side fetch as fallback / revalidation
   useEffect(() => {
     if (id) {
       fetchProductDetails();
-      checkWishlistStatus();
     }
   }, [id]);
 
   const fetchProductDetails = async () => {
     try {
-      setLoading(true);
+      // Only show loading skeleton if we don't already have SSR data
+      if (!product) setLoading(true);
       setError('');
       const response = await productService.getProductById(id as string);
       let productData: Product;

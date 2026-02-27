@@ -126,13 +126,19 @@
 
 .cw-body {
   flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  overscroll-behavior: contain;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .cw-body-inner {
   padding: 16px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
 }
 
 /* ── Welcome View ───────────────────── */
@@ -376,6 +382,7 @@
   display: flex;
   flex-direction: column;
   padding: 0 !important;
+  overflow: hidden;
 }
 
 .cw-ai-messages {
@@ -385,8 +392,8 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  min-height: 200px;
-  max-height: 310px;
+  min-height: 0;
+  overscroll-behavior: contain;
 }
 
 .cw-ai-msg {
@@ -644,6 +651,7 @@
   display: flex;
   flex-direction: column;
   padding: 0 !important;
+  overflow: hidden;
 }
 
 .cw-thread-loading {
@@ -676,8 +684,8 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  min-height: 180px;
-  max-height: 320px;
+  min-height: 0;
+  overscroll-behavior: contain;
 }
 
 .cw-thread-msg {
@@ -943,11 +951,11 @@
   }
 
   .cw-ai-messages {
-    max-height: 250px;
+    min-height: 0;
   }
 
   .cw-thread-messages {
-    max-height: 260px;
+    min-height: 0;
   }
 
   .cw-thread-reply-send {

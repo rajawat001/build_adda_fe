@@ -26,11 +26,11 @@ body {
 
 /* Prevent all elements from exceeding viewport */
 @media (max-width: 768px) {
-  /* Main containers */
+  /* Main containers — exclude Leaflet internals & map wrapper */
   main,
   section,
   article,
-  div,
+  div:not([class*="leaflet"]):not(.map-picker-map-wrapper),
   header,
   footer,
   nav {
@@ -110,8 +110,8 @@ body {
     margin: 0;
   }
 
-  /* Images */
-  img {
+  /* Images — exclude Leaflet tiles/markers */
+  img:not(.leaflet-tile):not(.leaflet-marker-icon):not(.leaflet-marker-shadow) {
     max-width: 100%;
     height: auto;
     display: block;

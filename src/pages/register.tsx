@@ -33,21 +33,7 @@ interface ValidationErrors {
 type RegisterStep = 'details' | 'verify' | 'success';
 
 // Panel entrance with spring stagger
-const panelVariants = {
-  hidden: { opacity: 0, y: 30 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { type: 'spring' as const, damping: 22, stiffness: 100, staggerChildren: 0.07 },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 14 },
-  visible: { opacity: 1, y: 0, transition: { type: 'spring' as const, damping: 20, stiffness: 120 } },
-};
-
-// 3D slide transition for wizard steps
+// 3D slide transition for wizard steps (used for steps 1 & 2 only; steps 3 & 4 use plain divs for Leaflet compat)
 const slideVariants = {
   enter: (direction: number) => ({
     opacity: 0,
@@ -486,24 +472,18 @@ export default function Register() {
           subtitle={theme === 'distributor' ? 'Sell building materials to thousands of buyers' : 'Shop quality building materials at the best prices'}
         />
 
-        <motion.div
-          className="auth-form-panel"
-          variants={panelVariants}
-          initial="hidden"
-          animate="visible"
-          style={{ perspective: 1200 }}
-        >
-          <motion.div className="login-logo" variants={itemVariants}>
+        <div className="auth-form-panel register-panel">
+          <div className="login-logo">
             <img src="/buildAddaBrandImage.png" alt="BuildAdda" />
-          </motion.div>
+          </div>
 
-          <motion.h1 variants={itemVariants}>Sign up</motion.h1>
-          <motion.p className="auth-form-subtitle" variants={itemVariants}>
+          <h1>Sign up</h1>
+          <p className="auth-form-subtitle">
             Register as a member to experience
-          </motion.p>
+          </p>
 
           {/* 5-Step Progress */}
-          <motion.div className="step-progress" variants={itemVariants}>
+          <div className="step-progress">
             {stepLabels.map((label, i) => (
               <React.Fragment key={label}>
                 {i > 0 && (
@@ -517,7 +497,7 @@ export default function Register() {
                 </div>
               </React.Fragment>
             ))}
-          </motion.div>
+          </div>
 
           <AnimatePresence mode="wait" custom={direction}>
             {step === 'details' && formStep === 1 && (
@@ -732,16 +712,7 @@ export default function Register() {
             )}
 
             {step === 'details' && formStep === 3 && (
-              <motion.div
-                key="step-3"
-                custom={direction}
-                variants={slideVariants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                style={{ perspective: 1200 }}
-              >
+              <div key="step-3">
                 <button type="button" className="btn-back-step" onClick={handlePrevStep}>
                   <FiArrowLeft size={16} /> Back
                 </button>
@@ -866,21 +837,12 @@ export default function Register() {
                     {loading ? <><span className="btn-spinner" />Sending verification...</> : 'Continue & verify email'}
                   </motion.button>
                 </form>
-              </motion.div>
+              </div>
             )}
 
             {/* Google Distributor: Collect business details after Google auth */}
             {step === 'details' && formStep === 4 && (
-              <motion.div
-                key="step-google-dist"
-                custom={direction}
-                variants={slideVariants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                style={{ perspective: 1200 }}
-              >
+              <div key="step-google-dist">
                 <button type="button" className="btn-back-step" onClick={() => { setFormStep(1); setDirection(-1); setGoogleCredential(null); setValidationErrors({}); setError(''); }}>
                   <FiArrowLeft size={16} /> Back
                 </button>
@@ -1038,7 +1000,7 @@ export default function Register() {
                     {loading ? <><span className="btn-spinner" />Creating account...</> : 'Complete Registration'}
                   </motion.button>
                 </form>
-              </motion.div>
+              </div>
             )}
 
             {step === 'verify' && (
@@ -1094,11 +1056,11 @@ export default function Register() {
           </AnimatePresence>
 
           {step !== 'success' && (
-            <motion.p className="login-footer" variants={itemVariants}>
+            <p className="login-footer">
               Already a member? <Link href="/login">Sign in</Link>
-            </motion.p>
+            </p>
           )}
-        </motion.div>
+        </div>
       </div>
       <Footer />
     </>

@@ -161,9 +161,9 @@ html, body {
   }
 }
 
-/* Better image loading on mobile */
+/* Better image loading on mobile — exclude Leaflet tiles/markers */
 @media (max-width: 768px) {
-  img {
+  img:not(.leaflet-tile):not(.leaflet-marker-icon):not(.leaflet-marker-shadow) {
     max-width: 100%;
     height: auto;
     display: block;
@@ -186,7 +186,7 @@ html, body {
     position: relative;
   }
 
-  * {
+  *:not([class*="leaflet"]):not(.map-picker-map-wrapper) {
     max-width: 100%;
     box-sizing: border-box;
   }

@@ -1195,6 +1195,20 @@ iframe.goog-te-banner-frame {
   }
 }
 
+/* Fix: Global mobile CSS (mobile-enhancements, mobile-overflow-fix) sets
+   img { max-width:100%; height:auto } which breaks Leaflet's 256px tile images.
+   Override for all Leaflet tile images. */
+.leaflet-container img {
+  max-width: none !important;
+  height: auto;
+  display: inline !important;
+}
+
+.leaflet-tile {
+  width: 256px !important;
+  height: 256px !important;
+}
+
 /* ==================
    MAP PICKER (Swiggy/Zomato style)
    ================== */
