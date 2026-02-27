@@ -22,35 +22,53 @@ const OrderNotifications: React.FC<OrderNotificationsProps> = ({ onNewOrder }) =
   const [lastChecked, setLastChecked] = useState<Date>(new Date());
   const [isEnabled, setIsEnabled] = useState(true);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioUnlockedRef = useRef(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Initialize audio element
   useEffect(() => {
-    // Create notification sound
     try {
       audioRef.current = new Audio('/sounds/notification.mp3');
       audioRef.current.volume = 0.7;
-
-      // Preload the audio to ensure it's ready
       audioRef.current.load();
 
-      // Enable audio after user interaction (required by browsers)
+      // Unlock audio on any user interaction (browsers require this)
       const enableAudio = () => {
-        if (audioRef.current) {
-          audioRef.current.play().then(() => {
-            audioRef.current!.pause();
-            audioRef.current!.currentTime = 0;
-          }).catch(() => {
-            // Audio will be enabled on next user interaction
-          });
+        if (audioRef.current && !audioUnlockedRef.current) {
+          const unlockPromise = audioRef.current.play();
+          if (unlockPromise) {
+            unlockPromise.then(() => {
+              audioRef.current!.pause();
+              audioRef.current!.currentTime = 0;
+              audioUnlockedRef.current = true;
+            }).catch(() => {
+              // Will retry on next interaction
+            });
+          }
         }
       };
 
-      // Listen for any user interaction to enable audio
-      document.addEventListener('click', enableAudio, { once: true });
-      document.addEventListener('keydown', enableAudio, { once: true });
+      // Keep trying on every interaction until unlocked
+      const handleInteraction = () => {
+        enableAudio();
+        if (audioUnlockedRef.current) {
+          document.removeEventListener('click', handleInteraction);
+          document.removeEventListener('touchstart', handleInteraction);
+          document.removeEventListener('keydown', handleInteraction);
+        }
+      };
+
+      document.addEventListener('click', handleInteraction);
+      document.addEventListener('touchstart', handleInteraction);
+      document.addEventListener('keydown', handleInteraction);
+
+      return () => {
+        document.removeEventListener('click', handleInteraction);
+        document.removeEventListener('touchstart', handleInteraction);
+        document.removeEventListener('keydown', handleInteraction);
+      };
     } catch (error) {
-      console.log('Audio notification setup failed:', error);
+      console.warn('Audio notification setup failed:', error);
       audioRef.current = null;
     }
 
@@ -69,8 +87,8 @@ const OrderNotifications: React.FC<OrderNotificationsProps> = ({ onNewOrder }) =
       try {
         const response = await api.get('/distributor/orders', {
           params: {
-            since: lastChecked.toISOString(),
-            status: 'pending',
+            orderStatus: 'pending',
+            limit: 20,
           },
         });
 
@@ -122,8 +140,8 @@ const OrderNotifications: React.FC<OrderNotificationsProps> = ({ onNewOrder }) =
     // Check immediately
     checkForNewOrders();
 
-    // Then check every 60 seconds (reduced from 30 to avoid rate limiting)
-    intervalRef.current = setInterval(checkForNewOrders, 60000);
+    // Check every 30 seconds for new orders
+    intervalRef.current = setInterval(checkForNewOrders, 30000);
 
     return () => {
       if (intervalRef.current) {
@@ -137,12 +155,32 @@ const OrderNotifications: React.FC<OrderNotificationsProps> = ({ onNewOrder }) =
     if (audioRef.current) {
       try {
         audioRef.current.currentTime = 0;
-        audioRef.current.play().catch(err => {
-          // Silently fail if sound file doesn't exist or can't play
-          // User will still see visual notification
-        });
-      } catch (error) {
-        // Audio not available, visual notification will still show
+        const playPromise = audioRef.current.play();
+        if (playPromise) {
+          playPromise.catch(() => {
+            // Fallback: try creating a fresh Audio element
+            try {
+              const fallback = new Audio('/sounds/notification.mp3');
+              fallback.volume = 0.7;
+              fallback.play().catch(() => {
+                console.warn('Notification sound blocked by browser. Click anywhere on the page to enable.');
+              });
+            } catch {
+              // Audio completely unavailable
+            }
+          });
+        }
+      } catch {
+        // Audio not available
+      }
+    } else {
+      // Re-create audio element if it was lost
+      try {
+        audioRef.current = new Audio('/sounds/notification.mp3');
+        audioRef.current.volume = 0.7;
+        audioRef.current.play().catch(() => {});
+      } catch {
+        // Audio unavailable
       }
     }
   };
@@ -216,7 +254,7 @@ const OrderNotifications: React.FC<OrderNotificationsProps> = ({ onNewOrder }) =
                   >
                     <div className="order-info">
                       <div className="order-number">#{order.orderNumber}</div>
-                      <div className="order-customer">{order.user.name}</div>
+                      <div className="order-customer">{order.user?.name || 'Guest Customer'}</div>
                       <div className="order-details">
                         {order.items.reduce((sum, item) => sum + item.quantity, 0)} items • ₹
                         {order.totalAmount.toLocaleString('en-IN')}

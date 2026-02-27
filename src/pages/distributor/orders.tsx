@@ -34,6 +34,10 @@ interface Order {
   deliveryCharge: number;
   paymentMethod: string;
   paymentStatus: string;
+  isGuestOrder?: boolean;
+  guestEmail?: string;
+  guestPhone?: string;
+  shippingAddress?: { phone?: string };
   createdAt: string;
   items: any[];
 }
@@ -162,8 +166,8 @@ const Orders = () => {
     const XLSX = await import('xlsx');
     const exportData = filteredOrders.map((o) => ({
       'Order Number': o.orderNumber,
-      Customer: o.user?.name || 'Unknown User',
-      Contact: o.user?.phone || o.user?.email || 'N/A',
+      Customer: o.user?.name || (o.isGuestOrder ? 'Guest Customer' : 'Unknown User'),
+      Contact: o.user?.phone || o.guestPhone || o.shippingAddress?.phone || o.user?.email || o.guestEmail || 'N/A',
       Amount: o.totalAmount,
       'Delivery Charge': o.deliveryCharge || 0,
       'Approval Status': o.approvalStatus,
@@ -233,10 +237,12 @@ const Orders = () => {
   };
 
   const filteredOrders = orders.filter((order) => {
-    const userName = order.user?.name || '';
+    const userName = order.user?.name || (order.isGuestOrder ? 'Guest Customer' : '');
+    const guestContact = order.guestEmail || order.guestPhone || '';
     const matchesSearch =
       order.orderNumber.toLowerCase().includes(filter.search.toLowerCase()) ||
-      userName.toLowerCase().includes(filter.search.toLowerCase());
+      userName.toLowerCase().includes(filter.search.toLowerCase()) ||
+      guestContact.toLowerCase().includes(filter.search.toLowerCase());
     const matchesStatus = !filter.status || order.orderStatus === filter.status;
     const matchesApproval = !filter.approval || order.approvalStatus === filter.approval;
     const matchesPayment = !filter.paymentStatus || order.paymentStatus === filter.paymentStatus;
@@ -457,7 +463,7 @@ const Orders = () => {
                   {
                     key: 'user',
                     label: 'Customer',
-                    render: (user) => user?.name || 'Unknown',
+                    render: (user: any, order: any) => user?.name || (order?.isGuestOrder ? 'Guest Customer' : 'Unknown'),
                   },
                   {
                     key: 'totalAmount',
@@ -566,10 +572,10 @@ const Orders = () => {
                       <td className="px-4 py-3">
                         <div className="flex flex-col">
                           <span className="font-medium text-[var(--text-primary)]">
-                            {order.user?.name || 'Unknown User'}
+                            {order.user?.name || (order.isGuestOrder ? 'Guest Customer' : 'Unknown User')}
                           </span>
                           <span className="text-xs text-[var(--text-tertiary)]">
-                            {order.user?.phone || order.user?.email || 'N/A'}
+                            {order.user?.phone || order.guestPhone || order.shippingAddress?.phone || order.user?.email || order.guestEmail || 'N/A'}
                           </span>
                         </div>
                       </td>

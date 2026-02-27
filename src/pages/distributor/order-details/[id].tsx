@@ -47,6 +47,9 @@ interface OrderDetails {
   approvalStatus: string;
   approvedAt?: string;
   rejectionReason?: string;
+  isGuestOrder?: boolean;
+  guestEmail?: string;
+  guestPhone?: string;
   createdAt: string;
   statusHistory?: Array<{
     status: string;
@@ -485,20 +488,24 @@ const OrderDetailsPage = () => {
             <div className="info-section">
               <h3>Customer Information</h3>
               <div className="distributor-card">
-                <h4>{order.user?.name || 'Unknown User'}</h4>
+                <h4>{order.user?.name || (order.isGuestOrder ? 'Guest Customer' : 'Unknown User')}</h4>
                 <div className="contact-info">
                   <div className="contact-item">
                     <span className="icon">📞</span>
-                    {order.user?.phone ? (
-                      <a href={`tel:${order.user.phone}`}>{order.user.phone}</a>
+                    {(order.user?.phone || order.guestPhone || order.shippingAddress?.phone) ? (
+                      <a href={`tel:${order.user?.phone || order.guestPhone || order.shippingAddress?.phone}`}>
+                        {order.user?.phone || order.guestPhone || order.shippingAddress?.phone}
+                      </a>
                     ) : (
                       <span>N/A</span>
                     )}
                   </div>
                   <div className="contact-item">
                     <span className="icon">📧</span>
-                    {order.user?.email ? (
-                      <a href={`mailto:${order.user.email}`}>{order.user.email}</a>
+                    {(order.user?.email || order.guestEmail) ? (
+                      <a href={`mailto:${order.user?.email || order.guestEmail}`}>
+                        {order.user?.email || order.guestEmail}
+                      </a>
                     ) : (
                       <span>N/A</span>
                     )}
