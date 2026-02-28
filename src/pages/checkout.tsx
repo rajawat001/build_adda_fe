@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import dynamic from 'next/dynamic';
 import SEO from '../components/SEO';
@@ -103,22 +103,24 @@ export default function Checkout() {
   const [showMapInline, setShowMapInline] = useState(false);
   const [mapInlineMounted, setMapInlineMounted] = useState(false);
   const [serviceAreas, setServiceAreas] = useState<{ state: string; cities: string[] }[]>([{ state: 'Rajasthan', cities: ['Jaipur'] }]);
+  const [cartChecked, setCartChecked] = useState(false);
 
+  // Initialize: fetch user profile and service areas once on mount
   useEffect(() => {
-    // Redirect to cart if empty (but not after successful order placement)
-    if (cartItems.length === 0 && !orderPlaced) {
-      router.push('/cart');
-      return;
-    }
-
-    // Fetch user profile to get saved addresses
     fetchUserProfile();
-
-    // Fetch service areas for state/city dropdowns
     fetchServiceAreas();
+    // Delay cart-empty check to allow cart context to hydrate from localStorage
+    const timer = setTimeout(() => setCartChecked(true), 300);
+    return () => clearTimeout(timer);
+  }, []);
 
-    // No external payment scripts needed — PhonePe uses redirect
-  }, [cartItems.length]);
+  // Redirect to cart if truly empty — only after cart context has hydrated
+  useEffect(() => {
+    if (!cartChecked || orderPlaced) return;
+    if (cartItems.length === 0) {
+      router.push('/cart');
+    }
+  }, [cartChecked, cartItems.length, orderPlaced]);
 
   const fetchServiceAreas = async () => {
     try {

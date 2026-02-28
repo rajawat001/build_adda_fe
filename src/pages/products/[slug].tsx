@@ -365,18 +365,23 @@ export default function ProductDetail({ ssrMeta, ssrProduct }: { ssrMeta: SSRPro
   }, []);
 
   // Client-side fetch as fallback / revalidation
+  // Guard with router.isReady to handle hydration where router.query is empty
   useEffect(() => {
-    if (id) {
-      fetchProductDetails();
+    if (!router.isReady) return;
+    const slug = router.query.slug as string;
+    if (slug) {
+      fetchProductDetails(slug);
     }
-  }, [id]);
+  }, [router.isReady]);
 
-  const fetchProductDetails = async () => {
+  const fetchProductDetails = async (slug?: string, retryCount = 0) => {
+    const productSlug = slug || id as string;
+    if (!productSlug) return;
     try {
       // Only show loading skeleton if we don't already have SSR data
       if (!product) setLoading(true);
       setError('');
-      const response = await productService.getProductById(id as string);
+      const response = await productService.getProductById(productSlug);
       let productData: Product;
       if (response.product) productData = response.product;
       else if (response.data?.product) productData = response.data.product;
@@ -401,7 +406,15 @@ export default function ProductDetail({ ssrMeta, ssrProduct }: { ssrMeta: SSRPro
         fetchRelatedProducts(categoryId);
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Product not found');
+      // Don't override existing SSR product data on client-side fetch error
+      if (!ssrProduct) {
+        // Retry once on mobile for slow network issues
+        if (retryCount < 1) {
+          setTimeout(() => fetchProductDetails(productSlug, retryCount + 1), 2000);
+          return;
+        }
+        setError(err.response?.data?.message || 'Product not found');
+      }
     } finally {
       setLoading(false);
     }
