@@ -186,7 +186,7 @@ html, body {
     position: relative;
   }
 
-  *:not([class*="leaflet"]):not(.map-picker-map-wrapper) {
+  *:not([class*="leaflet"]):not(.map-picker-map-wrapper):not([class*="cw-"]) {
     max-width: 100%;
     box-sizing: border-box;
   }

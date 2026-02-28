@@ -30,7 +30,7 @@ body {
   main,
   section,
   article,
-  div:not([class*="leaflet"]):not(.map-picker-map-wrapper),
+  div:not([class*="leaflet"]):not(.map-picker-map-wrapper):not([class*="cw-"]),
   header,
   footer,
   nav {
