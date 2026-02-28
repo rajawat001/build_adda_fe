@@ -353,33 +353,48 @@ export default function ProductDetail({ ssrMeta, ssrProduct }: { ssrMeta: SSRPro
   const minQty = product?.minQuantity || 1;
   const maxQty = product?.maxQuantity || product?.stock || 999;
 
-  // Fetch related products from SSR product on mount
+  // Unified fetch: handles initial load, SSR sync, and client-side navigation
+  const currentSlug = (router.query.slug as string) || '';
+
   useEffect(() => {
-    if (ssrProduct?.category) {
+    if (!router.isReady || !currentSlug) return;
+
+    // Apply SSR data to state immediately if available
+    // This handles both initial mount and client-side navigation (getServerSideProps re-runs)
+    if (ssrProduct) {
+      setProduct(ssrProduct);
+      setLoading(false);
+      setError('');
+      const imgs = ssrProduct.images?.length > 0 ? ssrProduct.images : ssrProduct.image ? [ssrProduct.image] : [];
+      setAllImages(imgs);
+      setSelectedImageIndex(0);
+      if (ssrProduct.minQuantity && ssrProduct.minQuantity > 1) {
+        setQuantity(ssrProduct.minQuantity);
+      } else {
+        setQuantity(1);
+      }
+      // Fetch related products from SSR category
       const categoryId = typeof ssrProduct.category === 'string'
         ? ssrProduct.category
-        : ssrProduct.category._id;
+        : ssrProduct.category?._id;
       if (categoryId) fetchRelatedProducts(categoryId);
+    } else {
+      // No SSR data — show loading skeleton
+      setProduct(null);
+      setLoading(true);
+      setError('');
+      setAllImages([]);
     }
-    checkWishlistStatus();
-  }, []);
 
-  // Client-side fetch as fallback / revalidation
-  // Guard with router.isReady to handle hydration where router.query is empty
-  useEffect(() => {
-    if (!router.isReady) return;
-    const slug = router.query.slug as string;
-    if (slug) {
-      fetchProductDetails(slug);
-    }
-  }, [router.isReady]);
+    checkWishlistStatus();
+    // Always fetch client-side as backup / revalidation
+    fetchProductDetails(currentSlug);
+  }, [currentSlug, router.isReady]);
 
   const fetchProductDetails = async (slug?: string, retryCount = 0) => {
     const productSlug = slug || id as string;
     if (!productSlug) return;
     try {
-      // Only show loading skeleton if we don't already have SSR data
-      if (!product) setLoading(true);
       setError('');
       const response = await productService.getProductById(productSlug);
       let productData: Product;
@@ -388,6 +403,7 @@ export default function ProductDetail({ ssrMeta, ssrProduct }: { ssrMeta: SSRPro
       else productData = response;
 
       setProduct(productData);
+      setLoading(false);
 
       const imgs = productData.images && productData.images.length > 0
         ? productData.images
@@ -407,15 +423,18 @@ export default function ProductDetail({ ssrMeta, ssrProduct }: { ssrMeta: SSRPro
       }
     } catch (err: any) {
       // Don't override existing SSR product data on client-side fetch error
-      if (!ssrProduct) {
-        // Retry once on mobile for slow network issues
-        if (retryCount < 1) {
-          setTimeout(() => fetchProductDetails(productSlug, retryCount + 1), 2000);
-          return;
-        }
-        setError(err.response?.data?.message || 'Product not found');
+      if (ssrProduct) {
+        setLoading(false);
+        return;
       }
-    } finally {
+      // Retry up to 2 times for slow mobile networks
+      // IMPORTANT: Don't set loading=false during retry — keep skeleton showing
+      if (retryCount < 2) {
+        setTimeout(() => fetchProductDetails(productSlug, retryCount + 1), 1500);
+        return;
+      }
+      // All retries exhausted — show error
+      setError(err.response?.data?.message || 'Product not found');
       setLoading(false);
     }
   };
@@ -646,6 +665,21 @@ export default function ProductDetail({ ssrMeta, ssrProduct }: { ssrMeta: SSRPro
             <FiPackage size={64} />
             <h2>Product Not Found</h2>
             <p>{error || 'The product you are looking for does not exist.'}</p>
+            <button
+              onClick={() => {
+                setError('');
+                setLoading(true);
+                // Clear stale caches and retry
+                if ('caches' in window) {
+                  Promise.all([caches.delete('next-data'), caches.delete('others')]).catch(() => {});
+                }
+                fetchProductDetails(currentSlug);
+              }}
+              className="pdp-error-btn"
+              style={{ marginBottom: '12px', cursor: 'pointer', border: 'none' }}
+            >
+              Retry
+            </button>
             <Link href="/products" className="pdp-error-btn">Browse Products</Link>
           </div>
         </div>

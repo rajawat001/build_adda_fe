@@ -1,3 +1,17 @@
+// Clear stale runtime caches on service worker activation (new deployment)
+// This removes cached SSR responses that may contain error/null data
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames
+          .filter((name) => name === 'next-data' || name === 'others')
+          .map((name) => caches.delete(name))
+      );
+    })
+  );
+});
+
 // Push notification handler — runs in the service worker context
 self.addEventListener('push', (event) => {
   const data = event.data ? event.data.json() : {};

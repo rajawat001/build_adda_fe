@@ -63,6 +63,23 @@ export default function App({ Component, pageProps }: AppProps) {
     }
   }, []);
 
+  // Clear stale service worker caches once per build version
+  // This removes cached SSR responses that may contain error/null data
+  useEffect(() => {
+    const CACHE_VERSION = 'v2';
+    if (typeof window !== 'undefined' && 'caches' in window) {
+      const cleared = localStorage.getItem('sw-cache-cleared');
+      if (cleared !== CACHE_VERSION) {
+        Promise.all([
+          caches.delete('next-data'),
+          caches.delete('others'),
+        ]).then(() => {
+          localStorage.setItem('sw-cache-cleared', CACHE_VERSION);
+        }).catch(() => {});
+      }
+    }
+  }, []);
+
   // Suppress DOM errors caused by browser extensions (Google Translate, Grammarly, etc.)
   // that modify React-managed text nodes, causing removeChild/insertBefore failures
   useEffect(() => {
