@@ -33,6 +33,25 @@ interface Distributor {
   createdAt: string;
 }
 
+interface PlanDetails {
+  planType: 'subscription' | 'commission' | 'none';
+  subscription?: {
+    planName: string; duration: string; status: string; paymentStatus: string;
+    startDate: string; endDate: string; amount: number; finalAmount: number;
+    autoRenew: boolean; autopayEnabled: boolean;
+  };
+  commission?: {
+    planName: string; commissionType: string; commissionValue: number;
+    walletBalance: number; totalCharged: number; totalPaid: number; totalOrders: number;
+    walletLimit: number; walletStatus: string; isLimitExceeded: boolean; graceExpiresAt?: string;
+  };
+}
+
+interface DistributorProduct {
+  _id: string; name: string; slug?: string; price: number; realPrice?: number;
+  stock: number; category?: string; images: string[]; isActive: boolean; unitType?: string;
+}
+
 interface DistributorStats {
   total: number;
   approved: number;
@@ -89,6 +108,9 @@ const DistributorsManagement: React.FC = () => {
     gstNumber: '',
     isActive: true
   });
+  const [planDetails, setPlanDetails] = useState<PlanDetails | null>(null);
+  const [distributorProducts, setDistributorProducts] = useState<DistributorProduct[]>([]);
+  const [detailsLoading, setDetailsLoading] = useState(false);
 
   useEffect(() => {
     if (router.isReady && router.query.search) {
@@ -510,11 +532,25 @@ const DistributorsManagement: React.FC = () => {
     window.open(`/admin/orders?distributor=${distributorId}`, '_blank');
   };
 
-  const handleViewDistributor = (distributorId: string) => {
+  const handleViewDistributor = async (distributorId: string) => {
     const distributor = distributors.find(d => d._id === distributorId);
     if (distributor) {
       setSelectedDistributor(distributor);
       setShowViewModal(true);
+      setDetailsLoading(true);
+      setPlanDetails(null);
+      setDistributorProducts([]);
+      try {
+        const response = await api.get(`/admin/distributors/${distributorId}/details`);
+        if (response.data.success) {
+          setPlanDetails(response.data.planDetails || null);
+          setDistributorProducts(response.data.products || []);
+        }
+      } catch (error) {
+        console.error('Error fetching distributor details:', error);
+      } finally {
+        setDetailsLoading(false);
+      }
     }
   };
 
@@ -695,7 +731,7 @@ const DistributorsManagement: React.FC = () => {
         {/* View Distributor Modal */}
         <AnimatePresence>
           {showViewModal && selectedDistributor && (
-            <div className="modal-overlay" onClick={() => setShowViewModal(false)}>
+            <div className="modal-overlay" onClick={() => { setShowViewModal(false); setPlanDetails(null); setDistributorProducts([]); }}>
               <motion.div
                 className="modal"
                 onClick={(e) => e.stopPropagation()}
@@ -703,11 +739,11 @@ const DistributorsManagement: React.FC = () => {
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                style={{ maxWidth: '700px', maxHeight: '90vh', overflow: 'auto' }}
+                style={{ maxWidth: '900px', maxHeight: '90vh', overflow: 'auto' }}
               >
                 <div className="modal-header">
                   <h2 className="modal-title">Distributor Details</h2>
-                  <button className="modal-close" onClick={() => setShowViewModal(false)}>
+                  <button className="modal-close" onClick={() => { setShowViewModal(false); setPlanDetails(null); setDistributorProducts([]); }}>
                     <FiX size={20} />
                   </button>
                 </div>
@@ -741,13 +777,21 @@ const DistributorsManagement: React.FC = () => {
                       <div style={{ fontSize: '0.875rem', color: 'var(--admin-text-secondary)', marginBottom: '0.5rem' }}>
                         Owner: {selectedDistributor.ownerName || selectedDistributor.name || '-'}
                       </div>
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                         <span className={`badge ${selectedDistributor.isApproved ? 'green' : 'orange'}`}>
                           {selectedDistributor.isApproved ? 'Approved' : 'Pending'}
                         </span>
                         <span className={`badge ${selectedDistributor.isActive ? 'blue' : 'red'}`}>
                           {selectedDistributor.isActive ? 'Active' : 'Inactive'}
                         </span>
+                        {planDetails && (
+                          <span className="badge" style={{
+                            background: planDetails.planType === 'subscription' ? '#f3e8ff' : planDetails.planType === 'commission' ? '#e6fffa' : '#f3f4f6',
+                            color: planDetails.planType === 'subscription' ? '#7c3aed' : planDetails.planType === 'commission' ? '#0d9488' : '#6b7280'
+                          }}>
+                            {planDetails.planType === 'subscription' ? 'Subscription Plan' : planDetails.planType === 'commission' ? 'Commission Plan' : 'No Plan'}
+                          </span>
+                        )}
                         {selectedDistributor.rating && (
                           <span className="badge" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                             <FiStar size={12} style={{ color: '#f59e0b' }} />
@@ -818,8 +862,120 @@ const DistributorsManagement: React.FC = () => {
                     </div>
                   </div>
 
+                  {/* Plan Details */}
+                  {detailsLoading ? (
+                    <div style={{ background: 'var(--admin-bg-secondary)', borderRadius: '8px', padding: '1.5rem', marginBottom: '1rem', textAlign: 'center' }}>
+                      <div className="loading-spinner" style={{ width: '24px', height: '24px', borderWidth: '2px', margin: '0 auto 0.5rem' }} />
+                      <span style={{ fontSize: '0.875rem', color: 'var(--admin-text-secondary)' }}>Loading plan details...</span>
+                    </div>
+                  ) : planDetails?.planType === 'subscription' && planDetails.subscription ? (
+                    <div style={{ background: 'var(--admin-bg-secondary)', borderRadius: '8px', padding: '1rem', marginBottom: '1rem', border: '1px solid #e9d5ff' }}>
+                      <h4 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#7c3aed', marginBottom: '0.75rem' }}>
+                        Subscription Details
+                      </h4>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem 1.5rem' }}>
+                        <div>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--admin-text-tertiary)' }}>Plan</span>
+                          <div style={{ fontWeight: 500, color: 'var(--admin-text-primary)' }}>
+                            {planDetails.subscription.planName || '-'} ({planDetails.subscription.duration || '-'})
+                          </div>
+                        </div>
+                        <div>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--admin-text-tertiary)' }}>Status</span>
+                          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.125rem' }}>
+                            <span className={`badge ${planDetails.subscription.status === 'active' ? 'green' : planDetails.subscription.status === 'expired' ? 'red' : planDetails.subscription.status === 'cancelled' ? 'red' : 'orange'}`}>
+                              {planDetails.subscription.status}
+                            </span>
+                            <span className={`badge ${planDetails.subscription.paymentStatus === 'paid' ? 'green' : planDetails.subscription.paymentStatus === 'failed' ? 'red' : 'orange'}`}>
+                              {planDetails.subscription.paymentStatus}
+                            </span>
+                          </div>
+                        </div>
+                        <div>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--admin-text-tertiary)' }}>Period</span>
+                          <div style={{ color: 'var(--admin-text-primary)', fontSize: '0.875rem' }}>
+                            {new Date(planDetails.subscription.startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            {' → '}
+                            {new Date(planDetails.subscription.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          </div>
+                        </div>
+                        <div>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--admin-text-tertiary)' }}>Amount</span>
+                          <div style={{ color: 'var(--admin-text-primary)', fontWeight: 500 }}>
+                            ₹{planDetails.subscription.amount?.toLocaleString('en-IN')}
+                            {planDetails.subscription.finalAmount !== planDetails.subscription.amount && (
+                              <span style={{ color: 'var(--admin-text-secondary)', fontSize: '0.8rem' }}> (Final: ₹{planDetails.subscription.finalAmount?.toLocaleString('en-IN')})</span>
+                            )}
+                          </div>
+                        </div>
+                        <div>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--admin-text-tertiary)' }}>Auto-Renew</span>
+                          <div style={{ color: 'var(--admin-text-primary)' }}>{planDetails.subscription.autoRenew ? 'Yes' : 'No'}</div>
+                        </div>
+                        <div>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--admin-text-tertiary)' }}>Autopay</span>
+                          <div style={{ color: 'var(--admin-text-primary)' }}>{planDetails.subscription.autopayEnabled ? 'Enabled' : 'Disabled'}</div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : planDetails?.planType === 'commission' && planDetails.commission ? (
+                    <div style={{ background: 'var(--admin-bg-secondary)', borderRadius: '8px', padding: '1rem', marginBottom: '1rem', border: '1px solid #ccfbf1' }}>
+                      <h4 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#0d9488', marginBottom: '0.75rem' }}>
+                        Commission Details
+                      </h4>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem 1.5rem' }}>
+                        <div>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--admin-text-tertiary)' }}>Plan</span>
+                          <div style={{ fontWeight: 500, color: 'var(--admin-text-primary)' }}>{planDetails.commission.planName || '-'}</div>
+                        </div>
+                        <div>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--admin-text-tertiary)' }}>Commission Rate</span>
+                          <div style={{ fontWeight: 500, color: 'var(--admin-text-primary)' }}>
+                            {planDetails.commission.commissionType === 'percentage'
+                              ? `${planDetails.commission.commissionValue}% per order`
+                              : `₹${planDetails.commission.commissionValue} fixed per order`}
+                          </div>
+                        </div>
+                        <div>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--admin-text-tertiary)' }}>Wallet Balance</span>
+                          <div style={{ fontWeight: 600, color: '#0d9488', fontSize: '1.1rem' }}>₹{planDetails.commission.walletBalance?.toLocaleString('en-IN')}</div>
+                        </div>
+                        <div>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--admin-text-tertiary)' }}>Wallet Status</span>
+                          <div>
+                            <span className={`badge ${planDetails.commission.walletStatus === 'active' ? 'green' : planDetails.commission.walletStatus === 'locked' ? 'red' : 'orange'}`}>
+                              {planDetails.commission.walletStatus}
+                            </span>
+                          </div>
+                        </div>
+                        <div>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--admin-text-tertiary)' }}>Total Charged</span>
+                          <div style={{ color: 'var(--admin-text-primary)' }}>₹{planDetails.commission.totalCharged?.toLocaleString('en-IN')}</div>
+                        </div>
+                        <div>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--admin-text-tertiary)' }}>Total Paid</span>
+                          <div style={{ color: 'var(--admin-text-primary)' }}>₹{planDetails.commission.totalPaid?.toLocaleString('en-IN')}</div>
+                        </div>
+                        <div>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--admin-text-tertiary)' }}>Total Orders</span>
+                          <div style={{ color: 'var(--admin-text-primary)' }}>{planDetails.commission.totalOrders}</div>
+                        </div>
+                        <div>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--admin-text-tertiary)' }}>Wallet Limit</span>
+                          <div style={{ color: 'var(--admin-text-primary)' }}>₹{planDetails.commission.walletLimit?.toLocaleString('en-IN')}</div>
+                        </div>
+                      </div>
+                      {(planDetails.commission.isLimitExceeded || planDetails.commission.walletStatus === 'locked') && (
+                        <div style={{ marginTop: '0.75rem', padding: '0.5rem 0.75rem', background: '#fef2f2', borderRadius: '6px', fontSize: '0.8rem', color: '#dc2626' }}>
+                          {planDetails.commission.isLimitExceeded ? 'Wallet limit exceeded.' : 'Wallet is locked.'}
+                          {planDetails.commission.graceExpiresAt && ` Grace period expires: ${new Date(planDetails.commission.graceExpiresAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}`}
+                        </div>
+                      )}
+                    </div>
+                  ) : null}
+
                   {/* Dates */}
-                  <div style={{ background: 'var(--admin-bg-secondary)', borderRadius: '8px', padding: '1rem' }}>
+                  <div style={{ background: 'var(--admin-bg-secondary)', borderRadius: '8px', padding: '1rem', marginBottom: '1rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <FiCalendar size={16} style={{ color: 'var(--admin-text-tertiary)' }} />
                       <span style={{ fontSize: '0.875rem', color: 'var(--admin-text-secondary)' }}>Registered:</span>
@@ -827,6 +983,73 @@ const DistributorsManagement: React.FC = () => {
                         {new Date(selectedDistributor.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
                       </span>
                     </div>
+                  </div>
+
+                  {/* Products Grid */}
+                  <div>
+                    <h4 style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--admin-text-secondary)', marginBottom: '0.75rem' }}>
+                      Listed Products ({detailsLoading ? '...' : distributorProducts.length})
+                    </h4>
+                    {detailsLoading ? (
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
+                        {[1, 2, 3].map((i) => (
+                          <div key={i} style={{ background: 'var(--admin-bg-secondary)', borderRadius: '8px', padding: '0.75rem', height: '80px', animation: 'pulse 1.5s ease-in-out infinite' }} />
+                        ))}
+                      </div>
+                    ) : distributorProducts.length > 0 ? (
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
+                        {distributorProducts.map((product) => (
+                          <div key={product._id} style={{
+                            background: 'var(--admin-bg-secondary)',
+                            borderRadius: '8px',
+                            padding: '0.75rem',
+                            display: 'flex',
+                            gap: '0.75rem',
+                            alignItems: 'center'
+                          }}>
+                            <div style={{
+                              width: '48px',
+                              height: '48px',
+                              borderRadius: '6px',
+                              overflow: 'hidden',
+                              flexShrink: 0,
+                              background: '#f3f4f6'
+                            }}>
+                              {product.images && product.images.length > 0 ? (
+                                <img
+                                  src={product.images[0]}
+                                  alt={product.name}
+                                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                />
+                              ) : (
+                                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                  <FiPackage size={20} style={{ color: '#d1d5db' }} />
+                                </div>
+                              )}
+                            </div>
+                            <div style={{ minWidth: 0, flex: 1 }}>
+                              <div style={{ fontWeight: 500, fontSize: '0.8rem', color: 'var(--admin-text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {product.name}
+                              </div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.25rem' }}>
+                                <span style={{ fontWeight: 600, fontSize: '0.8rem', color: 'var(--admin-success)' }}>₹{product.price?.toLocaleString('en-IN')}</span>
+                                <span style={{ fontSize: '0.7rem', color: product.stock > 0 ? 'var(--admin-text-tertiary)' : '#dc2626' }}>
+                                  {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
+                                </span>
+                              </div>
+                              <span className={`badge ${product.isActive ? 'green' : 'red'}`} style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', marginTop: '0.2rem' }}>
+                                {product.isActive ? 'Active' : 'Inactive'}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div style={{ background: 'var(--admin-bg-secondary)', borderRadius: '8px', padding: '2rem', textAlign: 'center' }}>
+                        <FiPackage size={32} style={{ color: '#d1d5db', marginBottom: '0.5rem' }} />
+                        <div style={{ color: 'var(--admin-text-tertiary)', fontSize: '0.875rem' }}>No products listed yet</div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
