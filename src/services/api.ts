@@ -13,11 +13,44 @@ const api = axios.create({
   timeout: 15000
 });
 
-// Remove token interceptor - cookies are sent automatically
+// Fetch client IP + location once from user's device, cache in memory
+let clientGeo: { ip: string; city: string; state: string; country: string } | null = null;
+let geoFetchAttempted = false;
+
+function fetchClientGeo() {
+  if (geoFetchAttempted || typeof window === 'undefined') return;
+  geoFetchAttempted = true;
+
+  // Using HTTPS API (ip-api.com free tier is HTTP only, blocked on HTTPS sites)
+  fetch('https://ipwho.is/')
+    .then(res => res.json())
+    .then(data => {
+      if (data.success !== false) {
+        clientGeo = {
+          ip: data.ip || '',
+          city: data.city || '',
+          state: data.region || '',
+          country: data.country || ''
+        };
+      }
+    })
+    .catch(() => {
+      // Silently fail - backend will fallback to server-side IP
+    });
+}
+
+// Trigger geo fetch on page load (runs on user's device/browser)
+fetchClientGeo();
+
+// Attach client geo headers to every request
 api.interceptors.request.use(
   (config) => {
-    // No need to manually add Authorization header
-    // Browser automatically sends httpOnly cookies
+    if (clientGeo) {
+      config.headers['x-client-real-ip'] = clientGeo.ip;
+      config.headers['x-client-city'] = clientGeo.city;
+      config.headers['x-client-state'] = clientGeo.state;
+      config.headers['x-client-country'] = clientGeo.country;
+    }
     return config;
   },
   (error) => {
