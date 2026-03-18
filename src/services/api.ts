@@ -105,6 +105,20 @@ api.interceptors.response.use(
       console.error('Request timeout:', error.config?.url);
     }
 
+    // Server down / network error — redirect to 500 page
+    if (!error.response && (error.code === 'ERR_NETWORK' || error.message === 'Network Error')) {
+      if (typeof window !== 'undefined' && window.location.pathname !== '/500') {
+        window.location.href = '/500';
+      }
+    }
+
+    // Server 500/502/503/504 errors
+    if (error.response?.status && error.response.status >= 500) {
+      if (typeof window !== 'undefined' && window.location.pathname !== '/500') {
+        console.error(`Server error ${error.response.status}:`, error.config?.url);
+      }
+    }
+
     if (error.response?.status === 401) {
       // Clear any client-side data
       if (typeof window !== 'undefined') {
