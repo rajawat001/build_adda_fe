@@ -170,7 +170,7 @@ const DistributorStatusPage = () => {
                         background: d.planType === 'subscription' ? '#dbeafe' : d.planType === 'commission' ? '#fef3c7' : '#f3f4f6',
                         color: d.planType === 'subscription' ? '#1d4ed8' : d.planType === 'commission' ? '#92400e' : '#6b7280'
                       }}>
-                        {d.planType === 'none' ? 'No Plan' : d.planType.charAt(0).toUpperCase() + d.planType.slice(1)}
+                        {!d.planType || d.planType === 'none' ? 'No Plan' : d.planType.charAt(0).toUpperCase() + d.planType.slice(1)}
                       </span>
                     </td>
                     <td style={{ padding: '0.875rem 1rem', textAlign: 'center' }}>
