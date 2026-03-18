@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import SEO from '../components/SEO';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import api from '../services/api';
 
 const aboutJsonLd = {
   '@context': 'https://schema.org',
@@ -44,6 +45,34 @@ const aboutJsonLd = {
 };
 
 const AboutPage: React.FC = () => {
+  const [platformStats, setPlatformStats] = useState({
+    totalCustomers: 0,
+    totalDistributors: 0,
+    totalProducts: 0,
+    citiesServed: 0
+  });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await api.get('/settings/platform-stats');
+        if (response.data.success) {
+          setPlatformStats(response.data.stats);
+        }
+      } catch (error) {
+        console.error('Failed to fetch platform stats:', error);
+      }
+    };
+    fetchStats();
+  }, []);
+
+  const formatStat = (value: number) => {
+    if (value >= 1000) {
+      return `${(value / 1000).toFixed(value >= 10000 ? 0 : 1)}K+`;
+    }
+    return `${value}+`;
+  };
+
   return (
     <>
       <SEO
@@ -117,19 +146,19 @@ const AboutPage: React.FC = () => {
               <h2>Our Impact</h2>
               <div className="stats-grid">
                 <div className="stat-card">
-                  <div className="stat-number">10,000+</div>
+                  <div className="stat-number">{formatStat(platformStats.totalCustomers)}</div>
                   <div className="stat-label">Happy Customers</div>
                 </div>
                 <div className="stat-card">
-                  <div className="stat-number">500+</div>
+                  <div className="stat-number">{formatStat(platformStats.totalDistributors)}</div>
                   <div className="stat-label">Verified Distributors</div>
                 </div>
                 <div className="stat-card">
-                  <div className="stat-number">5,000+</div>
+                  <div className="stat-number">{formatStat(platformStats.totalProducts)}</div>
                   <div className="stat-label">Quality Products</div>
                 </div>
                 <div className="stat-card">
-                  <div className="stat-number">50+</div>
+                  <div className="stat-number">{formatStat(platformStats.citiesServed)}</div>
                   <div className="stat-label">Cities Served</div>
                 </div>
               </div>

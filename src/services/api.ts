@@ -8,7 +8,9 @@ const api = axios.create({
     'Content-Type': 'application/json'
   },
   // CRITICAL FIX: Enable credentials to send httpOnly cookies
-  withCredentials: true
+  withCredentials: true,
+  // Timeout: 15 seconds for normal requests
+  timeout: 15000
 });
 
 // Remove token interceptor - cookies are sent automatically
@@ -26,6 +28,11 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Handle timeout errors
+    if (error.code === 'ECONNABORTED') {
+      console.error('Request timeout:', error.config?.url);
+    }
+
     if (error.response?.status === 401) {
       // Clear any client-side data
       if (typeof window !== 'undefined') {
@@ -49,6 +56,12 @@ api.interceptors.response.use(
         }
       }
     }
+
+    // Handle rate limiting
+    if (error.response?.status === 429) {
+      console.warn('Rate limited. Please wait before making more requests.');
+    }
+
     return Promise.reject(error);
   }
 );

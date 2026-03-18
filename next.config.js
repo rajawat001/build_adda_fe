@@ -143,6 +143,11 @@ const withPWA = require('next-pwa')({
 const nextConfig = {
   reactStrictMode: true,
 
+  // Tree-shake large packages for smaller bundles
+  experimental: {
+    optimizePackageImports: ['react-icons', 'date-fns', 'framer-motion', 'chart.js'],
+  },
+
   // Security headers
   async headers() {
     return [

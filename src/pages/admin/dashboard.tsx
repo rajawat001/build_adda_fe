@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import '../../utils/chartSetup';
 import AdminLayout from '../../components/admin/Layout';
 import StatCard from '../../components/admin/StatCard';
 import { Line, Doughnut, Bar } from 'react-chartjs-2';
@@ -11,17 +12,27 @@ import {
   FiTrendingUp,
   FiClock,
   FiAlertCircle,
-  FiCheckCircle
+  FiCheckCircle,
+  FiDelete,
+  FiLogIn,
+  FiLogOut,
+  FiSend,
+  FiUpload,
+  FiDownload
 } from 'react-icons/fi';
 import api from '../../services/api';
 import { formatDistanceToNow } from 'date-fns';
 
 interface DashboardStats {
   totalRevenue: number;
+  commissionRevenue: number;
+  subscriptionRevenue: number;
+  totalCombinedRevenue: number;
   totalOrders: number;
   totalUsers: number;
   totalDistributors: number;
   totalProducts: number;
+  totalSales: number;
   pendingOrders: number;
   lowStockProducts: number;
   pendingApprovals: number;
@@ -54,6 +65,45 @@ interface ActivityLog {
   createdAt: string;
 }
 
+const actionIconMap: Record<string, React.ReactElement> = {
+  create: <FiPackage />,
+  update: <FiTrendingUp />,
+  delete: <FiDelete />,
+  approve: <FiCheckCircle />,
+  reject: <FiAlertCircle />,
+  activate: <FiCheckCircle />,
+  deactivate: <FiAlertCircle />,
+  login: <FiLogIn />,
+  logout: <FiLogOut />,
+  send_email: <FiSend />,
+  export: <FiDownload />,
+  import: <FiUpload />,
+  bulk_action: <FiPackage />
+};
+
+const getActionIcon = (action: string) => {
+  return actionIconMap[action] || <FiAlertCircle />;
+};
+
+const getActionLabel = (action: string) => {
+  const labels: Record<string, string> = {
+    create: 'Created',
+    update: 'Updated',
+    delete: 'Deleted',
+    approve: 'Approved',
+    reject: 'Rejected',
+    activate: 'Activated',
+    deactivate: 'Deactivated',
+    login: 'Logged in',
+    logout: 'Logged out',
+    send_email: 'Sent email',
+    export: 'Exported',
+    import: 'Imported',
+    bulk_action: 'Bulk action'
+  };
+  return labels[action] || action;
+};
+
 const AdminDashboard = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
@@ -77,17 +127,10 @@ const AdminDashboard = () => {
         api.get('/admin/activity-logs?limit=10').catch(() => ({ data: { success: false, logs: [] } }))
       ]);
 
-      console.log('Dashboard API Responses:', {
-        stats: statsResponse.data,
-        analytics: analyticsResponse.data,
-        activity: activityResponse.data
-      });
-
       // Extract real stats from response
       const realStats = statsResponse.data.stats || statsResponse.data;
 
       // Use analytics data if available, otherwise use defaults
-      // Handle both response structures: analytics.analytics or analytics.stats
       const analytics = analyticsResponse?.data?.success
         ? (analyticsResponse.data.analytics || analyticsResponse.data.stats || {})
         : {};
@@ -117,52 +160,19 @@ const AdminDashboard = () => {
         }
       });
 
-      // Set real activity logs
-      if (activityResponse.data.success && activityResponse.data.logs) {
+      // Set real activity logs from API
+      if (activityResponse.data.success && activityResponse.data.logs && activityResponse.data.logs.length > 0) {
         const formattedLogs = activityResponse.data.logs.map((log: any) => ({
           _id: log._id,
-          adminName: log.admin?.name || 'Admin',
+          adminName: log.admin?.name || log.adminName || 'Admin',
           action: log.action,
           entity: log.entity,
-          description: `${log.action} ${log.entity} ${log.entityId || ''}`.trim(),
+          description: log.description || `${getActionLabel(log.action)} ${log.entity}${log.entityId ? ` #${log.entityId}` : ''}`,
           createdAt: log.timestamp || log.createdAt
         }));
         setActivityLogs(formattedLogs);
       } else {
         setActivityLogs([]);
-      }
-
-      // Fallback mock logs if API is not ready (temporary)
-      const fallbackMockActivityLogs: ActivityLog[] = [
-        {
-          _id: '1',
-          adminName: 'Admin User',
-          action: 'approve',
-          entity: 'distributor',
-          description: 'Approved distributor "ABC Materials"',
-          createdAt: new Date().toISOString()
-        },
-        {
-          _id: '2',
-          adminName: 'Admin User',
-          action: 'update',
-          entity: 'user',
-          description: 'Updated user "John Doe"',
-          createdAt: new Date(Date.now() - 3600000).toISOString()
-        },
-        {
-          _id: '3',
-          adminName: 'Admin User',
-          action: 'create',
-          entity: 'coupon',
-          description: 'Created coupon "SAVE20"',
-          createdAt: new Date(Date.now() - 7200000).toISOString()
-        }
-      ];
-
-      // Only use fallback if no real logs were fetched
-      if (activityLogs.length === 0) {
-        setActivityLogs(fallbackMockActivityLogs);
       }
 
     } catch (error) {
@@ -268,14 +278,6 @@ const AdminDashboard = () => {
       {/* KPI Stat Cards */}
       <div className="stat-cards-grid">
         <StatCard
-          title="Total Revenue"
-          value={`₹${stats?.totalRevenue?.toLocaleString('en-IN') || 0}`}
-          icon={FiDollarSign}
-          trend={{ value: stats?.trends.revenue || 0, isPositive: true }}
-          subtitle="vs last month"
-          variant="revenue"
-        />
-        <StatCard
           title="Total Orders"
           value={stats?.totalOrders || 0}
           icon={FiShoppingCart}
@@ -301,31 +303,148 @@ const AdminDashboard = () => {
         />
       </div>
 
-      {/* Quick Stats Row */}
-      <div className="admin-stat-grid">
-        <div className="stat-card products">
-          <div className="stat-card-header">
-            <div className="stat-card-icon products">
-              <FiPackage />
+      {/* Revenue & Sales Cards Row */}
+      <div className="admin-stat-grid" style={{ gridTemplateColumns: '1fr 1fr', marginBottom: '2rem' }}>
+        {/* Revenue Breakdown Card */}
+        <div className="chart-card" style={{ padding: '1.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
+            <div style={{
+              width: '48px',
+              height: '48px',
+              borderRadius: '12px',
+              background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'white',
+              fontSize: '1.25rem'
+            }}>
+              <FiDollarSign />
+            </div>
+            <div>
+              <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 600, color: '#2c3e50' }}>Revenue Overview</h3>
+              <p style={{ margin: 0, fontSize: '0.85rem', color: '#7f8c8d' }}>Commission + Subscription</p>
             </div>
           </div>
-          <div className="stat-card-title">Total Products</div>
-          <div className="stat-card-value">{stats?.totalProducts || 0}</div>
-          <div className="stat-card-footer">
-            <span className="stat-subtitle">{stats?.lowStockProducts || 0} low stock items</span>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {/* Commission Revenue */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '0.875rem 1rem',
+              background: '#f0fdf4',
+              borderRadius: '10px',
+              borderLeft: '4px solid #10b981'
+            }}>
+              <span style={{ fontSize: '0.9rem', fontWeight: 500, color: '#374151' }}>Commission Revenue</span>
+              <span style={{ fontSize: '1.1rem', fontWeight: 700, color: '#059669' }}>
+                ₹{(stats?.commissionRevenue || 0).toLocaleString('en-IN')}
+              </span>
+            </div>
+
+            {/* Subscription Revenue */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '0.875rem 1rem',
+              background: '#eff6ff',
+              borderRadius: '10px',
+              borderLeft: '4px solid #3b82f6'
+            }}>
+              <span style={{ fontSize: '0.9rem', fontWeight: 500, color: '#374151' }}>Subscription Revenue</span>
+              <span style={{ fontSize: '1.1rem', fontWeight: 700, color: '#2563eb' }}>
+                ₹{(stats?.subscriptionRevenue || 0).toLocaleString('en-IN')}
+              </span>
+            </div>
+
+            {/* Total Combined Revenue */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '1rem',
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              borderRadius: '10px',
+              color: 'white'
+            }}>
+              <span style={{ fontSize: '0.95rem', fontWeight: 600 }}>Total Revenue</span>
+              <span style={{ fontSize: '1.35rem', fontWeight: 700 }}>
+                ₹{(stats?.totalCombinedRevenue || 0).toLocaleString('en-IN')}
+              </span>
+            </div>
           </div>
         </div>
 
-        <div className="stat-card orders">
-          <div className="stat-card-header">
-            <div className="stat-card-icon orders">
-              <FiClock />
+        {/* Total Sales Card */}
+        <div className="chart-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
+            <div style={{
+              width: '48px',
+              height: '48px',
+              borderRadius: '12px',
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'white',
+              fontSize: '1.25rem'
+            }}>
+              <FiCheckCircle />
+            </div>
+            <div>
+              <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 600, color: '#2c3e50' }}>Total Sales</h3>
+              <p style={{ margin: 0, fontSize: '0.85rem', color: '#7f8c8d' }}>Delivered orders by distributors</p>
             </div>
           </div>
-          <div className="stat-card-title">Pending Orders</div>
-          <div className="stat-card-value">{stats?.pendingOrders || 0}</div>
-          <div className="stat-card-footer">
-            <span className="stat-subtitle">Requires attention</span>
+
+          <div style={{
+            textAlign: 'center',
+            padding: '2rem 1rem',
+            background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+            borderRadius: '12px'
+          }}>
+            <div style={{ fontSize: '3rem', fontWeight: 800, color: '#1e40af', lineHeight: 1 }}>
+              {(stats?.totalSales || 0).toLocaleString('en-IN')}
+            </div>
+            <div style={{ fontSize: '0.9rem', color: '#6b7280', marginTop: '0.5rem', fontWeight: 500 }}>
+              Orders Delivered
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+            <div style={{
+              flex: 1,
+              textAlign: 'center',
+              padding: '0.75rem',
+              background: '#fef3c7',
+              borderRadius: '8px'
+            }}>
+              <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#92400e' }}>{stats?.pendingOrders || 0}</div>
+              <div style={{ fontSize: '0.75rem', color: '#92400e' }}>Pending</div>
+            </div>
+            <div style={{
+              flex: 1,
+              textAlign: 'center',
+              padding: '0.75rem',
+              background: '#fce7f3',
+              borderRadius: '8px'
+            }}>
+              <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#9d174d' }}>{stats?.lowStockProducts || 0}</div>
+              <div style={{ fontSize: '0.75rem', color: '#9d174d' }}>Low Stock</div>
+            </div>
+            <div style={{
+              flex: 1,
+              textAlign: 'center',
+              padding: '0.75rem',
+              background: '#dbeafe',
+              borderRadius: '8px'
+            }}>
+              <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1e40af' }}>{stats?.totalProducts || 0}</div>
+              <div style={{ fontSize: '0.75rem', color: '#1e40af' }}>Products</div>
+            </div>
           </div>
         </div>
       </div>
@@ -372,26 +491,31 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* Recent Activity */}
+      {/* Recent Activity - Real Data */}
       <div className="data-table-wrapper">
         <div className="table-header">
           <h3 className="table-title">Recent Activity</h3>
         </div>
         <div style={{ padding: '1.5rem' }}>
-          {activityLogs.map((log) => (
-            <div key={log._id} className="admin-activity-item">
-              <div className="admin-activity-avatar">
-                {log.action === 'approve' && <FiCheckCircle />}
-                {log.action === 'update' && <FiTrendingUp />}
-                {log.action === 'create' && <FiPackage />}
-                {!['approve', 'update', 'create'].includes(log.action) && <FiAlertCircle />}
+          {activityLogs.length > 0 ? (
+            activityLogs.map((log) => (
+              <div key={log._id} className="admin-activity-item">
+                <div className="admin-activity-avatar">
+                  {getActionIcon(log.action)}
+                </div>
+                <div className="admin-activity-content">
+                  <p>{log.description}</p>
+                  <p>by {log.adminName} • {formatDistanceToNow(new Date(log.createdAt), { addSuffix: true })}</p>
+                </div>
               </div>
-              <div className="admin-activity-content">
-                <p>{log.description}</p>
-                <p>by {log.adminName} • {formatDistanceToNow(new Date(log.createdAt), { addSuffix: true })}</p>
-              </div>
+            ))
+          ) : (
+            <div style={{ textAlign: 'center', padding: '2rem', color: '#7f8c8d' }}>
+              <FiClock style={{ fontSize: '2rem', marginBottom: '0.5rem', display: 'block', margin: '0 auto 0.5rem' }} />
+              <p style={{ margin: 0, fontWeight: 500 }}>No recent activity</p>
+              <p style={{ margin: '0.25rem 0 0', fontSize: '0.875rem' }}>Activity logs will appear here as actions are performed</p>
             </div>
-          ))}
+          )}
         </div>
       </div>
     </AdminLayout>

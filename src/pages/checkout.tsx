@@ -401,13 +401,22 @@ export default function Checkout() {
   };
 
   const applyCoupon = async () => {
-    // Call API to validate coupon
-    // For now, mock implementation
-    if (formData.couponCode === 'SAVE10') {
-      setDiscount(getTotal() * 0.1);
-      alert('Coupon applied! 10% discount');
-    } else {
-      alert('Invalid coupon code');
+    if (!formData.couponCode.trim()) {
+      alert('Please enter a coupon code');
+      return;
+    }
+    try {
+      const response = await api.post('/orders/apply-coupon', {
+        couponCode: formData.couponCode,
+        totalAmount: getTotal()
+      });
+      if (response.data.success) {
+        setDiscount(response.data.discount);
+        alert(`Coupon applied! You saved ₹${response.data.discount.toLocaleString('en-IN')}`);
+      }
+    } catch (error: any) {
+      const msg = error.response?.data?.message || 'Invalid coupon code';
+      alert(msg);
     }
   };
 

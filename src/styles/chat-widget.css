@@ -1016,6 +1016,15 @@
   .cw-thread-reply-input {
     min-height: 42px;
   }
+
+  /* Move chat widget above product page sticky Buy Now bar */
+  body:has(.pdp-mobile-bottom-bar) .cw-toggle-btn {
+    bottom: calc(140px + env(safe-area-inset-bottom));
+  }
+
+  body:has(.pdp-mobile-bottom-bar) .cw-popup {
+    bottom: calc(200px + env(safe-area-inset-bottom));
+  }
 }
 
 /* Smaller phones */

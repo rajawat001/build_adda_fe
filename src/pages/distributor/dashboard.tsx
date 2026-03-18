@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import '../../utils/chartSetup';
 import { useRouter } from 'next/router';
 import DistributorLayout from '../../components/distributor/Layout';
 import OrderNotifications from '../../components/distributor/OrderNotifications';

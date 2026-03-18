@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { toast } from 'react-toastify';
 import api from '../services/api';
 import { isPushSupported, subscribeToPush, unsubscribeFromPush, isPushSubscribed } from '../services/push.service';
@@ -212,22 +212,6 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     }
   }, [playNotificationSound]);
 
-  // Generate mock notifications for demo
-  const generateMockNotifications = useCallback(() => {
-    const mockNotifications: Notification[] = [
-      {
-        _id: '1',
-        type: 'order_placed',
-        title: 'New Order Received',
-        message: 'Order #ORD-2024-001 has been placed',
-        orderNumber: 'ORD-2024-001',
-        read: false,
-        createdAt: new Date().toISOString(),
-      },
-    ];
-    setNotifications(mockNotifications);
-  }, []);
-
   // Show toast notification
   const showToastNotification = (notification: Notification) => {
     const icon = getNotificationIcon(notification.type);
@@ -349,15 +333,33 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     // Fetch immediately
     fetchNotifications();
 
-    // Poll every 30 seconds
+    // Poll every 60 seconds (reduced from 30s for better performance)
     pollingIntervalRef.current = setInterval(() => {
       fetchNotifications();
-    }, 30000);
+    }, 60000);
+
+    // Pause polling when tab is not visible, resume when visible
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current);
+          pollingIntervalRef.current = null;
+        }
+      } else {
+        fetchNotifications();
+        pollingIntervalRef.current = setInterval(() => {
+          fetchNotifications();
+        }, 60000);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
       }
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -365,20 +367,21 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
   // Calculate unread count
   const unreadCount = notifications.filter((n) => !n.read).length;
 
+  // Memoize context value to prevent unnecessary re-renders
+  const contextValue = useMemo(() => ({
+    notifications,
+    unreadCount,
+    playNotificationSound,
+    markAsRead,
+    markAllAsRead,
+    deleteNotification,
+    clearAllNotifications,
+    isNotificationEnabled,
+    enableNotifications,
+  }), [notifications, unreadCount, playNotificationSound, markAsRead, markAllAsRead, deleteNotification, clearAllNotifications, isNotificationEnabled, enableNotifications]);
+
   return (
-    <NotificationContext.Provider
-      value={{
-        notifications,
-        unreadCount,
-        playNotificationSound,
-        markAsRead,
-        markAllAsRead,
-        deleteNotification,
-        clearAllNotifications,
-        isNotificationEnabled,
-        enableNotifications,
-      }}
-    >
+    <NotificationContext.Provider value={contextValue}>
       {children}
     </NotificationContext.Provider>
   );

@@ -1,19 +1,14 @@
 import { useEffect } from 'react';
 import type { AppProps } from 'next/app';
 import Head from 'next/head';
+import dynamic from 'next/dynamic';
+import { useRouter } from 'next/router';
 import { GoogleOAuthProvider } from '@react-oauth/google';
-import '../utils/chartSetup';
 import { ThemeProvider } from '../contexts/ThemeContext';
-import { LocationProvider } from '../context/LocationContext';
-import { NotificationProvider } from '../contexts/NotificationContext';
-import { CartProvider } from '../context/CartContext';
-import { ToastProvider } from '../components/common/ToastContainer';
-import { ToastContainer } from 'react-toastify';
-import CartConflictModal from '../components/CartConflictModal';
-import ChatWidget from '../components/ChatWidget';
-import InstallPWA from '../components/common/InstallPWA';
+import ErrorBoundary from '../components/common/ErrorBoundary';
+
+// Global CSS imports (required in _app.tsx by Next.js)
 import 'react-toastify/dist/ReactToastify.css';
-import 'leaflet/dist/leaflet.css';
 import '../styles/globals.css';
 import '../styles/theme.css';
 import '../styles/home.css';
@@ -49,8 +44,38 @@ import '../styles/email-auth.css';
 import '../styles/mobile-cards.css';
 import '../styles/chat-widget.css';
 
+// Lazy load heavy JS components (not needed on initial render)
+const ChatWidget = dynamic(() => import('../components/ChatWidget'), {
+  ssr: false,
+  loading: () => null
+});
+
+const CartConflictModal = dynamic(() => import('../components/CartConflictModal'), {
+  ssr: false,
+  loading: () => null
+});
+
+const InstallPWA = dynamic(() => import('../components/common/InstallPWA'), {
+  ssr: false,
+  loading: () => null
+});
+
+const ToastContainer = dynamic(
+  () => import('react-toastify').then(mod => mod.ToastContainer),
+  { ssr: false }
+);
+
+// Contexts - lightweight, always needed
+import { LocationProvider } from '../context/LocationContext';
+import { NotificationProvider } from '../contexts/NotificationContext';
+import { CartProvider } from '../context/CartContext';
+import { ToastProvider } from '../components/common/ToastContainer';
+
 export default function App({ Component, pageProps }: AppProps) {
-  // PWA auto-update: reload page when a new service worker takes over
+  const router = useRouter();
+  const isAdminPage = router.pathname.startsWith('/admin');
+
+  // PWA auto-update
   useEffect(() => {
     if ('serviceWorker' in navigator) {
       let refreshing = false;
@@ -64,7 +89,6 @@ export default function App({ Component, pageProps }: AppProps) {
   }, []);
 
   // Clear stale service worker caches once per build version
-  // This removes cached SSR responses that may contain error/null data
   useEffect(() => {
     const CACHE_VERSION = 'v2';
     if (typeof window !== 'undefined' && 'caches' in window) {
@@ -80,8 +104,7 @@ export default function App({ Component, pageProps }: AppProps) {
     }
   }, []);
 
-  // Suppress DOM errors caused by browser extensions (Google Translate, Grammarly, etc.)
-  // that modify React-managed text nodes, causing removeChild/insertBefore failures
+  // Suppress DOM errors caused by browser extensions
   useEffect(() => {
     const handler = (event: ErrorEvent) => {
       if (
@@ -100,22 +123,16 @@ export default function App({ Component, pageProps }: AppProps) {
     <>
       <Head>
         <link rel="icon" href="/favicon.ico" />
-
-        {/* PWA Meta Tags */}
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#FF6B35" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="BuildAdda" />
-
-        {/* Apple Touch Icons */}
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
         <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png" />
         <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192x192.png" />
         <link rel="apple-touch-icon" sizes="167x167" href="/icons/icon-192x192.png" />
-
-        {/* Viewport */}
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes" />
       </Head>
       <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ''}>
@@ -124,11 +141,12 @@ export default function App({ Component, pageProps }: AppProps) {
             <NotificationProvider>
               <CartProvider>
                 <ToastProvider>
-                  {/* PWA Install Banner */}
                   <InstallPWA />
-                  <Component {...pageProps} />
+                  <ErrorBoundary>
+                    <Component {...pageProps} />
+                  </ErrorBoundary>
                   <CartConflictModal />
-                  <ChatWidget />
+                  {!isAdminPage && <ChatWidget />}
                   <ToastContainer
                     position="top-right"
                     autoClose={3000}
