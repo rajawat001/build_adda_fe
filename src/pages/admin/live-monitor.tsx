@@ -50,6 +50,8 @@ interface Visitor {
   deviceType: string;
   deviceVendor: string;
   deviceModel: string;
+  accessSource: string;
+  accessApp: string;
   userId: string | null;
   userType: string;
   userName: string;
@@ -142,6 +144,26 @@ const LiveMonitor = () => {
     if (pct < 50) return '#10b981';
     if (pct < 75) return '#f59e0b';
     return '#ef4444';
+  };
+
+  const getAccessBadge = (source: string, app: string) => {
+    const config: Record<string, { bg: string; color: string; icon: React.ReactNode }> = {
+      'browser': { bg: '#dbeafe', color: '#1e40af', icon: <FiGlobe size={12} /> },
+      'in-app': { bg: '#fef3c7', color: '#92400e', icon: <FiSmartphone size={12} /> },
+      'api-client': { bg: '#fce7f3', color: '#9d174d', icon: <FiServer size={12} /> },
+      'bot': { bg: '#f3f4f6', color: '#6b7280', icon: <FiCpu size={12} /> },
+      'unknown': { bg: '#f3f4f6', color: '#6b7280', icon: <FiMonitor size={12} /> }
+    };
+    const c = config[source] || config.unknown;
+    return (
+      <span style={{
+        display: 'inline-flex', alignItems: 'center', gap: '4px',
+        padding: '3px 8px', borderRadius: '12px', fontSize: '0.75rem',
+        fontWeight: 600, background: c.bg, color: c.color, whiteSpace: 'nowrap' as const
+      }}>
+        {c.icon} {app || source}
+      </span>
+    );
   };
 
   const getUserTypeBadge = (type: string) => {
@@ -376,6 +398,7 @@ const LiveMonitor = () => {
                 <th>City / State</th>
                 <th>Type</th>
                 <th>Name / Email</th>
+                <th>Access Via</th>
                 <th>Browser</th>
                 <th>OS</th>
                 <th>Device</th>
@@ -387,7 +410,7 @@ const LiveMonitor = () => {
             <tbody>
               {filteredVisitors.length === 0 ? (
                 <tr>
-                  <td colSpan={10} style={{ textAlign: 'center', padding: '2rem', color: '#9ca3af' }}>
+                  <td colSpan={11} style={{ textAlign: 'center', padding: '2rem', color: '#9ca3af' }}>
                     {data?.visitors.length === 0 ? 'No active visitors' : 'No visitors match the current filters'}
                   </td>
                 </tr>
@@ -418,6 +441,7 @@ const LiveMonitor = () => {
                         <span className="text-muted">Anonymous</span>
                       )}
                     </td>
+                    <td>{getAccessBadge(v.accessSource, v.accessApp)}</td>
                     <td><span className="text-sm">{v.browser}</span></td>
                     <td><span className="text-sm">{v.os}</span></td>
                     <td>
