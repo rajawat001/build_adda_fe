@@ -19,7 +19,8 @@ import {
   FiCreditCard,
   FiUserCheck,
   FiPercent,
-  FiDollarSign
+  FiDollarSign,
+  FiPower
 } from 'react-icons/fi';
 import { usePermissions } from '../../hooks/usePermissions';
 
@@ -35,6 +36,7 @@ const Sidebar = ({ onLogout }: SidebarProps) => {
     { icon: FiHome, label: 'Dashboard', path: '/admin/dashboard', permission: null },
     { icon: FiUsers, label: 'Users', path: '/admin/users', permission: 'users.view' },
     { icon: FiTruck, label: 'Distributors', path: '/admin/distributors', permission: 'distributors.view' },
+    { icon: FiPower, label: 'Dist. Status', path: '/admin/distributor-status', permission: 'distributors.view' },
     { icon: FiPackage, label: 'Products', path: '/admin/products', permission: 'products.view' },
     { icon: FiShoppingCart, label: 'Orders', path: '/admin/orders', permission: 'orders.view' },
     { icon: FiFolder, label: 'Categories', path: '/admin/categories', permission: 'categories.view' },

@@ -83,6 +83,8 @@ const DistributorLayout = ({ children, title = 'Distributor Panel' }: LayoutProp
   const [isApproved, setIsApproved] = useState(false);
   const [isWalletLocked, setIsWalletLocked] = useState(false);
   const [planType, setPlanType] = useState<string>('none');
+  const [isTempDisabled, setIsTempDisabled] = useState(false);
+  const [tempDisabledReason, setTempDisabledReason] = useState('');
 
   useEffect(() => {
     checkAuth();
@@ -115,6 +117,14 @@ const DistributorLayout = ({ children, title = 'Distributor Panel' }: LayoutProp
       setIsApproved(isUserApproved);
       setPlanType(userPlanType);
       setIsWalletLocked(userWalletLocked);
+
+      // Check if temporarily disabled
+      if (user?.tempDisabled) {
+        setIsTempDisabled(true);
+        setTempDisabledReason(user?.tempDisabledReason || '');
+        setCheckingSubscription(false);
+        return;
+      }
 
       // Commission plan distributors: approved via plan selection, no subscription needed
       if (userPlanType === 'commission' && isUserApproved) {
@@ -201,6 +211,116 @@ const DistributorLayout = ({ children, title = 'Distributor Panel' }: LayoutProp
             to { transform: rotate(360deg); }
           }
         `}</style>
+      </>
+    );
+  }
+
+  // Show disabled page if temporarily disabled by admin
+  if (isTempDisabled) {
+    return (
+      <>
+        <SEO title="Account Disabled" description="Your distributor account has been temporarily disabled" />
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '100vh',
+          background: 'linear-gradient(135deg, #f5f7fa 0%, #e4e8ee 100%)',
+          padding: '1rem'
+        }}>
+          <div style={{
+            textAlign: 'center',
+            maxWidth: '520px',
+            background: 'white',
+            borderRadius: '20px',
+            padding: '3rem 2rem',
+            boxShadow: '0 10px 40px rgba(0,0,0,0.08)'
+          }}>
+            <div style={{
+              width: '80px',
+              height: '80px',
+              borderRadius: '50%',
+              background: '#fef2f2',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 1.5rem',
+              fontSize: '2.5rem'
+            }}>
+              &#128683;
+            </div>
+            <h1 style={{
+              fontSize: '1.5rem',
+              fontWeight: 700,
+              color: '#1a202c',
+              marginBottom: '1rem',
+              lineHeight: 1.3
+            }}>
+              Account Temporarily Disabled
+            </h1>
+            <p style={{
+              color: '#4b5563',
+              fontSize: '1rem',
+              lineHeight: 1.7,
+              marginBottom: '0.5rem'
+            }}>
+              Your distributor account has been temporarily disabled by the administrator. This may be because you have not been active for a while or have not added any products recently.
+            </p>
+            {tempDisabledReason && (
+              <div style={{
+                background: '#fef3c7',
+                borderRadius: '10px',
+                padding: '0.875rem 1.25rem',
+                margin: '1rem 0',
+                textAlign: 'left'
+              }}>
+                <strong style={{ color: '#92400e', fontSize: '0.875rem' }}>Reason:</strong>
+                <p style={{ color: '#78350f', margin: '0.25rem 0 0', fontSize: '0.9rem' }}>{tempDisabledReason}</p>
+              </div>
+            )}
+            <p style={{
+              color: '#6b7280',
+              fontSize: '0.9rem',
+              lineHeight: 1.6,
+              marginTop: '1rem'
+            }}>
+              To get your account re-enabled, please contact our support team. We will be happy to assist you.
+            </p>
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', marginTop: '1.5rem', flexWrap: 'wrap' }}>
+              <a
+                href="mailto:contact@buildadda.in"
+                style={{
+                  padding: '0.75rem 1.75rem',
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '10px',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  fontSize: '0.95rem',
+                  textDecoration: 'none'
+                }}
+              >
+                Contact Support
+              </a>
+              <button
+                onClick={handleLogout}
+                style={{
+                  padding: '0.75rem 1.75rem',
+                  background: 'white',
+                  color: '#6b7280',
+                  border: '2px solid #e5e7eb',
+                  borderRadius: '10px',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  fontSize: '0.95rem'
+                }}
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
       </>
     );
   }
