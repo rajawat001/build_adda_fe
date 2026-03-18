@@ -13,6 +13,7 @@ import {
   FiMessageSquare,
   FiStar,
   FiActivity,
+  FiMonitor,
   FiSettings,
   FiLogOut,
   FiTruck,
@@ -50,6 +51,7 @@ const Sidebar = ({ onLogout }: SidebarProps) => {
     { icon: FiStar, label: 'Reviews', path: '/admin/reviews', permission: 'reviews.view' },
     { icon: FiMessageSquare, label: 'Messages', path: '/admin/contacts', permission: 'contacts.view' },
     { icon: FiActivity, label: 'Activity Logs', path: '/admin/activity-logs', permission: 'activityLogs.view' },
+    { icon: FiMonitor, label: 'Live Monitor', path: '/admin/live-monitor', permission: 'settings.view' },
     { icon: FiSettings, label: 'Settings', path: '/admin/settings', permission: 'settings.view' },
   ];
 
