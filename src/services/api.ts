@@ -21,22 +21,61 @@ function fetchClientGeo() {
   if (geoFetchAttempted || typeof window === 'undefined') return;
   geoFetchAttempted = true;
 
-  // Using HTTPS API (ip-api.com free tier is HTTP only, blocked on HTTPS sites)
-  fetch('https://ipwho.is/')
-    .then(res => res.json())
-    .then(data => {
-      if (data.success !== false) {
-        clientGeo = {
-          ip: data.ip || '',
-          city: data.city || '',
-          state: data.region || '',
-          country: data.country || ''
-        };
+  // Try multiple free HTTPS geo APIs with fallback chain
+  fetchFromApis([
+    {
+      url: 'https://freeipapi.com/api/json',
+      parse: (data: any) => ({
+        ip: data.ipAddress || '',
+        city: data.cityName || '',
+        state: data.regionName || '',
+        country: data.countryName || ''
+      }),
+      isValid: (data: any) => !!data.ipAddress
+    },
+    {
+      url: 'https://ipapi.co/json/',
+      parse: (data: any) => ({
+        ip: data.ip || '',
+        city: data.city || '',
+        state: data.region || '',
+        country: data.country_name || ''
+      }),
+      isValid: (data: any) => !data.error && !!data.ip
+    },
+    {
+      url: 'https://api.db-ip.com/v2/free/self',
+      parse: (data: any) => ({
+        ip: data.ipAddress || '',
+        city: data.city || '',
+        state: data.stateProv || '',
+        country: data.countryName || ''
+      }),
+      isValid: (data: any) => !!data.ipAddress
+    }
+  ]);
+}
+
+interface GeoProvider {
+  url: string;
+  parse: (data: any) => { ip: string; city: string; state: string; country: string };
+  isValid: (data: any) => boolean;
+}
+
+async function fetchFromApis(providers: GeoProvider[]) {
+  for (const provider of providers) {
+    try {
+      const res = await fetch(provider.url, { signal: AbortSignal.timeout(5000) });
+      if (!res.ok) continue;
+      const data = await res.json();
+      if (provider.isValid(data)) {
+        clientGeo = provider.parse(data);
+        return; // Success, stop trying
       }
-    })
-    .catch(() => {
-      // Silently fail - backend will fallback to server-side IP
-    });
+    } catch {
+      // Try next provider
+    }
+  }
 }
 
 // Trigger geo fetch on page load (runs on user's device/browser)
