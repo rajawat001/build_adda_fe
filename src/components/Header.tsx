@@ -227,6 +227,12 @@ export default function Header() {
   const categoryCache = useRef<Record<string, any>>({});
   const [categoryProducts, setCategoryProducts] = useState<Record<string, any>>({});
 
+  // Clear category cache when user location changes so products refresh for new location
+  useEffect(() => {
+    categoryCache.current = {};
+    setCategoryProducts({});
+  }, [userLocation?.city, userLocation?.pincode]);
+
   const handleCategoryHover = useCallback(async (categoryId: string) => {
     setActiveCategory(categoryId);
 
@@ -237,7 +243,10 @@ export default function Header() {
 
     setMegaMenuLoading(true);
     try {
-      const data = await getProductsByCategory(categoryId);
+      const data = await getProductsByCategory(categoryId, {
+        city: userLocation?.city,
+        pincode: userLocation?.pincode,
+      });
       const products = Array.isArray(data) ? data : data.products || [];
       const grouped: Record<string, { distributorId: string; distributorSlug: string; businessName: string; city: string; products: any[] }> = {};
 
@@ -270,7 +279,7 @@ export default function Header() {
     } finally {
       setMegaMenuLoading(false);
     }
-  }, []);
+  }, [userLocation?.city, userLocation?.pincode]);
 
   const handleMegaMenuOpen = useCallback(() => {
     setShowCategoryMenu(true);

@@ -377,7 +377,8 @@ export default function ProductDetail({ ssrMeta, ssrProduct }: { ssrMeta: SSRPro
       const categoryId = typeof ssrProduct.category === 'string'
         ? ssrProduct.category
         : ssrProduct.category?._id;
-      if (categoryId) fetchRelatedProducts(categoryId);
+      const ssrDist = typeof ssrProduct.distributor === 'object' ? ssrProduct.distributor : null;
+      if (categoryId) fetchRelatedProducts(categoryId, { city: ssrDist?.city, pincode: ssrDist?.pincode });
     } else {
       // No SSR data — show loading skeleton
       setProduct(null);
@@ -419,7 +420,8 @@ export default function ProductDetail({ ssrMeta, ssrProduct }: { ssrMeta: SSRPro
         const categoryId = typeof productData.category === 'string'
           ? productData.category
           : productData.category._id;
-        fetchRelatedProducts(categoryId);
+        const dist = typeof productData.distributor === 'object' ? productData.distributor : null;
+        fetchRelatedProducts(categoryId, { city: dist?.city, pincode: dist?.pincode });
       }
     } catch (err: any) {
       // Don't override existing SSR product data on client-side fetch error
@@ -439,9 +441,15 @@ export default function ProductDetail({ ssrMeta, ssrProduct }: { ssrMeta: SSRPro
     }
   };
 
-  const fetchRelatedProducts = async (categoryId: string) => {
+  const fetchRelatedProducts = async (categoryId: string, distributorInfo?: { city?: string; pincode?: string }) => {
     try {
-      const response = await productService.getProductsByCategory(categoryId);
+      const currentProductId = typeof id === 'string' ? id : undefined;
+      const response = await productService.getProductsByCategory(categoryId, {
+        city: distributorInfo?.city,
+        pincode: distributorInfo?.pincode,
+        exclude: currentProductId,
+        limit: 8,
+      });
       let products: Product[] = [];
       if (Array.isArray(response)) products = response;
       else if (response.products) products = response.products;

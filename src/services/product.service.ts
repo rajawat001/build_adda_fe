@@ -20,8 +20,8 @@ export const getProductsByDistributor = async (distributorId: string) => {
   return response.data;
 };
 
-export const getProductsByCategory = async (category: string) => {
-  const response = await api.get(`/products/category/${category}`);
+export const getProductsByCategory = async (category: string, params?: { city?: string; pincode?: string; exclude?: string; limit?: number }) => {
+  const response = await api.get(`/products/category/${category}`, { params });
   return response.data;
 };
 

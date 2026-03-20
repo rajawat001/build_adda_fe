@@ -15,6 +15,7 @@ export interface Product {
     businessName: string;
     city?: string;
     state?: string;
+    pincode?: string;
   };
   stock: number;
   unit?: string;
