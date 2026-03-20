@@ -25,3 +25,9 @@ export {
   useSwipeGesture,
   useDragToClose,
 } from './useSwipeGesture';
+
+// Admin Table Hooks
+export {
+  useConfirmDialog,
+  useTableState,
+} from './useAdminTable';

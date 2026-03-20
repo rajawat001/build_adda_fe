@@ -5,6 +5,7 @@ import StatCard from '../../components/admin/StatCard';
 import ConfirmDialog from '../../components/admin/ConfirmDialog';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../services/api';
+import { useConfirmDialog } from '../../hooks/useAdminTable';
 
 interface EmailTemplate {
   _id: string;
@@ -56,19 +57,7 @@ const EmailTemplatesManagement: React.FC = () => {
     isActive: true
   });
   const [testEmail, setTestEmail] = useState('');
-  const [confirmDialog, setConfirmDialog] = useState<{
-    isOpen: boolean;
-    title: string;
-    message: string;
-    variant: 'danger' | 'warning' | 'info';
-    onConfirm: () => void;
-  }>({
-    isOpen: false,
-    title: '',
-    message: '',
-    variant: 'danger',
-    onConfirm: () => {}
-  });
+  const { confirmDialog, showConfirm, hideConfirm } = useConfirmDialog();
   const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
@@ -151,8 +140,7 @@ const EmailTemplatesManagement: React.FC = () => {
   };
 
   const handleDeleteTemplate = (template: EmailTemplate) => {
-    setConfirmDialog({
-      isOpen: true,
+    showConfirm({
       title: 'Delete Email Template',
       message: `Are you sure you want to delete "${template.name}"? This action cannot be undone.`,
       variant: 'danger',
@@ -167,7 +155,7 @@ const EmailTemplatesManagement: React.FC = () => {
           console.error('Delete failed:', error);
         } finally {
           setActionLoading(false);
-          setConfirmDialog({ ...confirmDialog, isOpen: false });
+          hideConfirm();
         }
       }
     });
@@ -604,7 +592,7 @@ const EmailTemplatesManagement: React.FC = () => {
           message={confirmDialog.message}
           variant={confirmDialog.variant}
           onConfirm={confirmDialog.onConfirm}
-          onCancel={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
+          onCancel={hideConfirm}
           loading={actionLoading}
         />
       </div>

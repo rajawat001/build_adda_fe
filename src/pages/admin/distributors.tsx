@@ -11,6 +11,7 @@ import ConfirmDialog from '../../components/admin/ConfirmDialog';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../services/api';
 import { getApiErrorMessage } from '../../utils/api-error';
+import { useConfirmDialog, useTableState } from '../../hooks/useAdminTable';
 
 interface Distributor {
   _id: string;
@@ -71,26 +72,9 @@ const DistributorsManagement: React.FC = () => {
     trend: 0
   });
   const [loading, setLoading] = useState(true);
-  const [selectedDistributors, setSelectedDistributors] = useState<string[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
-  const [filters, setFilters] = useState<Record<string, any>>({});
-  const [searchTerm, setSearchTerm] = useState('');
+  const { confirmDialog, showConfirm, hideConfirm } = useConfirmDialog();
+  const { searchTerm, setSearchTerm, filters, setFilters, currentPage, setCurrentPage, totalPages, setTotalPages, totalItems, setTotalItems, selectedItems: selectedDistributors, setSelectedItems: setSelectedDistributors, clearSelection } = useTableState();
   const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'approved'>('all');
-  const [confirmDialog, setConfirmDialog] = useState<{
-    isOpen: boolean;
-    title: string;
-    message: string;
-    variant: 'danger' | 'warning' | 'info';
-    onConfirm: () => void;
-  }>({
-    isOpen: false,
-    title: '',
-    message: '',
-    variant: 'danger',
-    onConfirm: () => {}
-  });
   const [actionLoading, setActionLoading] = useState(false);
 
   // View & Edit Modal States
@@ -183,8 +167,7 @@ const DistributorsManagement: React.FC = () => {
   };
 
   const handleBulkApprove = () => {
-    setConfirmDialog({
-      isOpen: true,
+    showConfirm({
       title: 'Approve Distributors',
       message: `Are you sure you want to approve ${selectedDistributors.length} selected distributor(s)?`,
       variant: 'info',
@@ -202,15 +185,14 @@ const DistributorsManagement: React.FC = () => {
           console.error('Bulk approve failed:', error);
         } finally {
           setActionLoading(false);
-          setConfirmDialog({ ...confirmDialog, isOpen: false });
+          hideConfirm();
         }
       }
     });
   };
 
   const handleBulkReject = () => {
-    setConfirmDialog({
-      isOpen: true,
+    showConfirm({
       title: 'Reject Distributors',
       message: `Are you sure you want to reject ${selectedDistributors.length} selected distributor(s)?`,
       variant: 'warning',
@@ -228,15 +210,14 @@ const DistributorsManagement: React.FC = () => {
           console.error('Bulk reject failed:', error);
         } finally {
           setActionLoading(false);
-          setConfirmDialog({ ...confirmDialog, isOpen: false });
+          hideConfirm();
         }
       }
     });
   };
 
   const handleBulkDelete = () => {
-    setConfirmDialog({
-      isOpen: true,
+    showConfirm({
       title: 'Delete Distributors',
       message: `Are you sure you want to permanently delete ${selectedDistributors.length} selected distributor(s)? This action cannot be undone.`,
       variant: 'danger',
@@ -254,7 +235,7 @@ const DistributorsManagement: React.FC = () => {
           console.error('Bulk delete failed:', error);
         } finally {
           setActionLoading(false);
-          setConfirmDialog({ ...confirmDialog, isOpen: false });
+          hideConfirm();
         }
       }
     });
@@ -476,8 +457,7 @@ const DistributorsManagement: React.FC = () => {
   ];
 
   const handleApproveDistributor = (distributorId: string) => {
-    setConfirmDialog({
-      isOpen: true,
+    showConfirm({
       title: 'Approve Distributor',
       message: 'Are you sure you want to approve this distributor?',
       variant: 'info',
@@ -492,15 +472,14 @@ const DistributorsManagement: React.FC = () => {
           console.error('Approve failed:', error);
         } finally {
           setActionLoading(false);
-          setConfirmDialog({ ...confirmDialog, isOpen: false });
+          hideConfirm();
         }
       }
     });
   };
 
   const handleRejectDistributor = (distributorId: string) => {
-    setConfirmDialog({
-      isOpen: true,
+    showConfirm({
       title: 'Reject Distributor',
       message: 'Are you sure you want to reject this distributor application?',
       variant: 'warning',
@@ -518,7 +497,7 @@ const DistributorsManagement: React.FC = () => {
           console.error('Reject failed:', error);
         } finally {
           setActionLoading(false);
-          setConfirmDialog({ ...confirmDialog, isOpen: false });
+          hideConfirm();
         }
       }
     });
@@ -1278,7 +1257,7 @@ const DistributorsManagement: React.FC = () => {
           message={confirmDialog.message}
           variant={confirmDialog.variant}
           onConfirm={confirmDialog.onConfirm}
-          onCancel={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
+          onCancel={hideConfirm}
           loading={actionLoading}
         />
       </div>

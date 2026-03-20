@@ -19,6 +19,7 @@ import ConfirmDialog from '../../components/admin/ConfirmDialog';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../services/api';
 import { getApiErrorMessage } from '../../utils/api-error';
+import { useConfirmDialog } from '../../hooks/useAdminTable';
 
 interface SubscriptionPlan {
   _id: string;
@@ -86,19 +87,7 @@ const SubscriptionPlansManagement: React.FC = () => {
     description: '',
     isActive: true
   });
-  const [confirmDialog, setConfirmDialog] = useState<{
-    isOpen: boolean;
-    title: string;
-    message: string;
-    variant: 'danger' | 'warning' | 'info';
-    onConfirm: () => void;
-  }>({
-    isOpen: false,
-    title: '',
-    message: '',
-    variant: 'danger',
-    onConfirm: () => {}
-  });
+  const { confirmDialog, showConfirm, hideConfirm } = useConfirmDialog();
   const [actionLoading, setActionLoading] = useState(false);
 
   // Extend subscription modal
@@ -185,8 +174,7 @@ const SubscriptionPlansManagement: React.FC = () => {
   };
 
   const handleDeletePlan = (plan: SubscriptionPlan) => {
-    setConfirmDialog({
-      isOpen: true,
+    showConfirm({
       title: 'Delete Plan',
       message: `Are you sure you want to delete the "${plan.name}" plan? This action cannot be undone.`,
       variant: 'danger',
@@ -200,7 +188,7 @@ const SubscriptionPlansManagement: React.FC = () => {
           alert(getApiErrorMessage(error, 'Failed to delete plan'));
         } finally {
           setActionLoading(false);
-          setConfirmDialog({ ...confirmDialog, isOpen: false });
+          hideConfirm();
         }
       }
     });
@@ -237,8 +225,7 @@ const SubscriptionPlansManagement: React.FC = () => {
   };
 
   const handleCancelSubscription = (subscription: Subscription) => {
-    setConfirmDialog({
-      isOpen: true,
+    showConfirm({
       title: 'Cancel Subscription',
       message: `Are you sure you want to cancel the subscription for "${subscription.distributor?.businessName}"?`,
       variant: 'warning',
@@ -254,7 +241,7 @@ const SubscriptionPlansManagement: React.FC = () => {
           alert(getApiErrorMessage(error, 'Failed to cancel subscription'));
         } finally {
           setActionLoading(false);
-          setConfirmDialog({ ...confirmDialog, isOpen: false });
+          hideConfirm();
         }
       }
     });
@@ -810,7 +797,7 @@ const SubscriptionPlansManagement: React.FC = () => {
           message={confirmDialog.message}
           variant={confirmDialog.variant}
           onConfirm={confirmDialog.onConfirm}
-          onCancel={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
+          onCancel={hideConfirm}
           loading={actionLoading}
         />
       </div>

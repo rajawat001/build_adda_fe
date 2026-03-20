@@ -8,6 +8,7 @@ import ConfirmDialog from '../../components/admin/ConfirmDialog';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../services/api';
 import { getApiErrorMessage } from '../../utils/api-error';
+import { useConfirmDialog, useTableState } from '../../hooks/useAdminTable';
 
 interface ThreadMessage {
   _id: string;
@@ -59,11 +60,8 @@ const ContactsManagement: React.FC = () => {
   const [contacts, setContacts] = useState<ContactThread[]>([]);
   const [stats, setStats] = useState<ContactStats>({ total: 0, new: 0, read: 0, replied: 0, closed: 0 });
   const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
-  const [filters, setFilters] = useState<Record<string, any>>({});
-  const [searchTerm, setSearchTerm] = useState('');
+  const { confirmDialog, showConfirm, hideConfirm } = useConfirmDialog();
+  const { searchTerm, setSearchTerm, filters, setFilters, currentPage, setCurrentPage, totalPages, setTotalPages, totalItems, setTotalItems } = useTableState();
   const [activeTab, setActiveTab] = useState<'all' | 'new' | 'read' | 'replied' | 'closed'>('all');
   const [selectedThread, setSelectedThread] = useState<ContactThread | null>(null);
   const [showChatModal, setShowChatModal] = useState(false);
@@ -72,19 +70,6 @@ const ContactsManagement: React.FC = () => {
   const [replyError, setReplyError] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
-  const [confirmDialog, setConfirmDialog] = useState<{
-    isOpen: boolean;
-    title: string;
-    message: string;
-    variant: 'danger' | 'warning' | 'info';
-    onConfirm: () => void;
-  }>({
-    isOpen: false,
-    title: '',
-    message: '',
-    variant: 'danger',
-    onConfirm: () => {}
-  });
 
   useEffect(() => {
     fetchContacts();
@@ -183,8 +168,7 @@ const ContactsManagement: React.FC = () => {
   };
 
   const handleDeleteThread = (threadId: string) => {
-    setConfirmDialog({
-      isOpen: true,
+    showConfirm({
       title: 'Delete Conversation',
       message: 'Are you sure you want to permanently delete this entire conversation?',
       variant: 'danger',
@@ -202,7 +186,7 @@ const ContactsManagement: React.FC = () => {
           console.error('Delete failed:', error);
         } finally {
           setActionLoading(false);
-          setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+          hideConfirm();
         }
       }
     });
@@ -636,7 +620,7 @@ const ContactsManagement: React.FC = () => {
           message={confirmDialog.message}
           variant={confirmDialog.variant}
           onConfirm={confirmDialog.onConfirm}
-          onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+          onCancel={hideConfirm}
           loading={actionLoading}
         />
       </div>

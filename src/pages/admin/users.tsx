@@ -11,6 +11,7 @@ import ConfirmDialog from '../../components/admin/ConfirmDialog';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../services/api';
 import { getApiErrorMessage } from '../../utils/api-error';
+import { useConfirmDialog, useTableState } from '../../hooks/useAdminTable';
 
 interface User {
   _id: string;
@@ -53,25 +54,8 @@ const UsersManagement: React.FC = () => {
     trend: 0
   });
   const [loading, setLoading] = useState(true);
-  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
-  const [filters, setFilters] = useState<Record<string, any>>({});
-  const [searchTerm, setSearchTerm] = useState('');
-  const [confirmDialog, setConfirmDialog] = useState<{
-    isOpen: boolean;
-    title: string;
-    message: string;
-    variant: 'danger' | 'warning' | 'info';
-    onConfirm: () => void;
-  }>({
-    isOpen: false,
-    title: '',
-    message: '',
-    variant: 'danger',
-    onConfirm: () => {}
-  });
+  const { confirmDialog, showConfirm, hideConfirm } = useConfirmDialog();
+  const { searchTerm, setSearchTerm, filters, setFilters, currentPage, setCurrentPage, totalPages, setTotalPages, totalItems, setTotalItems, selectedItems: selectedUsers, setSelectedItems: setSelectedUsers, clearSelection } = useTableState();
   const [actionLoading, setActionLoading] = useState(false);
 
   // View & Edit Modal States
@@ -108,10 +92,12 @@ const UsersManagement: React.FC = () => {
       });
 
       const response = await api.get(`/admin/users?${queryParams}`);
-
-      setUsers(response.data.users || []);
-      setTotalPages(response.data.pagination?.pages || 1);
-      setTotalItems(response.data.pagination?.total || 0);
+      // Interceptor unwraps standardized format; use meta for pagination
+      const data = response.data;
+      setUsers(data?.users || data || []);
+      const meta = (response as any).meta;
+      setTotalPages(meta?.totalPages || data?.pagination?.pages || 1);
+      setTotalItems(meta?.total || data?.pagination?.total || 0);
     } catch (error) {
       console.error('Error fetching users:', error);
     } finally {
@@ -123,7 +109,7 @@ const UsersManagement: React.FC = () => {
     try {
       const response = await api.get('/admin/users/stats');
       const data = response.data;
-      setStats(data.stats || stats);
+      setStats(data?.stats || data || stats);
     } catch (error) {
       console.error('Error fetching stats:', error);
     }
@@ -157,8 +143,7 @@ const UsersManagement: React.FC = () => {
   };
 
   const handleBulkActivate = () => {
-    setConfirmDialog({
-      isOpen: true,
+    showConfirm({
       title: 'Activate Users',
       message: `Are you sure you want to activate ${selectedUsers.length} selected user(s)?`,
       variant: 'info',
@@ -171,20 +156,19 @@ const UsersManagement: React.FC = () => {
 
           await fetchUsers();
           await fetchStats();
-          setSelectedUsers([]);
+          clearSelection();
         } catch (error) {
           console.error('Bulk activate failed:', error);
         } finally {
           setActionLoading(false);
-          setConfirmDialog({ ...confirmDialog, isOpen: false });
+          hideConfirm();
         }
       }
     });
   };
 
   const handleBulkDeactivate = () => {
-    setConfirmDialog({
-      isOpen: true,
+    showConfirm({
       title: 'Deactivate Users',
       message: `Are you sure you want to deactivate ${selectedUsers.length} selected user(s)? They will not be able to log in.`,
       variant: 'warning',
@@ -197,20 +181,19 @@ const UsersManagement: React.FC = () => {
 
           await fetchUsers();
           await fetchStats();
-          setSelectedUsers([]);
+          clearSelection();
         } catch (error) {
           console.error('Bulk deactivate failed:', error);
         } finally {
           setActionLoading(false);
-          setConfirmDialog({ ...confirmDialog, isOpen: false });
+          hideConfirm();
         }
       }
     });
   };
 
   const handleBulkDelete = () => {
-    setConfirmDialog({
-      isOpen: true,
+    showConfirm({
       title: 'Delete Users',
       message: `Are you sure you want to permanently delete ${selectedUsers.length} selected user(s)? This action cannot be undone.`,
       variant: 'danger',
@@ -223,12 +206,12 @@ const UsersManagement: React.FC = () => {
 
           await fetchUsers();
           await fetchStats();
-          setSelectedUsers([]);
+          clearSelection();
         } catch (error) {
           console.error('Bulk delete failed:', error);
         } finally {
           setActionLoading(false);
-          setConfirmDialog({ ...confirmDialog, isOpen: false });
+          hideConfirm();
         }
       }
     });
@@ -490,8 +473,7 @@ const UsersManagement: React.FC = () => {
   };
 
   const handleDeleteUser = (userId: string) => {
-    setConfirmDialog({
-      isOpen: true,
+    showConfirm({
       title: 'Delete User',
       message: 'Are you sure you want to delete this user? This action cannot be undone.',
       variant: 'danger',
@@ -506,7 +488,7 @@ const UsersManagement: React.FC = () => {
           console.error('Delete failed:', error);
         } finally {
           setActionLoading(false);
-          setConfirmDialog({ ...confirmDialog, isOpen: false });
+          hideConfirm();
         }
       }
     });
@@ -885,7 +867,7 @@ const UsersManagement: React.FC = () => {
           message={confirmDialog.message}
           variant={confirmDialog.variant}
           onConfirm={confirmDialog.onConfirm}
-          onCancel={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
+          onCancel={hideConfirm}
           loading={actionLoading}
         />
       </div>

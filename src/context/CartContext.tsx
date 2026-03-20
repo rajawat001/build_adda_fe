@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef, ReactNode } from 'react';
 import { toast } from 'react-toastify';
 
 // Types
@@ -56,12 +56,10 @@ const getStoredCart = (): CartItem[] => {
   }
 };
 
-// Helper to save cart to localStorage
-const saveCart = (cart: CartItem[]) => {
+// Helper to save cart to localStorage (used for immediate saves like on replace)
+const saveCartImmediate = (cart: CartItem[]) => {
   if (typeof window === 'undefined') return;
   localStorage.setItem('cart', JSON.stringify(cart));
-  // Dispatch event to update header cart count
-  window.dispatchEvent(new Event('storage'));
 };
 
 export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -69,10 +67,32 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [isCartConflictOpen, setIsCartConflictOpen] = useState(false);
   const [pendingItem, setPendingItem] = useState<PendingCartItem | null>(null);
 
+  const isInitialMount = useRef(true);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // Load cart from localStorage on mount
   useEffect(() => {
     setCart(getStoredCart());
   }, []);
+
+  // Debounced localStorage save - avoids saving on every single state change
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current);
+    }
+    saveTimerRef.current = setTimeout(() => {
+      saveCartImmediate(cart);
+    }, 300);
+    return () => {
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current);
+      }
+    };
+  }, [cart]);
 
   // Get current distributor from cart
   const currentDistributor = cart.length > 0 ? cart[0].distributor : null;
@@ -157,7 +177,6 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
 
     setCart(updatedCart);
-    saveCart(updatedCart);
 
     // Show success toast
     toast.success(`${product.name} added to cart`, {
@@ -198,7 +217,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     const newCart = [newItem];
     setCart(newCart);
-    saveCart(newCart);
+    saveCartImmediate(newCart);
 
     // Close modal and clear pending
     setIsCartConflictOpen(false);
@@ -219,14 +238,12 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // Remove item from cart
   const removeFromCart = useCallback((productId: string) => {
-    const updatedCart = cart.filter(item => item._id !== productId);
-    setCart(updatedCart);
-    saveCart(updatedCart);
-  }, [cart]);
+    setCart(prev => prev.filter(item => item._id !== productId));
+  }, []);
 
   // Update item quantity
   const updateQuantity = useCallback((productId: string, quantity: number) => {
-    const updatedCart = cart.map(item => {
+    setCart(prev => prev.map(item => {
       if (item._id === productId) {
         const minQty = item.minQuantity || 1;
         const maxQty = item.maxQuantity || item.stock;
@@ -234,34 +251,36 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return { ...item, quantity: finalQuantity };
       }
       return item;
-    });
-    setCart(updatedCart);
-    saveCart(updatedCart);
-  }, [cart]);
+    }));
+  }, []);
 
   // Clear entire cart
   const clearCart = useCallback(() => {
     setCart([]);
-    saveCart([]);
+    saveCartImmediate([]);
   }, []);
 
+  const contextValue = useMemo<CartContextType>(() => ({
+    cart,
+    cartCount,
+    cartTotal,
+    currentDistributor,
+    addToCart,
+    removeFromCart,
+    updateQuantity,
+    clearCart,
+    isCartConflictOpen,
+    pendingItem,
+    confirmReplaceCart,
+    cancelReplaceCart
+  }), [
+    cart, cartCount, cartTotal, currentDistributor,
+    addToCart, removeFromCart, updateQuantity, clearCart,
+    isCartConflictOpen, pendingItem, confirmReplaceCart, cancelReplaceCart
+  ]);
+
   return (
-    <CartContext.Provider
-      value={{
-        cart,
-        cartCount,
-        cartTotal,
-        currentDistributor,
-        addToCart,
-        removeFromCart,
-        updateQuantity,
-        clearCart,
-        isCartConflictOpen,
-        pendingItem,
-        confirmReplaceCart,
-        cancelReplaceCart
-      }}
-    >
+    <CartContext.Provider value={contextValue}>
       {children}
     </CartContext.Provider>
   );

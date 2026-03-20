@@ -133,28 +133,20 @@ export default function Home() {
       }
       const response = await productService.getProducts(params);
 
+      // Standardized format: response.data.products (interceptor unwraps outer data)
+      // Fallback: response.products for backward compat during migration
       let productList: Product[] = [];
-
-      if (Array.isArray(response)) {
-        productList = response;
-      } else if (response?.products && Array.isArray(response.products)) {
+      if (response?.products && Array.isArray(response.products)) {
         productList = response.products;
-      } else if (response?.data?.products && Array.isArray(response.data.products)) {
-        productList = response.data.products;
+      } else if (Array.isArray(response)) {
+        productList = response;
       }
 
       // If location active but no products — show expanding message + load all
       if (productList.length === 0 && userLocation) {
         setNoLocalProducts(true);
         const allResponse = await productService.getProducts({ limit: 8 });
-        let allProducts: Product[] = [];
-        if (Array.isArray(allResponse)) {
-          allProducts = allResponse;
-        } else if (allResponse?.products) {
-          allProducts = allResponse.products;
-        } else if (allResponse?.data?.products) {
-          allProducts = allResponse.data.products;
-        }
+        const allProducts: Product[] = allResponse?.products || (Array.isArray(allResponse) ? allResponse : []);
         setProducts(allProducts);
       } else {
         setProducts(productList);

@@ -142,6 +142,12 @@ const withPWA = require('next-pwa')({
 
 const nextConfig = {
   reactStrictMode: true,
+  swcMinify: true,
+
+  // Remove console.log in production builds
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production' ? { exclude: ['error', 'warn'] } : false,
+  },
 
   // Tree-shake large packages for smaller bundles
   experimental: {
@@ -151,6 +157,36 @@ const nextConfig = {
   // Security headers
   async headers() {
     return [
+      {
+        // Cache static assets (JS, CSS, images, fonts) for 1 year (immutable)
+        source: '/static/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        // Cache Next.js build assets
+        source: '/_next/static/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        // Cache icons and images in public folder
+        source: '/icons/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=86400, stale-while-revalidate=604800',
+          },
+        ],
+      },
       {
         source: '/:path*',
         headers: [

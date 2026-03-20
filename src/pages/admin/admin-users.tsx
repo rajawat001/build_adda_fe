@@ -4,6 +4,7 @@ import AdminLayout from '../../components/admin/Layout';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../services/api';
 import { getApiErrorMessage } from '../../utils/api-error';
+import { useTableState } from '../../hooks/useAdminTable';
 
 interface AssignedRole {
   _id: string;
@@ -72,7 +73,7 @@ const AdminUsersManagement: React.FC = () => {
   const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
   const [availableRoles, setAvailableRoles] = useState<AssignedRole[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const { searchTerm, setSearchTerm } = useTableState();
   const [actionLoading, setActionLoading] = useState(false);
 
   // Edit modal state

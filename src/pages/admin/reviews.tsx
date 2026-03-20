@@ -9,6 +9,7 @@ import ExportButton from '../../components/admin/ExportButton';
 import ConfirmDialog from '../../components/admin/ConfirmDialog';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../services/api';
+import { useConfirmDialog, useTableState } from '../../hooks/useAdminTable';
 
 interface Review {
   _id: string;
@@ -57,29 +58,12 @@ const ReviewsManagement: React.FC = () => {
     avgRating: 0
   });
   const [loading, setLoading] = useState(true);
-  const [selectedReviews, setSelectedReviews] = useState<string[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
-  const [filters, setFilters] = useState<Record<string, any>>({});
-  const [searchTerm, setSearchTerm] = useState('');
+  const { confirmDialog, showConfirm, hideConfirm } = useConfirmDialog();
+  const { searchTerm, setSearchTerm, filters, setFilters, currentPage, setCurrentPage, totalPages, setTotalPages, totalItems, setTotalItems, selectedItems: selectedReviews, setSelectedItems: setSelectedReviews, clearSelection } = useTableState();
   const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'approved' | 'rejected' | 'flagged'>('all');
   const [showReplyModal, setShowReplyModal] = useState(false);
   const [replyingTo, setReplyingTo] = useState<Review | null>(null);
   const [replyText, setReplyText] = useState('');
-  const [confirmDialog, setConfirmDialog] = useState<{
-    isOpen: boolean;
-    title: string;
-    message: string;
-    variant: 'danger' | 'warning' | 'info';
-    onConfirm: () => void;
-  }>({
-    isOpen: false,
-    title: '',
-    message: '',
-    variant: 'danger',
-    onConfirm: () => {}
-  });
   const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
@@ -147,8 +131,7 @@ const ReviewsManagement: React.FC = () => {
   };
 
   const handleApproveReview = (reviewId: string) => {
-    setConfirmDialog({
-      isOpen: true,
+    showConfirm({
       title: 'Approve Review',
       message: 'Are you sure you want to approve this review?',
       variant: 'info',
@@ -163,15 +146,14 @@ const ReviewsManagement: React.FC = () => {
           console.error('Approve failed:', error);
         } finally {
           setActionLoading(false);
-          setConfirmDialog({ ...confirmDialog, isOpen: false });
+          hideConfirm();
         }
       }
     });
   };
 
   const handleRejectReview = (reviewId: string) => {
-    setConfirmDialog({
-      isOpen: true,
+    showConfirm({
       title: 'Reject Review',
       message: 'Are you sure you want to reject this review? It will be hidden from users.',
       variant: 'warning',
@@ -186,15 +168,14 @@ const ReviewsManagement: React.FC = () => {
           console.error('Reject failed:', error);
         } finally {
           setActionLoading(false);
-          setConfirmDialog({ ...confirmDialog, isOpen: false });
+          hideConfirm();
         }
       }
     });
   };
 
   const handleFlagReview = (reviewId: string) => {
-    setConfirmDialog({
-      isOpen: true,
+    showConfirm({
       title: 'Flag Review',
       message: 'Flag this review for inappropriate content?',
       variant: 'warning',
@@ -209,15 +190,14 @@ const ReviewsManagement: React.FC = () => {
           console.error('Flag failed:', error);
         } finally {
           setActionLoading(false);
-          setConfirmDialog({ ...confirmDialog, isOpen: false });
+          hideConfirm();
         }
       }
     });
   };
 
   const handleDeleteReview = (reviewId: string) => {
-    setConfirmDialog({
-      isOpen: true,
+    showConfirm({
       title: 'Delete Review',
       message: 'Are you sure you want to permanently delete this review?',
       variant: 'danger',
@@ -232,7 +212,7 @@ const ReviewsManagement: React.FC = () => {
           console.error('Delete failed:', error);
         } finally {
           setActionLoading(false);
-          setConfirmDialog({ ...confirmDialog, isOpen: false });
+          hideConfirm();
         }
       }
     });
@@ -265,8 +245,7 @@ const ReviewsManagement: React.FC = () => {
   };
 
   const handleBulkApprove = () => {
-    setConfirmDialog({
-      isOpen: true,
+    showConfirm({
       title: 'Approve Reviews',
       message: `Approve ${selectedReviews.length} selected review(s)?`,
       variant: 'info',
@@ -279,20 +258,19 @@ const ReviewsManagement: React.FC = () => {
 
           await fetchReviews();
           await fetchStats();
-          setSelectedReviews([]);
+          clearSelection();
         } catch (error) {
           console.error('Bulk approve failed:', error);
         } finally {
           setActionLoading(false);
-          setConfirmDialog({ ...confirmDialog, isOpen: false });
+          hideConfirm();
         }
       }
     });
   };
 
   const handleBulkReject = () => {
-    setConfirmDialog({
-      isOpen: true,
+    showConfirm({
       title: 'Reject Reviews',
       message: `Reject ${selectedReviews.length} selected review(s)?`,
       variant: 'warning',
@@ -305,12 +283,12 @@ const ReviewsManagement: React.FC = () => {
 
           await fetchReviews();
           await fetchStats();
-          setSelectedReviews([]);
+          clearSelection();
         } catch (error) {
           console.error('Bulk reject failed:', error);
         } finally {
           setActionLoading(false);
-          setConfirmDialog({ ...confirmDialog, isOpen: false });
+          hideConfirm();
         }
       }
     });
@@ -719,7 +697,7 @@ const ReviewsManagement: React.FC = () => {
           message={confirmDialog.message}
           variant={confirmDialog.variant}
           onConfirm={confirmDialog.onConfirm}
-          onCancel={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
+          onCancel={hideConfirm}
           loading={actionLoading}
         />
       </div>

@@ -105,10 +105,12 @@ const Dashboard = () => {
     try {
       setLoading(true);
       const response = await api.get('/distributor/stats');
-      setStats(response.data.stats || response.data);
+      // Interceptor unwraps standardized format
+      const data = response.data;
+      setStats(data?.stats || data || null);
     } catch (error: any) {
       console.error('Error fetching stats:', error);
-      toast.error(error.response?.data?.message || 'Failed to load dashboard data');
+      toast.error(error.message || error.response?.data?.message || 'Failed to load dashboard data');
     } finally {
       setLoading(false);
     }

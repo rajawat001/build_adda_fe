@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -18,29 +18,32 @@ interface ProductCardProps {
 const defaultImage = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iI2Y1ZjVmNSIvPjxwYXRoIGQ9Ik0xNTAgMTAwaDEwMHYyMDBoLTEwMHoiIGZpbGw9IiNkOTc3MDYiLz48cGF0aCBkPSJNMTgwIDEzMGg0MHY0MGgtNDB6TTEwMCAyMDBoMjAwdjIwaC0yMDB6IiBmaWxsPSIjYjQ1MzA5Ii8+PHRleHQgeD0iNTAlIiB5PSI1NSUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+QnVpbGRpbmcgTWF0ZXJpYWw8L3RleHQ+PC9zdmc+';
 
 function ProductCard({ product, onAddToCart, onAddToWishlist, showWishlist = true }: ProductCardProps) {
-  const [isInWishlist, setIsInWishlist] = useState(false);
   const [wishlistLoading, setWishlistLoading] = useState(false);
+  const [wishlistVersion, setWishlistVersion] = useState(0);
   const { addToCart } = useCart();
   const router = useRouter();
 
-  // Check if product is in wishlist on mount
-  useEffect(() => {
+  // Derive wishlist status from localStorage via useMemo instead of useState + useEffect
+  const isInWishlist = useMemo(() => {
+    // wishlistVersion is used to trigger re-computation after toggle
+    void wishlistVersion;
     try {
       const wishlistData = localStorage.getItem('wishlist');
       if (wishlistData && wishlistData !== 'undefined') {
         const wishlist = JSON.parse(wishlistData);
-        setIsInWishlist(wishlist.some((item: any) => item._id === product._id));
+        return wishlist.some((item: any) => item._id === product._id);
       }
     } catch {
       // ignore parse errors
     }
-  }, [product._id]);
+    return false;
+  }, [product._id, wishlistVersion]);
 
-  const handleAddToCart = () => {
+  const handleAddToCart = useCallback(() => {
     addToCart(product);
-  };
+  }, [addToCart, product]);
 
-  const handleToggleWishlist = async () => {
+  const handleToggleWishlist = useCallback(async () => {
     // Check if user is logged in
     const user = localStorage.getItem('user');
     if (!user || user === 'undefined') {
@@ -64,7 +67,7 @@ function ProductCard({ product, onAddToCart, onAddToWishlist, showWishlist = tru
         const wishlist = wishlistData && wishlistData !== 'undefined' ? JSON.parse(wishlistData) : [];
         const filtered = wishlist.filter((item: any) => item._id !== product._id);
         localStorage.setItem('wishlist', JSON.stringify(filtered));
-        setIsInWishlist(false);
+        setWishlistVersion(v => v + 1);
       } else {
         // Add to wishlist
         try {
@@ -80,7 +83,7 @@ function ProductCard({ product, onAddToCart, onAddToWishlist, showWishlist = tru
           wishlist.push(product);
         }
         localStorage.setItem('wishlist', JSON.stringify(wishlist));
-        setIsInWishlist(true);
+        setWishlistVersion(v => v + 1);
       }
 
       // Trigger storage event to update header wishlist count
@@ -95,7 +98,7 @@ function ProductCard({ product, onAddToCart, onAddToWishlist, showWishlist = tru
     } finally {
       setWishlistLoading(false);
     }
-  };
+  }, [isInWishlist, product, router, onAddToWishlist]);
 
   // Handle both category as string and as object
   const categoryName = typeof product.category === 'string'
@@ -185,4 +188,13 @@ function ProductCard({ product, onAddToCart, onAddToWishlist, showWishlist = tru
   );
 }
 
-export default React.memo(ProductCard);
+export default React.memo(ProductCard, (prevProps, nextProps) => {
+  return (
+    prevProps.product._id === nextProps.product._id &&
+    prevProps.product.price === nextProps.product.price &&
+    prevProps.product.stock === nextProps.product.stock &&
+    prevProps.product.name === nextProps.product.name &&
+    prevProps.product.image === nextProps.product.image &&
+    prevProps.showWishlist === nextProps.showWishlist
+  );
+});

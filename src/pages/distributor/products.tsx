@@ -30,7 +30,7 @@ interface Product {
   price: number;
   realPrice?: number;
   stock: number;
-  category: string;
+  category: string | { _id: string; name: string; slug?: string; icon?: string };
   image: string;
   unit?: string;
   minQuantity?: number;
@@ -80,11 +80,13 @@ const Products = () => {
     try {
       setLoading(true);
       const response = await api.get('/distributor/products');
-      setProducts(response.data.products || []);
+      // Interceptor unwraps standardized format
+      const data = response.data;
+      setProducts(data?.products || (Array.isArray(data) ? data : []));
       toast.success('Products loaded successfully');
     } catch (error: any) {
       console.error('Error fetching products:', error);
-      toast.error(error.response?.data?.message || 'Failed to load products');
+      toast.error(error.message || error.response?.data?.message || 'Failed to load products');
     } finally {
       setLoading(false);
     }
@@ -231,7 +233,7 @@ const Products = () => {
         <div className={`${isMobile ? 'p-3' : 'p-4'} space-y-3`}>
           <div>
             <Badge variant="default" size="sm" className="mb-2">
-              {product.category}
+              {typeof product.category === 'object' ? product.category?.name ?? '' : product.category ?? ''}
             </Badge>
             <h3 className={`${isMobile ? 'text-base' : 'text-lg'} font-semibold text-[var(--text-primary)] mb-0.5 line-clamp-1`}>
               {product.name}

@@ -82,14 +82,16 @@ const Orders = () => {
     try {
       setLoading(true);
       const response = await api.get('/distributor/orders', { signal });
-      setOrders(response.data.orders || []);
+      // Interceptor unwraps standardized format
+      const data = response.data;
+      setOrders(data?.orders || (Array.isArray(data) ? data : []));
       toast.success('Orders loaded successfully');
     } catch (error: any) {
       if (error.name === 'AbortError' || error.name === 'CanceledError') {
         return;
       }
       console.error('Error fetching orders:', error);
-      toast.error(error.response?.data?.message || 'Failed to load orders');
+      toast.error(error.message || error.response?.data?.message || 'Failed to load orders');
     } finally {
       setLoading(false);
     }

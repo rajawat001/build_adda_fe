@@ -7,6 +7,7 @@ import ExportButton from '../../components/admin/ExportButton';
 import ConfirmDialog from '../../components/admin/ConfirmDialog';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../services/api';
+import { useConfirmDialog, useTableState } from '../../hooks/useAdminTable';
 
 interface Coupon {
   _id: string;
@@ -45,9 +46,8 @@ const CouponsManagement: React.FC = () => {
     totalDiscount: 0
   });
   const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [searchTerm, setSearchTerm] = useState('');
+  const { confirmDialog, showConfirm, hideConfirm } = useConfirmDialog();
+  const { searchTerm, setSearchTerm, currentPage, setCurrentPage, totalPages, setTotalPages } = useTableState();
   const [activeTab, setActiveTab] = useState<'all' | 'active' | 'expired'>('all');
   const [showModal, setShowModal] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
@@ -63,19 +63,6 @@ const CouponsManagement: React.FC = () => {
     applicableFor: 'products' as 'products' | 'subscription' | 'both',
     freeMonths: 0,
     description: ''
-  });
-  const [confirmDialog, setConfirmDialog] = useState<{
-    isOpen: boolean;
-    title: string;
-    message: string;
-    variant: 'danger' | 'warning' | 'info';
-    onConfirm: () => void;
-  }>({
-    isOpen: false,
-    title: '',
-    message: '',
-    variant: 'danger',
-    onConfirm: () => {}
   });
   const [actionLoading, setActionLoading] = useState(false);
 
@@ -216,8 +203,7 @@ const CouponsManagement: React.FC = () => {
   };
 
   const handleDeleteCoupon = (coupon: Coupon) => {
-    setConfirmDialog({
-      isOpen: true,
+    showConfirm({
       title: 'Delete Coupon',
       message: `Are you sure you want to delete coupon "${coupon.code}"? This action cannot be undone.`,
       variant: 'danger',
@@ -232,7 +218,7 @@ const CouponsManagement: React.FC = () => {
           console.error('Delete failed:', error);
         } finally {
           setActionLoading(false);
-          setConfirmDialog({ ...confirmDialog, isOpen: false });
+          hideConfirm();
         }
       }
     });
@@ -721,7 +707,7 @@ const CouponsManagement: React.FC = () => {
           message={confirmDialog.message}
           variant={confirmDialog.variant}
           onConfirm={confirmDialog.onConfirm}
-          onCancel={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
+          onCancel={hideConfirm}
           loading={actionLoading}
         />
       </div>

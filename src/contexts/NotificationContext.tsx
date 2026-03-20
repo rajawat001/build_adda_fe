@@ -323,20 +323,59 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     return !!(user && role);
   };
 
-  // Start polling for notifications
+  // Start polling for notifications with idle detection
   useEffect(() => {
     // Only fetch notifications if user is authenticated
     if (!isAuthenticated()) {
       return;
     }
 
+    const NORMAL_INTERVAL = 60000;       // 60 seconds
+    const IDLE_INTERVAL = 5 * 60 * 1000; // 5 minutes
+    const IDLE_THRESHOLD = 5 * 60 * 1000; // 5 minutes of no interaction
+
+    let lastActivityTime = Date.now();
+    let isIdle = false;
+
+    const startPolling = (interval: number) => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+      pollingIntervalRef.current = setInterval(() => {
+        fetchNotifications();
+      }, interval);
+    };
+
+    const handleUserActivity = () => {
+      lastActivityTime = Date.now();
+      if (isIdle) {
+        isIdle = false;
+        // User returned from idle - resume normal polling
+        fetchNotifications();
+        startPolling(NORMAL_INTERVAL);
+      }
+    };
+
+    // Check for idle state periodically
+    const idleCheckInterval = setInterval(() => {
+      if (!isIdle && Date.now() - lastActivityTime >= IDLE_THRESHOLD) {
+        isIdle = true;
+        // Switch to slower polling
+        startPolling(IDLE_INTERVAL);
+      }
+    }, 30000); // Check every 30 seconds
+
+    // Track user activity
+    const activityEvents = ['mousedown', 'keydown', 'scroll', 'touchstart'] as const;
+    activityEvents.forEach((event) => {
+      document.addEventListener(event, handleUserActivity, { passive: true });
+    });
+
     // Fetch immediately
     fetchNotifications();
 
-    // Poll every 60 seconds (reduced from 30s for better performance)
-    pollingIntervalRef.current = setInterval(() => {
-      fetchNotifications();
-    }, 60000);
+    // Start normal polling
+    startPolling(NORMAL_INTERVAL);
 
     // Pause polling when tab is not visible, resume when visible
     const handleVisibilityChange = () => {
@@ -346,10 +385,11 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
           pollingIntervalRef.current = null;
         }
       } else {
+        // Tab became visible again - reset idle state, fetch immediately, resume normal polling
+        lastActivityTime = Date.now();
+        isIdle = false;
         fetchNotifications();
-        pollingIntervalRef.current = setInterval(() => {
-          fetchNotifications();
-        }, 60000);
+        startPolling(NORMAL_INTERVAL);
       }
     };
 
@@ -359,7 +399,11 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
       }
+      clearInterval(idleCheckInterval);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      activityEvents.forEach((event) => {
+        document.removeEventListener(event, handleUserActivity);
+      });
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

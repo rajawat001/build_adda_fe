@@ -6,6 +6,7 @@ import ConfirmDialog from '../../components/admin/ConfirmDialog';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../services/api';
 import { getApiErrorMessage, scrollToError } from '../../utils/api-error';
+import { useConfirmDialog } from '../../hooks/useAdminTable';
 
 interface Role {
   _id: string;
@@ -154,19 +155,7 @@ const RolesManagement: React.FC = () => {
     permissions: [] as string[],
     isActive: true
   });
-  const [confirmDialog, setConfirmDialog] = useState<{
-    isOpen: boolean;
-    title: string;
-    message: string;
-    variant: 'danger' | 'warning' | 'info';
-    onConfirm: () => void;
-  }>({
-    isOpen: false,
-    title: '',
-    message: '',
-    variant: 'danger',
-    onConfirm: () => {}
-  });
+  const { confirmDialog, showConfirm, hideConfirm } = useConfirmDialog();
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -271,8 +260,7 @@ const RolesManagement: React.FC = () => {
       return;
     }
 
-    setConfirmDialog({
-      isOpen: true,
+    showConfirm({
       title: 'Delete Role',
       message: `Are you sure you want to delete the role "${role.name}"? This action cannot be undone.`,
       variant: 'danger',
@@ -287,7 +275,7 @@ const RolesManagement: React.FC = () => {
           alert(getApiErrorMessage(err, 'Failed to delete role'));
         } finally {
           setActionLoading(false);
-          setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+          hideConfirm();
         }
       }
     });
@@ -728,7 +716,7 @@ const RolesManagement: React.FC = () => {
           message={confirmDialog.message}
           variant={confirmDialog.variant}
           onConfirm={confirmDialog.onConfirm}
-          onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+          onCancel={hideConfirm}
           loading={actionLoading}
         />
       </div>

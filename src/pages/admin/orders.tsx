@@ -9,6 +9,7 @@ import ExportButton from '../../components/admin/ExportButton';
 import ConfirmDialog from '../../components/admin/ConfirmDialog';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../services/api';
+import { useConfirmDialog, useTableState } from '../../hooks/useAdminTable';
 
 interface OrderItem {
   product: {
@@ -75,27 +76,11 @@ const OrdersManagement: React.FC = () => {
     totalRevenue: 0
   });
   const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
-  const [filters, setFilters] = useState<Record<string, any>>({});
-  const [searchTerm, setSearchTerm] = useState('');
+  const { confirmDialog, showConfirm, hideConfirm } = useConfirmDialog();
+  const { searchTerm, setSearchTerm, filters, setFilters, currentPage, setCurrentPage, totalPages, setTotalPages, totalItems, setTotalItems } = useTableState();
   const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled'>('all');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
-  const [confirmDialog, setConfirmDialog] = useState<{
-    isOpen: boolean;
-    title: string;
-    message: string;
-    variant: 'danger' | 'warning' | 'info';
-    onConfirm: () => void;
-  }>({
-    isOpen: false,
-    title: '',
-    message: '',
-    variant: 'info',
-    onConfirm: () => {}
-  });
   const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
@@ -120,9 +105,12 @@ const OrdersManagement: React.FC = () => {
       });
 
       const response = await api.get(`/admin/orders?${queryParams}`);
-      setOrders(response.data.orders || []);
-      setTotalPages(response.data.pagination?.pages || 1);
-      setTotalItems(response.data.pagination?.total || 0);
+      // Interceptor unwraps standardized format; use meta for pagination
+      const data = response.data;
+      setOrders(data?.orders || data || []);
+      const meta = (response as any).meta;
+      setTotalPages(meta?.totalPages || data?.pagination?.pages || 1);
+      setTotalItems(meta?.total || data?.pagination?.total || 0);
     } catch (error) {
       console.error('Error fetching orders:', error);
     } finally {
@@ -134,7 +122,7 @@ const OrdersManagement: React.FC = () => {
     try {
       const response = await api.get('/admin/orders/stats');
       const data = response.data;
-      setStats(data.stats || stats);
+      setStats(data?.stats || data || stats);
     } catch (error) {
       console.error('Error fetching stats:', error);
     }
@@ -169,8 +157,7 @@ const OrdersManagement: React.FC = () => {
   };
 
   const handleUpdateOrderStatus = (orderId: string, newStatus: string) => {
-    setConfirmDialog({
-      isOpen: true,
+    showConfirm({
       title: 'Update Order Status',
       message: `Are you sure you want to update this order to "${newStatus}"?`,
       variant: 'info',
@@ -189,7 +176,7 @@ const OrdersManagement: React.FC = () => {
           console.error('Update status failed:', error);
         } finally {
           setActionLoading(false);
-          setConfirmDialog({ ...confirmDialog, isOpen: false });
+          hideConfirm();
         }
       }
     });
@@ -669,7 +656,7 @@ const OrdersManagement: React.FC = () => {
           message={confirmDialog.message}
           variant={confirmDialog.variant}
           onConfirm={confirmDialog.onConfirm}
-          onCancel={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
+          onCancel={hideConfirm}
           loading={actionLoading}
         />
       </div>

@@ -98,8 +98,38 @@ api.interceptors.request.use(
 );
 
 api.interceptors.response.use(
-  (response) => response,
-  (error) => {
+  (response) => {
+    // Extract the standardized response data automatically
+    // If the response follows { success: true, data: {...} }, unwrap it
+    const data = response.data;
+    if (data && typeof data === 'object' && data.success === true && data.data !== undefined) {
+      response.data = data.data;
+      // Preserve meta for pagination (attach to response for consumers)
+      if (data.meta) {
+        (response as any).meta = data.meta;
+      }
+      // Preserve message if present
+      if (data.message) {
+        (response as any).message = data.message;
+      }
+    }
+    return response;
+  },
+  async (error) => {
+    // Handle standardized error format from backend
+    // { success: false, error: { code: string, message: string, details?: any } }
+    if (error.response?.data?.success === false && error.response.data.error) {
+      const backendError = error.response.data.error;
+      const enhancedError = new Error(backendError.message || 'An error occurred') as any;
+      enhancedError.code = backendError.code;
+      enhancedError.details = backendError.details;
+      enhancedError.status = error.response.status;
+      enhancedError.response = error.response;
+      // Keep original response accessible for backward compat
+      error.message = backendError.message || error.message;
+      (error as any).errorCode = backendError.code;
+      (error as any).errorDetails = backendError.details;
+    }
     // Handle timeout errors
     if (error.code === 'ECONNABORTED') {
       console.error('Request timeout:', error.config?.url);
@@ -143,9 +173,27 @@ api.interceptors.response.use(
       }
     }
 
-    // Handle rate limiting
-    if (error.response?.status === 429) {
-      console.warn('Rate limited. Please wait before making more requests.');
+    // Handle rate limiting with exponential backoff (GET requests only)
+    if (error.response?.status === 429 && error.config) {
+      const config = error.config as any;
+      const method = (config.method || '').toUpperCase();
+
+      // Only retry GET requests to avoid duplicate mutations
+      if (method === 'GET') {
+        const retryCount = config.__retryCount || 0;
+        const MAX_RETRIES = 3;
+
+        if (retryCount < MAX_RETRIES) {
+          config.__retryCount = retryCount + 1;
+          const backoffMs = Math.pow(2, retryCount) * 1000; // 1s, 2s, 4s
+          console.warn(`Rate limited (429). Retrying in ${backoffMs / 1000}s (attempt ${retryCount + 1}/${MAX_RETRIES})...`);
+
+          await new Promise((resolve) => setTimeout(resolve, backoffMs));
+          return api(config);
+        }
+      }
+
+      console.warn('Rate limited. Max retries exceeded or non-GET request.');
     }
 
     return Promise.reject(error);

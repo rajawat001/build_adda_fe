@@ -122,18 +122,17 @@ const AdminDashboard = () => {
         api.get('/admin/stats'),
         api.get('/admin/analytics/dashboard').catch((err) => {
           console.error('Analytics API error:', err);
-          return { data: { success: false } };
+          return { data: null };
         }),
-        api.get('/admin/activity-logs?limit=10').catch(() => ({ data: { success: false, logs: [] } }))
+        api.get('/admin/activity-logs?limit=10').catch(() => ({ data: null }))
       ]);
 
-      // Extract real stats from response
-      const realStats = statsResponse.data.stats || statsResponse.data;
+      // Interceptor unwraps standardized format; fallback for non-standard responses
+      const realStats = statsResponse.data?.stats || statsResponse.data || {};
 
       // Use analytics data if available, otherwise use defaults
-      const analytics = analyticsResponse?.data?.success
-        ? (analyticsResponse.data.analytics || analyticsResponse.data.stats || {})
-        : {};
+      const analyticsData = analyticsResponse?.data;
+      const analytics = analyticsData?.analytics || analyticsData?.stats || analyticsData || {};
 
       setStats({
         ...realStats,
@@ -161,8 +160,11 @@ const AdminDashboard = () => {
       });
 
       // Set real activity logs from API
-      if (activityResponse.data.success && activityResponse.data.logs && activityResponse.data.logs.length > 0) {
-        const formattedLogs = activityResponse.data.logs.map((log: any) => ({
+      // Interceptor unwraps: data = { logs: [...] } or fallback
+      const logsData = activityResponse.data;
+      const rawLogs = logsData?.logs || [];
+      if (rawLogs.length > 0) {
+        const formattedLogs = rawLogs.map((log: any) => ({
           _id: log._id,
           adminName: log.admin?.name || log.adminName || 'Admin',
           action: log.action,

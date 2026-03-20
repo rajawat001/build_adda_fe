@@ -10,7 +10,7 @@ Allow: /
 # Public pages to crawl
 Allow: /products
 Allow: /products/
-Allow: /distributor/
+Disallow: /distributor/
 Allow: /distributors
 Allow: /about
 Allow: /contact
@@ -59,7 +59,7 @@ User-agent: Googlebot
 Allow: /
 Allow: /api/sitemap.xml
 Allow: /products/
-Allow: /distributor/
+Disallow: /distributor/
 Disallow: /admin/
 Disallow: /api/
 Disallow: /cart
@@ -80,7 +80,7 @@ User-agent: Bingbot
 Allow: /
 Allow: /api/sitemap.xml
 Allow: /products/
-Allow: /distributor/
+Disallow: /distributor/
 Disallow: /admin/
 Disallow: /api/
 Disallow: /cart

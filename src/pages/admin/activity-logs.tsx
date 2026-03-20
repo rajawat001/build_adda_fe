@@ -6,6 +6,7 @@ import FilterPanel, { FilterOption } from '../../components/admin/FilterPanel';
 import ExportButton from '../../components/admin/ExportButton';
 import { motion } from 'framer-motion';
 import api from '../../services/api';
+import { useTableState } from '../../hooks/useAdminTable';
 
 interface ActivityLog {
   _id: string;
@@ -43,10 +44,7 @@ const ActivityLogsPage: React.FC = () => {
     total: 0
   });
   const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [filters, setFilters] = useState<Record<string, any>>({});
-  const [searchTerm, setSearchTerm] = useState('');
+  const { searchTerm, setSearchTerm, filters, setFilters, currentPage, setCurrentPage, totalPages, setTotalPages } = useTableState();
   const [selectedLog, setSelectedLog] = useState<ActivityLog | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
 

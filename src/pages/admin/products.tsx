@@ -11,6 +11,7 @@ import ConfirmDialog from '../../components/admin/ConfirmDialog';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../services/api';
 import { getApiErrorMessage } from '../../utils/api-error';
+import { useConfirmDialog, useTableState } from '../../hooks/useAdminTable';
 
 interface Product {
   _id: string;
@@ -56,26 +57,9 @@ const ProductsManagement: React.FC = () => {
     trend: 0
   });
   const [loading, setLoading] = useState(true);
-  const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
-  const [filters, setFilters] = useState<Record<string, any>>({});
-  const [searchTerm, setSearchTerm] = useState('');
+  const { confirmDialog, showConfirm, hideConfirm } = useConfirmDialog();
+  const { searchTerm, setSearchTerm, filters, setFilters, currentPage, setCurrentPage, totalPages, setTotalPages, totalItems, setTotalItems, selectedItems: selectedProducts, setSelectedItems: setSelectedProducts, clearSelection } = useTableState();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
-  const [confirmDialog, setConfirmDialog] = useState<{
-    isOpen: boolean;
-    title: string;
-    message: string;
-    variant: 'danger' | 'warning' | 'info';
-    onConfirm: () => void;
-  }>({
-    isOpen: false,
-    title: '',
-    message: '',
-    variant: 'danger',
-    onConfirm: () => {}
-  });
   const [actionLoading, setActionLoading] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
 
@@ -112,9 +96,13 @@ const ProductsManagement: React.FC = () => {
       });
 
       const response = await api.get(`/admin/products?${queryParams}`);
-      setProducts(response.data.products || []);
-      setTotalPages(response.data.pagination?.pages || 1);
-      setTotalItems(response.data.pagination?.total || 0);
+      // Interceptor unwraps standardized format; use meta for pagination
+      const data = response.data;
+      setProducts(data?.products || data || []);
+      // Prefer standardized meta, fallback to legacy pagination
+      const meta = (response as any).meta;
+      setTotalPages(meta?.totalPages || data?.pagination?.pages || 1);
+      setTotalItems(meta?.total || data?.pagination?.total || 0);
     } catch (error) {
       console.error('Error fetching products:', error);
     } finally {
@@ -126,7 +114,7 @@ const ProductsManagement: React.FC = () => {
     try {
       const response = await api.get('/admin/products/stats');
       const data = response.data;
-      setStats(data.stats || stats);
+      setStats(data?.stats || data || stats);
     } catch (error) {
       console.error('Error fetching stats:', error);
     }
@@ -160,8 +148,7 @@ const ProductsManagement: React.FC = () => {
   };
 
   const handleBulkDelete = () => {
-    setConfirmDialog({
-      isOpen: true,
+    showConfirm({
       title: 'Delete Products',
       message: `Are you sure you want to permanently delete ${selectedProducts.length} selected product(s)? This action cannot be undone.`,
       variant: 'danger',
@@ -174,12 +161,12 @@ const ProductsManagement: React.FC = () => {
 
           await fetchProducts();
           await fetchStats();
-          setSelectedProducts([]);
+          clearSelection();
         } catch (error) {
           console.error('Bulk delete failed:', error);
         } finally {
           setActionLoading(false);
-          setConfirmDialog({ ...confirmDialog, isOpen: false });
+          hideConfirm();
         }
       }
     });
@@ -423,8 +410,7 @@ const ProductsManagement: React.FC = () => {
   };
 
   const handleDeleteProduct = (productId: string) => {
-    setConfirmDialog({
-      isOpen: true,
+    showConfirm({
       title: 'Delete Product',
       message: 'Are you sure you want to delete this product? This action cannot be undone.',
       variant: 'danger',
@@ -439,7 +425,7 @@ const ProductsManagement: React.FC = () => {
           console.error('Delete failed:', error);
         } finally {
           setActionLoading(false);
-          setConfirmDialog({ ...confirmDialog, isOpen: false });
+          hideConfirm();
         }
       }
     });
@@ -856,7 +842,7 @@ const ProductsManagement: React.FC = () => {
           message={confirmDialog.message}
           variant={confirmDialog.variant}
           onConfirm={confirmDialog.onConfirm}
-          onCancel={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
+          onCancel={hideConfirm}
           loading={actionLoading}
         />
       </div>

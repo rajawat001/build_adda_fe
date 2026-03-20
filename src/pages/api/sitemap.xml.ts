@@ -58,31 +58,7 @@ async function fetchProducts(): Promise<any[]> {
   }
 }
 
-async function fetchDistributors(): Promise<any[]> {
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
-
-    const res = await fetch(`${API_URL}/users/distributors?limit=1000`, {
-      signal: controller.signal,
-      headers: { 'Accept': 'application/json' }
-    });
-    clearTimeout(timeoutId);
-
-    if (!res.ok) {
-      console.error('Distributors API returned:', res.status);
-      return [];
-    }
-
-    const data = await res.json();
-    return data.distributors || [];
-  } catch (error: any) {
-    console.error('Error fetching distributors for sitemap:', error.message || error);
-    return [];
-  }
-}
-
-function generateSitemapXml(staticPages: any[], products: any[], distributors: any[]) {
+function generateSitemapXml(staticPages: any[], products: any[]) {
   const today = new Date().toISOString().split('T')[0];
 
   let xml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -139,33 +115,7 @@ function generateSitemapXml(staticPages: any[], products: any[], distributors: a
 `;
   }
 
-  // Distributor pages
-  for (const distributor of distributors) {
-    if (!distributor._id) continue;
-    const slug = distributor.slug || distributor._id;
-    const lastmod = distributor.updatedAt
-      ? new Date(distributor.updatedAt).toISOString().split('T')[0]
-      : today;
-
-    xml += `  <url>
-    <loc>${SITE_URL}/distributor/${slug}</loc>
-    <lastmod>${lastmod}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-`;
-
-    // Add distributor profile image if available
-    if (distributor.profileImage && distributor.profileImage.startsWith('http')) {
-      xml += `    <image:image>
-      <image:loc>${escapeXml(distributor.profileImage)}</image:loc>
-      <image:title>${escapeXml(distributor.businessName || '')} - Building Materials Distributor</image:title>
-    </image:image>
-`;
-    }
-
-    xml += `  </url>
-`;
-  }
+  // Distributor individual pages excluded from indexing — only /distributors listing page is indexed
 
   xml += `</urlset>`;
   return xml;
@@ -176,18 +126,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
 
   try {
-    const [products, distributors] = await Promise.all([
-      fetchProducts(),
-      fetchDistributors()
-    ]);
+    const products = await fetchProducts();
 
-    console.log(`Sitemap: ${staticPages.length} static, ${products.length} products, ${distributors.length} distributors`);
+    console.log(`Sitemap: ${staticPages.length} static, ${products.length} products`);
 
-    const sitemap = generateSitemapXml(staticPages, products, distributors);
+    const sitemap = generateSitemapXml(staticPages, products);
     res.status(200).send(sitemap);
   } catch (error) {
     console.error('Error generating sitemap:', error);
-    const sitemap = generateSitemapXml(staticPages, [], []);
+    const sitemap = generateSitemapXml(staticPages, []);
     res.status(200).send(sitemap);
   }
 }

@@ -46,7 +46,6 @@ export default function SEO({
       <meta name="language" content="English" />
       <meta name="robots" content={noindex ? 'noindex, nofollow' : 'index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1'} />
       <meta name="googlebot" content={noindex ? 'noindex, nofollow' : 'index, follow'} />
-      <meta name="bingbot" content={noindex ? 'noindex, nofollow' : 'index, follow'} />
 
       {/* Canonical URL */}
       <link rel="canonical" href={fullCanonicalUrl} />
@@ -97,11 +96,6 @@ export default function SEO({
       <meta name="theme-color" content="#d97706" />
 
       {/* Additional SEO Tags */}
-      <meta name="revisit-after" content="7 days" />
-      <meta name="distribution" content="global" />
-      <meta name="rating" content="general" />
-      <meta name="coverage" content="Worldwide" />
-      <meta name="target" content="all" />
       <meta name="HandheldFriendly" content="True" />
       <meta name="MobileOptimized" content="320" />
 
@@ -112,10 +106,6 @@ export default function SEO({
       <link rel="icon" type="image/png" sizes="144x144" href="/icons/icon-144x144.png" />
       <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png" />
       <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192x192.png" />
-
-      {/* Alternate for different languages (if needed in future) */}
-      <link rel="alternate" hrefLang="en" href={fullCanonicalUrl} />
-      <link rel="alternate" hrefLang="hi" href={fullCanonicalUrl} />
 
       {/* JSON-LD Structured Data */}
       {jsonLd && (Array.isArray(jsonLd)
