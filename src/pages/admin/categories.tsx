@@ -4,6 +4,7 @@ import AdminLayout from '../../components/admin/Layout';
 import StatCard from '../../components/admin/StatCard';
 import ConfirmDialog from '../../components/admin/ConfirmDialog';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'react-toastify';
 import api from '../../services/api';
 import { useConfirmDialog } from '../../hooks/useAdminTable';
 
@@ -137,8 +138,8 @@ const CategoriesManagement: React.FC = () => {
       await fetchCategories();
       await fetchStats();
       setShowModal(false);
-    } catch (error) {
-      console.error('Save category failed:', error);
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || error.message || 'Failed to save category');
     } finally {
       setActionLoading(false);
     }
@@ -156,8 +157,8 @@ const CategoriesManagement: React.FC = () => {
 
           await fetchCategories();
           await fetchStats();
-        } catch (error) {
-          console.error('Delete failed:', error);
+        } catch (error: any) {
+          toast.error(error.response?.data?.message || error.message || 'Failed to delete category');
         } finally {
           setActionLoading(false);
           hideConfirm();

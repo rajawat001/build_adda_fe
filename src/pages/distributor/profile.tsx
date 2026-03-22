@@ -46,6 +46,7 @@ const Profile = () => {
     city: '',
     state: '',
     pincode: '',
+    gstNumber: '',
     location: { type: 'Point' as const, coordinates: [0, 0] },
   });
   const [showMap, setShowMap] = useState(false);
@@ -67,6 +68,7 @@ const Profile = () => {
         city: distributorData.city,
         state: distributorData.state,
         pincode: distributorData.pincode,
+        gstNumber: distributorData.gstNumber || '',
         location: distributorData.location
           ? { type: 'Point' as const, coordinates: distributorData.location.coordinates }
           : { type: 'Point' as const, coordinates: [0, 0] },
@@ -104,6 +106,7 @@ const Profile = () => {
         city: profile.city,
         state: profile.state,
         pincode: profile.pincode,
+        gstNumber: profile.gstNumber || '',
         location: profile.location
           ? { type: 'Point' as const, coordinates: profile.location.coordinates }
           : { type: 'Point' as const, coordinates: [0, 0] },
@@ -323,6 +326,23 @@ const Profile = () => {
                   className={`w-full px-4 ${isMobile ? 'py-3 min-h-tap' : 'py-2'} bg-[var(--bg-primary)] border border-[var(--border-primary)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]`}
                 />
                 <p className="text-xs text-[var(--text-tertiary)] mt-1">Enter 6-digit pincode</p>
+              </div>
+
+              {/* GST Number */}
+              <div>
+                <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">
+                  GST Number (GSTIN)
+                </label>
+                <input
+                  type="text"
+                  value={formData.gstNumber}
+                  onChange={(e) => setFormData({ ...formData, gstNumber: e.target.value.toUpperCase() })}
+                  placeholder="e.g. 08AABCU9603R1ZM"
+                  maxLength={15}
+                  pattern="^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$"
+                  className={`w-full px-4 ${isMobile ? 'py-3 min-h-tap' : 'py-2'} bg-[var(--bg-primary)] border border-[var(--border-primary)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]`}
+                />
+                <p className="text-xs text-[var(--text-tertiary)] mt-1">15-character GST Identification Number (optional)</p>
               </div>
 
               {/* Map Picker */}

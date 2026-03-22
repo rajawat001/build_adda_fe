@@ -97,6 +97,7 @@ export const googleRegisterDistributor = async (data: {
   city: string;
   state: string;
   pincode: string;
+  gstNumber?: string;
   location?: { type: string; coordinates: number[] };
 }): Promise<AuthResponse> => {
   const response = await api.post('/auth/google/register-distributor', data);

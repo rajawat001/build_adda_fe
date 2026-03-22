@@ -32,6 +32,7 @@ interface RegisterOTPData {
   address?: string;
   city?: string;
   state?: string;
+  gstNumber?: string;
   location?: {
     type: string;
     coordinates: number[];

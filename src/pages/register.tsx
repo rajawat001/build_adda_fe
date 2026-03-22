@@ -105,6 +105,7 @@ export default function Register() {
     address: '',
     city: '',
     state: '',
+    gstNumber: '',
     location: { type: 'Point', coordinates: [0, 0] }
   });
   const [error, setError] = useState('');
@@ -192,6 +193,7 @@ export default function Register() {
         city: formData.city,
         state: formData.state,
         pincode: formData.pincode,
+        gstNumber: formData.gstNumber || undefined,
         location: formData.location.coordinates[0] !== 0 ? formData.location : undefined,
       });
 
@@ -386,6 +388,7 @@ export default function Register() {
         address: formData.address,
         city: formData.city,
         state: formData.state,
+        gstNumber: formData.gstNumber || undefined,
         location: formData.location
       });
 
@@ -513,7 +516,7 @@ export default function Register() {
               >
                 {error && <div className="error-message">{error}</div>}
 
-                <div>
+                <form onSubmit={(e) => { e.preventDefault(); handleNextStep(); }}>
                   {/* Role Selector Cards */}
                   <div className="form-group">
                     <label>Register as</label>
@@ -589,14 +592,14 @@ export default function Register() {
                   </AnimatePresence>
 
                   <motion.button
-                    type="button"
+                    type="submit"
                     className="btn-submit"
-                    onClick={handleNextStep}
                     whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.98 }}
                   >
                     Continue
                   </motion.button>
+                </form>
 
                   {/* Google Sign-Up Divider & Button */}
                   <div style={{
@@ -618,7 +621,6 @@ export default function Register() {
                       width={320}
                     />
                   </div>
-                </div>
               </motion.div>
             )}
 
@@ -639,7 +641,7 @@ export default function Register() {
 
                 {error && <div className="error-message">{error}</div>}
 
-                <div>
+                <form onSubmit={(e) => { e.preventDefault(); handleNextStep(); }}>
                   <div className="form-group">
                     <label htmlFor="email">Email</label>
                     <div className="input-with-icon">
@@ -699,15 +701,14 @@ export default function Register() {
                   </div>
 
                   <motion.button
-                    type="button"
+                    type="submit"
                     className="btn-submit"
-                    onClick={handleNextStep}
                     whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.98 }}
                   >
                     Continue
                   </motion.button>
-                </div>
+                </form>
               </motion.div>
             )}
 
@@ -778,6 +779,24 @@ export default function Register() {
                     />
                     {validationErrors.address && <span className="validation-error">{validationErrors.address}</span>}
                   </div>
+
+                  {formData.role === 'distributor' && (
+                    <div className="form-group">
+                      <label htmlFor="gstNumber">GST Number (optional)</label>
+                      <div className="input-with-icon">
+                        <span className="input-icon-left"><FiHash /></span>
+                        <input
+                          id="gstNumber" type="text" name="gstNumber"
+                          value={formData.gstNumber}
+                          onChange={(e) => setFormData({ ...formData, gstNumber: e.target.value.toUpperCase() })}
+                          placeholder="e.g. 08AABCU9603R1ZM"
+                          maxLength={15}
+                          autoComplete="off"
+                        />
+                      </div>
+                      <small className="field-hint">15-character GSTIN (optional)</small>
+                    </div>
+                  )}
 
                   <div style={{ marginBottom: '0.75rem' }}>
                     {formData.location.coordinates[0] !== 0 && formData.location.coordinates[1] !== 0 && !showMap && (
@@ -940,6 +959,22 @@ export default function Register() {
                       rows={3} required
                     />
                     {validationErrors.address && <span className="validation-error">{validationErrors.address}</span>}
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="gd-gstNumber">GST Number (optional)</label>
+                    <div className="input-with-icon">
+                      <span className="input-icon-left"><FiHash /></span>
+                      <input
+                        id="gd-gstNumber" type="text" name="gstNumber"
+                        value={formData.gstNumber}
+                        onChange={(e) => setFormData({ ...formData, gstNumber: e.target.value.toUpperCase() })}
+                        placeholder="e.g. 08AABCU9603R1ZM"
+                        maxLength={15}
+                        autoComplete="off"
+                      />
+                    </div>
+                    <small className="field-hint">15-character GSTIN (optional)</small>
                   </div>
 
                   <div style={{ marginBottom: '0.75rem' }}>
