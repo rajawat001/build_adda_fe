@@ -21,7 +21,10 @@ export function getApiErrorMessage(
       return data.validationErrors.map((v: any) => v.message || v.msg).filter(Boolean).join('. ') || fallback;
     }
 
-    return data.message || data.error || data.msg || fallback;
+    // data.error can be a string or an object { code, message, details }
+    const errorField = data.error;
+    const errorMsg = typeof errorField === 'object' && errorField !== null ? errorField.message : errorField;
+    return data.message || errorMsg || data.msg || fallback;
   }
 
   return err?.message || fallback;

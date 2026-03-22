@@ -27,6 +27,18 @@ import {
 
 const LocationPreview = dynamic(() => import('../../../components/LocationPreview'), { ssr: false });
 
+interface DistributorInfo {
+  businessName: string;
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+  state: string;
+  pincode: string;
+  gstNumber?: string;
+}
+
 interface OrderDetails {
   _id: string;
   orderNumber: string;
@@ -68,6 +80,30 @@ interface OrderDetails {
   }>;
 }
 
+// Convert number to Indian currency words
+function amountInWords(num: number): string {
+  if (num === 0) return 'Zero Rupees';
+  const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine',
+    'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+  const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+
+  const toWords = (n: number): string => {
+    if (n === 0) return '';
+    if (n < 20) return ones[n];
+    if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 ? ' ' + ones[n % 10] : '');
+    if (n < 1000) return ones[Math.floor(n / 100)] + ' Hundred' + (n % 100 ? ' and ' + toWords(n % 100) : '');
+    if (n < 100000) return toWords(Math.floor(n / 1000)) + ' Thousand' + (n % 1000 ? ' ' + toWords(n % 1000) : '');
+    if (n < 10000000) return toWords(Math.floor(n / 100000)) + ' Lakh' + (n % 100000 ? ' ' + toWords(n % 100000) : '');
+    return toWords(Math.floor(n / 10000000)) + ' Crore' + (n % 10000000 ? ' ' + toWords(n % 10000000) : '');
+  };
+
+  const rupees = Math.floor(num);
+  const paise = Math.round((num - rupees) * 100);
+  let result = 'Rupees ' + toWords(rupees);
+  if (paise > 0) result += ' and ' + toWords(paise) + ' Paise';
+  return result;
+}
+
 const OrderDetailsPage = () => {
   const router = useRouter();
   const { id } = router.query;
@@ -83,10 +119,19 @@ const OrderDetailsPage = () => {
   const [approvalShipping, setApprovalShipping] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
   const [showRejectForm, setShowRejectForm] = useState(false);
+  const [distributorInfo, setDistributorInfo] = useState<DistributorInfo | null>(null);
 
   useEffect(() => {
     if (id) fetchOrderDetails();
+    fetchDistributorInfo();
   }, [id]);
+
+  const fetchDistributorInfo = async () => {
+    try {
+      const response = await api.get('/distributor/profile');
+      setDistributorInfo(response.data.distributor);
+    } catch { /* ignore */ }
+  };
 
   const fetchOrderDetails = async () => {
     try {
@@ -644,6 +689,166 @@ const OrderDetailsPage = () => {
             <FiFileText size={16} />
             Download Invoice
           </button>
+        </div>
+      </div>
+
+      {/* ===== PRINT-ONLY INVOICE ===== */}
+      {/* eslint-disable-next-line @next/next/no-css-tags */}
+      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" />
+      <div className="invoice-print-only">
+        {/* Top accent bar */}
+        <div className="inv-accent-bar" />
+
+        {/* Header: Logo + Invoice Meta */}
+        <div className="inv-header">
+          <div className="inv-header-left">
+            <h1 className="inv-title">INVOICE</h1>
+            <p className="inv-subtitle">Tax Invoice / Bill of Supply</p>
+          </div>
+          <div className="inv-header-right">
+            <table className="inv-meta-table">
+              <tbody>
+                <tr>
+                  <td className="inv-meta-label">Invoice No.</td>
+                  <td className="inv-meta-value">INV-{order.orderNumber}</td>
+                </tr>
+                <tr>
+                  <td className="inv-meta-label">Invoice Date</td>
+                  <td className="inv-meta-value">{new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                </tr>
+                <tr>
+                  <td className="inv-meta-label">Order No.</td>
+                  <td className="inv-meta-value">#{order.orderNumber}</td>
+                </tr>
+                <tr>
+                  <td className="inv-meta-label">Payment</td>
+                  <td className="inv-meta-value">{order.paymentMethod === 'cod' ? 'COD' : order.paymentMethod.toUpperCase()}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Seller & Buyer */}
+        <div className="inv-parties">
+          <div className="inv-party inv-party-seller">
+            <div className="inv-party-tag">SOLD BY</div>
+            {distributorInfo ? (
+              <>
+                <p className="inv-party-name">{distributorInfo.businessName}</p>
+                <p>{distributorInfo.address}</p>
+                <p>{distributorInfo.city}, {distributorInfo.state} - {distributorInfo.pincode}</p>
+                <p className="inv-party-contact">Ph: {distributorInfo.phone}</p>
+                <p className="inv-party-contact">{distributorInfo.email}</p>
+                {distributorInfo.gstNumber && (
+                  <div className="inv-gstn-box">
+                    <span className="inv-gstn-label">GSTIN</span>
+                    <span className="inv-gstn-value">{distributorInfo.gstNumber}</span>
+                  </div>
+                )}
+              </>
+            ) : (
+              <p>—</p>
+            )}
+          </div>
+          <div className="inv-party inv-party-buyer">
+            <div className="inv-party-tag">BILL TO / SHIP TO</div>
+            <p className="inv-party-name">{order.shippingAddress.fullName}</p>
+            <p>{order.shippingAddress.address}</p>
+            <p>{order.shippingAddress.city}, {order.shippingAddress.state} - {order.shippingAddress.pincode}</p>
+            <p className="inv-party-contact">Ph: {order.shippingAddress.phone}</p>
+            {getCustomerEmail() && <p className="inv-party-contact">{getCustomerEmail()}</p>}
+          </div>
+        </div>
+
+        {/* Items Table */}
+        <table className="inv-table">
+          <thead>
+            <tr>
+              <th className="inv-th-sno">S.No</th>
+              <th className="inv-th-item">Description</th>
+              <th className="inv-th-qty">Qty</th>
+              <th className="inv-th-rate">Unit Price</th>
+              <th className="inv-th-amount">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            {order.items.map((item, i) => (
+              <tr key={i}>
+                <td className="inv-center inv-mono">{String(i + 1).padStart(2, '0')}</td>
+                <td className="inv-item-name">{item.product.name}</td>
+                <td className="inv-center inv-mono">{item.quantity}</td>
+                <td className="inv-right inv-mono">₹{item.price.toLocaleString('en-IN')}</td>
+                <td className="inv-right inv-mono inv-bold">₹{(item.price * item.quantity).toLocaleString('en-IN')}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        {/* Summary + Amount in Words */}
+        <div className="inv-bottom">
+          <div className="inv-words-box">
+            <span className="inv-words-label">Total Amount (in words):</span>
+            <span className="inv-words-value">{amountInWords(order.totalAmount)} Only</span>
+          </div>
+          <div className="inv-summary-table">
+            <div className="inv-sum-row">
+              <span>Subtotal</span>
+              <span className="inv-mono">₹{order.subtotal.toLocaleString('en-IN')}</span>
+            </div>
+            {order.discount > 0 && (
+              <div className="inv-sum-row inv-sum-discount">
+                <span>Discount</span>
+                <span className="inv-mono">−₹{order.discount.toLocaleString('en-IN')}</span>
+              </div>
+            )}
+            {order.tax > 0 && (
+              <div className="inv-sum-row">
+                <span>Tax / GST</span>
+                <span className="inv-mono">₹{order.tax.toLocaleString('en-IN')}</span>
+              </div>
+            )}
+            <div className="inv-sum-row">
+              <span>Delivery / Shipping</span>
+              <span className="inv-mono">{order.deliveryCharge === 0 ? 'FREE' : `₹${order.deliveryCharge.toLocaleString('en-IN')}`}</span>
+            </div>
+            <div className="inv-sum-row inv-sum-total">
+              <span>Grand Total</span>
+              <span className="inv-mono">₹{order.totalAmount.toLocaleString('en-IN')}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Payment Status + Signature */}
+        <div className="inv-footer-section">
+          <div className="inv-payment-box">
+            <div className="inv-pay-badge" data-status={order.paymentStatus}>
+              {order.paymentStatus === 'paid' ? 'PAID' : 'PAYMENT PENDING'}
+            </div>
+            <p className="inv-pay-method">
+              via {order.paymentMethod === 'cod' ? 'Cash on Delivery' : order.paymentMethod.toUpperCase()}
+            </p>
+          </div>
+          <div className="inv-signature">
+            <div className="inv-sign-space" />
+            <div className="inv-sign-line" />
+            <p className="inv-sign-label">Authorized Signatory</p>
+            <p className="inv-sign-name">{distributorInfo?.businessName || ''}</p>
+          </div>
+        </div>
+
+        {/* Computer Generated Note */}
+        <p className="inv-note">This is a computer-generated invoice and does not require a physical signature.</p>
+
+        {/* BuildAdda Branding Footer — single compact line */}
+        <div className="inv-brand-footer">
+          <span className="inv-brand-name">BuildAdda</span>
+          <span className="inv-brand-sep">|</span>
+          <span>+91 6377845721</span>
+          <span className="inv-brand-sep">|</span>
+          <span>contact@buildadda.in</span>
+          <span className="inv-brand-sep">|</span>
+          <span>www.buildadda.in</span>
         </div>
       </div>
 
@@ -1535,23 +1740,327 @@ const OrderDetailsPage = () => {
           .odp-sidebar { order: -1; }
         }
 
-        /* ===== PRINT ===== */
-        @media print {
-          .odp-back,
-          .odp-footer,
-          .odp-approval-card,
-          .odp-header-action,
-          .odp-edit-icon,
-          .odp-navigate-btn { display: none !important; }
+        /* ===== INVOICE (hidden on screen) ===== */
+        .invoice-print-only { display: none; }
+      `}</style>
 
-          .odp-card,
-          .odp-header-card {
-            box-shadow: none;
-            border: 1px solid #e5e7eb;
-            break-inside: avoid;
+      {/* Global print styles to hide DistributorLayout shell */}
+      <style jsx global>{`
+        @media print {
+          /* Hide EVERYTHING on the page first */
+          body * {
+            visibility: hidden;
           }
 
-          .odp-grid { grid-template-columns: 1fr 1fr; }
+          /* Then show ONLY the invoice */
+          .invoice-print-only,
+          .invoice-print-only * {
+            visibility: visible !important;
+          }
+
+          /* Position invoice at top-left of page */
+          .invoice-print-only {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            padding: 20px 32px;
+            box-sizing: border-box;
+          }
+
+          /* Hide sidebar, header, layout chrome completely */
+          .distributor-sidebar,
+          .sidebar-overlay,
+          .distributor-main > div:first-child {
+            display: none !important;
+          }
+
+          .distributor-layout {
+            display: block !important;
+            padding: 0 !important;
+          }
+          .distributor-main {
+            margin: 0 !important;
+            padding: 0 !important;
+            margin-left: 0 !important;
+          }
+
+          body {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #fff !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+        }
+      `}</style>
+
+      <style jsx>{`
+
+        /* ===== PRINT ===== */
+        @media print {
+          .odp,
+          .odp-back,
+          .odp-footer { display: none !important; }
+
+          .invoice-print-only {
+            display: block !important;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            color: #111827;
+            font-size: 12.5px;
+            line-height: 1.55;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+
+          .inv-mono { font-family: 'JetBrains Mono', 'Consolas', monospace; }
+          .inv-bold { font-weight: 700; }
+
+          /* Accent bar */
+          .inv-accent-bar {
+            height: 5px;
+            background: linear-gradient(90deg, #1e3a5f 0%, #2563eb 50%, #1e3a5f 100%);
+            margin-bottom: 24px;
+          }
+
+          /* Header */
+          .inv-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 24px;
+          }
+          .inv-header-left {}
+          .inv-title {
+            font-size: 32px;
+            font-weight: 800;
+            letter-spacing: 4px;
+            margin: 0;
+            color: #1e3a5f;
+          }
+          .inv-subtitle {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #6b7280;
+            margin: 4px 0 0;
+            font-weight: 500;
+          }
+          .inv-header-right { text-align: right; }
+          .inv-meta-table { border-collapse: collapse; margin-left: auto; }
+          .inv-meta-table td { padding: 3px 0; }
+          .inv-meta-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #9ca3af;
+            font-weight: 600;
+            padding-right: 16px;
+            text-align: right;
+          }
+          .inv-meta-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            font-size: 12px;
+            color: #111827;
+          }
+
+          /* Parties */
+          .inv-parties {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            margin-bottom: 24px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            overflow: hidden;
+          }
+          .inv-party {
+            padding: 16px 20px;
+          }
+          .inv-party-seller {
+            background: #f8fafc;
+            border-right: 1px solid #e5e7eb;
+          }
+          .inv-party-tag {
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #6b7280;
+            font-weight: 700;
+            margin-bottom: 10px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid #e5e7eb;
+          }
+          .inv-party p { margin: 2px 0; font-size: 11.5px; color: #374151; }
+          .inv-party-name { font-weight: 700; font-size: 14px !important; color: #111827 !important; margin-bottom: 6px !important; }
+          .inv-party-contact { color: #6b7280 !important; font-size: 11px !important; }
+          .inv-gstn-box {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+            padding: 5px 10px;
+            background: #1e3a5f;
+            border-radius: 4px;
+          }
+          .inv-gstn-label {
+            font-size: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 700;
+            color: #93c5fd;
+          }
+          .inv-gstn-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 600;
+            color: #ffffff;
+            letter-spacing: 1px;
+          }
+
+          /* Items Table */
+          .inv-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 0;
+          }
+          .inv-table th {
+            background: #1e3a5f;
+            color: #ffffff;
+            padding: 10px 14px;
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            font-weight: 700;
+            text-align: left;
+          }
+          .inv-th-sno { width: 50px; text-align: center; }
+          .inv-th-qty { width: 65px; text-align: center; }
+          .inv-th-rate { width: 110px; text-align: right; }
+          .inv-th-amount { width: 120px; text-align: right; }
+          .inv-table td {
+            padding: 11px 14px;
+            border-bottom: 1px solid #f3f4f6;
+            font-size: 12px;
+            color: #374151;
+          }
+          .inv-table tbody tr:nth-child(even) { background: #fafbfc; }
+          .inv-table tbody tr:last-child td { border-bottom: 2px solid #e5e7eb; }
+          .inv-item-name { font-weight: 500; color: #111827; }
+          .inv-center { text-align: center; }
+          .inv-right { text-align: right; }
+
+          /* Bottom: Words + Summary */
+          .inv-bottom {
+            display: flex;
+            gap: 24px;
+            margin: 20px 0 0;
+          }
+          .inv-words-box {
+            flex: 1;
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 14px 16px;
+            align-self: flex-start;
+          }
+          .inv-words-label {
+            display: block;
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #9ca3af;
+            font-weight: 600;
+            margin-bottom: 6px;
+          }
+          .inv-words-value {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #1e3a5f;
+            font-style: italic;
+          }
+          .inv-summary-table { width: 260px; flex-shrink: 0; }
+          .inv-sum-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 7px 0;
+            font-size: 12px;
+            border-bottom: 1px solid #f3f4f6;
+            color: #374151;
+          }
+          .inv-sum-discount span:last-child { color: #16a34a; }
+          .inv-sum-total {
+            font-size: 15px;
+            font-weight: 800;
+            color: #111827;
+            border-top: 2px solid #1e3a5f;
+            border-bottom: none;
+            padding-top: 10px;
+            margin-top: 4px;
+          }
+
+          /* Payment + Signature */
+          .inv-footer-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-top: 36px;
+            padding-top: 20px;
+          }
+          .inv-payment-box {}
+          .inv-pay-badge {
+            display: inline-block;
+            padding: 5px 16px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+          }
+          .inv-pay-badge[data-status="paid"] {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+          }
+          .inv-pay-badge[data-status="pending"] {
+            background: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+          }
+          .inv-pay-method { font-size: 11px; color: #6b7280; margin: 6px 0 0; }
+          .inv-signature { text-align: center; min-width: 200px; }
+          .inv-sign-space { height: 50px; }
+          .inv-sign-line { border-bottom: 1.5px solid #374151; margin-bottom: 6px; }
+          .inv-sign-label { font-size: 9px; text-transform: uppercase; letter-spacing: 1px; color: #9ca3af; margin: 0; font-weight: 600; }
+          .inv-sign-name { font-weight: 700; color: #111827; font-size: 11.5px; margin: 3px 0 0; }
+
+          /* Note */
+          .inv-note {
+            text-align: center;
+            font-size: 9px;
+            color: #9ca3af;
+            margin-top: 20px;
+            font-style: italic;
+          }
+
+          /* Brand Footer — single compact line */
+          .inv-brand-footer {
+            margin-top: 24px;
+            padding-top: 10px;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-size: 9px;
+            color: #9ca3af;
+            flex-wrap: nowrap;
+          }
+          .inv-brand-sep { color: #d1d5db; font-size: 10px; }
+          .inv-brand-name { font-weight: 700; color: #6b7280; }
         }
       `}</style>
     </DistributorLayout>
