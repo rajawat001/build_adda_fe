@@ -72,7 +72,22 @@ const ProductsManagement: React.FC = () => {
     price: 0,
     mrp: 0,
     stockQuantity: 0,
-    isActive: true
+    isActive: true,
+    unit: 'unit',
+    unitType: 'unit',
+    brand: '',
+    manufacturer: '',
+    origin: '',
+    material: '',
+    color: '',
+    weight: '',
+    warranty: '',
+    hsnCode: '',
+    minQuantity: 1,
+    maxQuantity: '',
+    acceptedPaymentMethods: ['COD', 'Online'] as string[],
+    dimensions: { length: '', width: '', height: '', dimensionUnit: '' },
+    specifications: [] as Array<{ key: string; value: string }>,
   });
 
   useEffect(() => {
@@ -374,19 +389,52 @@ const ProductsManagement: React.FC = () => {
     window.open(`/products/${slug}`, '_blank');
   };
 
-  const handleEditProduct = (productId: string) => {
-    const product = products.find(p => p._id === productId);
-    if (product) {
-      setSelectedProduct(product);
+  const handleEditProduct = async (productId: string) => {
+    try {
+      // Fetch full product details from API for all fields
+      const res = await api.get(`/products/${productId}`);
+      const p = res.data?.product || res.data || {};
+      const product = products.find(pr => pr._id === productId);
+      setSelectedProduct(product || p);
       setEditFormData({
-        name: product.name || '',
-        description: product.description || '',
-        price: product.price || 0,
-        mrp: product.realPrice || product.mrp || 0,
-        stockQuantity: product.stock || product.stockQuantity || 0,
-        isActive: product.isActive ?? true
+        name: p.name || '',
+        description: p.description || '',
+        price: p.price || 0,
+        mrp: p.realPrice || 0,
+        stockQuantity: p.stock || 0,
+        isActive: p.isActive ?? true,
+        unit: p.unit || 'unit',
+        unitType: p.unitType || 'unit',
+        brand: p.brand || '',
+        manufacturer: p.manufacturer || '',
+        origin: p.origin || '',
+        material: p.material || '',
+        color: p.color || '',
+        weight: p.weight || '',
+        warranty: p.warranty || '',
+        hsnCode: p.hsnCode || '',
+        minQuantity: p.minQuantity || 1,
+        maxQuantity: p.maxQuantity || '',
+        acceptedPaymentMethods: p.acceptedPaymentMethods || ['COD', 'Online'],
+        dimensions: p.dimensions || { length: '', width: '', height: '', dimensionUnit: '' },
+        specifications: p.specifications || [],
       });
       setShowEditModal(true);
+    } catch {
+      const product = products.find(pr => pr._id === productId);
+      if (product) {
+        setSelectedProduct(product);
+        setEditFormData({
+          name: product.name || '', description: product.description || '',
+          price: product.price || 0, mrp: product.realPrice || product.mrp || 0,
+          stockQuantity: product.stock || product.stockQuantity || 0, isActive: product.isActive ?? true,
+          unit: 'unit', unitType: 'unit', brand: '', manufacturer: '', origin: '', material: '',
+          color: '', weight: '', warranty: '', hsnCode: '', minQuantity: 1, maxQuantity: '',
+          acceptedPaymentMethods: ['COD', 'Online'], dimensions: { length: '', width: '', height: '', dimensionUnit: '' },
+          specifications: [],
+        });
+        setShowEditModal(true);
+      }
     }
   };
 
@@ -670,7 +718,7 @@ const ProductsManagement: React.FC = () => {
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                style={{ maxWidth: '600px', maxHeight: '90vh', overflow: 'auto' }}
+                style={{ maxWidth: '800px', maxHeight: '90vh', overflow: 'auto' }}
               >
                 <div className="modal-header">
                   <h2 className="modal-title">Edit Product</h2>
@@ -750,53 +798,168 @@ const ProductsManagement: React.FC = () => {
                       />
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+                    {/* Pricing */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
                       <div className="form-group">
                         <label className="form-label">Selling Price (₹) *</label>
-                        <input
-                          type="number"
-                          className="form-input"
-                          value={editFormData.price}
+                        <input type="number" className="form-input" value={editFormData.price}
                           onChange={(e) => setEditFormData({ ...editFormData, price: parseFloat(e.target.value) || 0 })}
-                          min="0"
-                          step="0.01"
-                          required
-                        />
+                          min="0" step="0.01" required />
                       </div>
-
                       <div className="form-group">
                         <label className="form-label">MRP (₹)</label>
-                        <input
-                          type="number"
-                          className="form-input"
-                          value={editFormData.mrp}
+                        <input type="number" className="form-input" value={editFormData.mrp}
                           onChange={(e) => setEditFormData({ ...editFormData, mrp: parseFloat(e.target.value) || 0 })}
-                          min="0"
-                          step="0.01"
-                        />
+                          min="0" step="0.01" />
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Stock *</label>
+                        <input type="number" className="form-input" value={editFormData.stockQuantity}
+                          onChange={(e) => setEditFormData({ ...editFormData, stockQuantity: parseInt(e.target.value) || 0 })}
+                          min="0" required />
                       </div>
                     </div>
 
-                    <div className="form-group">
-                      <label className="form-label">Stock Quantity *</label>
-                      <input
-                        type="number"
-                        className="form-input"
-                        value={editFormData.stockQuantity}
-                        onChange={(e) => setEditFormData({ ...editFormData, stockQuantity: parseInt(e.target.value) || 0 })}
-                        min="0"
-                        required
-                      />
+                    {/* Unit & Quantity */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
+                      <div className="form-group">
+                        <label className="form-label">Unit Type</label>
+                        <select className="form-input" value={editFormData.unitType}
+                          onChange={(e) => setEditFormData({ ...editFormData, unitType: e.target.value, unit: e.target.value })}>
+                          {['unit','kg','g','L','mL','ton','piece','bag','box','sqft','sqm','bundle','set','meter','feet'].map(u =>
+                            <option key={u} value={u}>{u}</option>
+                          )}
+                        </select>
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Min Qty</label>
+                        <input type="number" className="form-input" value={editFormData.minQuantity}
+                          onChange={(e) => setEditFormData({ ...editFormData, minQuantity: parseInt(e.target.value) || 1 })}
+                          min="1" />
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Max Qty</label>
+                        <input type="number" className="form-input" value={editFormData.maxQuantity}
+                          onChange={(e) => setEditFormData({ ...editFormData, maxQuantity: e.target.value })}
+                          min="1" placeholder="No limit" />
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Payment</label>
+                        <div style={{ display: 'flex', gap: '0.75rem', paddingTop: '0.5rem' }}>
+                          {['COD', 'Online'].map(m => (
+                            <label key={m} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.85rem', cursor: 'pointer' }}>
+                              <input type="checkbox" checked={editFormData.acceptedPaymentMethods.includes(m)}
+                                onChange={(e) => {
+                                  const methods = e.target.checked
+                                    ? [...editFormData.acceptedPaymentMethods, m]
+                                    : editFormData.acceptedPaymentMethods.filter(x => x !== m);
+                                  setEditFormData({ ...editFormData, acceptedPaymentMethods: methods });
+                                }} />
+                              {m}
+                            </label>
+                          ))}
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="form-group">
+                    {/* Product Details */}
+                    <p style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--admin-text-secondary)', textTransform: 'uppercase', letterSpacing: '1px', margin: '0.5rem 0 0.25rem', borderBottom: '1px solid var(--admin-border-primary)', paddingBottom: '0.25rem' }}>Product Details</p>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+                      <div className="form-group">
+                        <label className="form-label">Brand</label>
+                        <input type="text" className="form-input" value={editFormData.brand}
+                          onChange={(e) => setEditFormData({ ...editFormData, brand: e.target.value })} placeholder="e.g. UltraTech" />
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Manufacturer</label>
+                        <input type="text" className="form-input" value={editFormData.manufacturer}
+                          onChange={(e) => setEditFormData({ ...editFormData, manufacturer: e.target.value })} placeholder="e.g. UltraTech Cement Ltd" />
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Origin</label>
+                        <input type="text" className="form-input" value={editFormData.origin}
+                          onChange={(e) => setEditFormData({ ...editFormData, origin: e.target.value })} placeholder="e.g. India" />
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Material</label>
+                        <input type="text" className="form-input" value={editFormData.material}
+                          onChange={(e) => setEditFormData({ ...editFormData, material: e.target.value })} placeholder="e.g. Portland Cement" />
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Color</label>
+                        <input type="text" className="form-input" value={editFormData.color}
+                          onChange={(e) => setEditFormData({ ...editFormData, color: e.target.value })} placeholder="e.g. Grey" />
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Weight</label>
+                        <input type="text" className="form-input" value={editFormData.weight}
+                          onChange={(e) => setEditFormData({ ...editFormData, weight: e.target.value })} placeholder="e.g. 50 kg" />
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Warranty</label>
+                        <input type="text" className="form-input" value={editFormData.warranty}
+                          onChange={(e) => setEditFormData({ ...editFormData, warranty: e.target.value })} placeholder="e.g. 6 months" />
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">HSN Code</label>
+                        <input type="text" className="form-input" value={editFormData.hsnCode}
+                          onChange={(e) => setEditFormData({ ...editFormData, hsnCode: e.target.value })} placeholder="e.g. 2523" />
+                      </div>
+                    </div>
+
+                    {/* Dimensions */}
+                    <p style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--admin-text-secondary)', textTransform: 'uppercase', letterSpacing: '1px', margin: '0.5rem 0 0.25rem', borderBottom: '1px solid var(--admin-border-primary)', paddingBottom: '0.25rem' }}>Dimensions</p>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
+                      <div className="form-group">
+                        <label className="form-label">Length</label>
+                        <input type="text" className="form-input" value={editFormData.dimensions.length}
+                          onChange={(e) => setEditFormData({ ...editFormData, dimensions: { ...editFormData.dimensions, length: e.target.value } })} />
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Width</label>
+                        <input type="text" className="form-input" value={editFormData.dimensions.width}
+                          onChange={(e) => setEditFormData({ ...editFormData, dimensions: { ...editFormData.dimensions, width: e.target.value } })} />
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Height</label>
+                        <input type="text" className="form-input" value={editFormData.dimensions.height}
+                          onChange={(e) => setEditFormData({ ...editFormData, dimensions: { ...editFormData.dimensions, height: e.target.value } })} />
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Unit</label>
+                        <select className="form-input" value={editFormData.dimensions.dimensionUnit}
+                          onChange={(e) => setEditFormData({ ...editFormData, dimensions: { ...editFormData.dimensions, dimensionUnit: e.target.value } })}>
+                          <option value="">--</option>
+                          {['mm','cm','inch','feet','m'].map(u => <option key={u} value={u}>{u}</option>)}
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Specifications */}
+                    <p style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--admin-text-secondary)', textTransform: 'uppercase', letterSpacing: '1px', margin: '0.5rem 0 0.25rem', borderBottom: '1px solid var(--admin-border-primary)', paddingBottom: '0.25rem' }}>Specifications</p>
+                    {editFormData.specifications.map((spec, i) => (
+                      <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                        <input type="text" className="form-input" placeholder="Key" value={spec.key}
+                          onChange={(e) => { const specs = [...editFormData.specifications]; specs[i] = { ...specs[i], key: e.target.value }; setEditFormData({ ...editFormData, specifications: specs }); }} />
+                        <input type="text" className="form-input" placeholder="Value" value={spec.value}
+                          onChange={(e) => { const specs = [...editFormData.specifications]; specs[i] = { ...specs[i], value: e.target.value }; setEditFormData({ ...editFormData, specifications: specs }); }} />
+                        <button type="button" className="btn btn-secondary" style={{ padding: '0.4rem 0.6rem' }}
+                          onClick={() => { const specs = editFormData.specifications.filter((_, idx) => idx !== i); setEditFormData({ ...editFormData, specifications: specs }); }}>
+                          <FiX size={14} />
+                        </button>
+                      </div>
+                    ))}
+                    <button type="button" className="btn btn-secondary" style={{ fontSize: '0.8rem', padding: '0.4rem 0.75rem' }}
+                      onClick={() => setEditFormData({ ...editFormData, specifications: [...editFormData.specifications, { key: '', value: '' }] })}>
+                      + Add Specification
+                    </button>
+
+                    {/* Active Toggle */}
+                    <div className="form-group" style={{ marginTop: '1rem' }}>
                       <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                        <input
-                          type="checkbox"
-                          checked={editFormData.isActive}
+                        <input type="checkbox" checked={editFormData.isActive}
                           onChange={(e) => setEditFormData({ ...editFormData, isActive: e.target.checked })}
-                          style={{ width: '18px', height: '18px' }}
-                        />
+                          style={{ width: '18px', height: '18px' }} />
                         <span className="form-label" style={{ margin: 0 }}>Active (visible to customers)</span>
                       </label>
                     </div>
