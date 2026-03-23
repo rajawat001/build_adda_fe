@@ -66,12 +66,14 @@ const ProductsManagement: React.FC = () => {
   // Edit Modal States
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [categories, setCategories] = useState<Array<{ _id: string; name: string }>>([]);
   const [editFormData, setEditFormData] = useState({
     name: '',
     description: '',
     price: 0,
     mrp: 0,
     stockQuantity: 0,
+    category: '',
     isActive: true,
     unit: 'unit',
     unitType: 'unit',
@@ -99,7 +101,16 @@ const ProductsManagement: React.FC = () => {
   useEffect(() => {
     fetchProducts();
     fetchStats();
+    fetchCategories();
   }, [currentPage, filters, searchTerm]);
+
+  const fetchCategories = async () => {
+    try {
+      const res = await api.get('/products/categories');
+      const list = res.data?.categories || res.data || [];
+      setCategories(Array.isArray(list) ? list : []);
+    } catch { /* ignore */ }
+  };
 
   const fetchProducts = async () => {
     try {
@@ -402,6 +413,7 @@ const ProductsManagement: React.FC = () => {
         price: p.price || 0,
         mrp: p.realPrice || 0,
         stockQuantity: p.stock || 0,
+        category: typeof p.category === 'object' ? p.category?._id : p.category || '',
         isActive: p.isActive ?? true,
         unit: p.unit || 'unit',
         unitType: p.unitType || 'unit',
@@ -427,7 +439,8 @@ const ProductsManagement: React.FC = () => {
         setEditFormData({
           name: product.name || '', description: product.description || '',
           price: product.price || 0, mrp: product.realPrice || product.mrp || 0,
-          stockQuantity: product.stock || product.stockQuantity || 0, isActive: product.isActive ?? true,
+          stockQuantity: product.stock || product.stockQuantity || 0, category: product.category?._id || '',
+          isActive: product.isActive ?? true,
           unit: 'unit', unitType: 'unit', brand: '', manufacturer: '', origin: '', material: '',
           color: '', weight: '', warranty: '', hsnCode: '', minQuantity: 1, maxQuantity: '',
           acceptedPaymentMethods: ['COD', 'Online'], dimensions: { length: '', width: '', height: '', dimensionUnit: '' },
@@ -796,6 +809,17 @@ const ProductsManagement: React.FC = () => {
                         onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
                         placeholder="Enter product description"
                       />
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">Category *</label>
+                      <select className="form-input" value={editFormData.category}
+                        onChange={(e) => setEditFormData({ ...editFormData, category: e.target.value })} required>
+                        <option value="">Select category</option>
+                        {categories.map(c => (
+                          <option key={c._id} value={c._id}>{c.name}</option>
+                        ))}
+                      </select>
                     </div>
 
                     {/* Pricing */}
