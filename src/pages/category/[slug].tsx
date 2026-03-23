@@ -60,8 +60,8 @@ const CategoryPage: React.FC = () => {
 
       setCategory(foundCategory);
 
-      // Fetch all products and filter by category
-      const productsResponse = await productService.getAllProducts();
+      // Fetch products by category (backend handles city filtering via x-client-city header)
+      const productsResponse = await productService.getProductsByCategory(foundCategory._id);
       let productsList: Product[] = [];
 
       if (productsResponse.products) {
@@ -72,8 +72,9 @@ const CategoryPage: React.FC = () => {
         productsList = productsResponse.data.products;
       }
 
-      // Filter products by category ID
+      // Products already filtered by category from backend, but double-check
       const categoryProducts = productsList.filter((product: Product) => {
+        if (!product.category) return true; // keep if no category info
         const categoryId = typeof product.category === 'string'
           ? product.category
           : product.category._id;
