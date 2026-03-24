@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useTheme } from '../../contexts/ThemeContext';
-import { FiHome, FiPackage, FiShoppingCart, FiUser, FiLogOut, FiSun, FiMoon, FiBarChart2, FiCreditCard, FiX, FiBell, FiDollarSign } from 'react-icons/fi';
+import { FiHome, FiPackage, FiShoppingCart, FiUser, FiLogOut, FiSun, FiMoon, FiBarChart2, FiCreditCard, FiX, FiBell, FiDollarSign, FiFileText } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
 import api from '../../services/api';
@@ -36,6 +36,7 @@ const Sidebar = ({ onLogout, isOpen = false, onClose, isMobile = false }: Sideba
     { path: '/distributor/dashboard', icon: FiHome, label: 'Dashboard' },
     { path: '/distributor/products', icon: FiPackage, label: 'Products' },
     { path: '/distributor/orders', icon: FiShoppingCart, label: 'Orders' },
+    { path: '/distributor/manual-orders', icon: FiFileText, label: 'Manual Orders' },
     { path: '/distributor/analytics', icon: FiBarChart2, label: 'Analytics' },
   ];
 
