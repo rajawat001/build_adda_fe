@@ -44,6 +44,7 @@ export const createManualOrder = async (data: {
   paymentMethod?: string;
   deliveryCharge?: number;
   notes?: string;
+  gst?: { enabled: boolean; gstType: string; gstRate: number };
 }) => {
   const response = await api.post('/distributor/manual-orders', data);
   return response.data;

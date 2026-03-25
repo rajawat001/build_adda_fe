@@ -62,6 +62,11 @@ const CreateOrderPage = () => {
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  // GST state
+  const [gstEnabled, setGstEnabled] = useState(false);
+  const [gstType, setGstType] = useState<'intra' | 'inter'>('intra');
+  const [gstRate, setGstRate] = useState(18);
+
   // Fetch distributor's products
   useEffect(() => {
     const loadProducts = async () => {
@@ -141,7 +146,14 @@ const CreateOrderPage = () => {
   };
 
   const subtotal = orderItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const total = subtotal + deliveryCharge;
+
+  // GST calculation
+  const gstAmount = gstEnabled ? Math.round(subtotal * gstRate / 100 * 100) / 100 : 0;
+  const cgstAmount = gstEnabled && gstType === 'intra' ? Math.round(subtotal * (gstRate / 2) / 100 * 100) / 100 : 0;
+  const sgstAmount = gstEnabled && gstType === 'intra' ? Math.round(subtotal * (gstRate / 2) / 100 * 100) / 100 : 0;
+  const igstAmount = gstEnabled && gstType === 'inter' ? Math.round(subtotal * gstRate / 100 * 100) / 100 : 0;
+
+  const total = Math.round((subtotal + gstAmount + deliveryCharge) * 100) / 100;
 
   const handleSubmit = async () => {
     if (!selectedCustomer) { toast.error('Please select a customer'); return; }
@@ -159,6 +171,7 @@ const CreateOrderPage = () => {
         paymentMethod,
         deliveryCharge,
         notes,
+        gst: gstEnabled ? { enabled: true, gstType, gstRate } : undefined,
         shippingAddress: selectedCustomer.address ? {
           fullName: selectedCustomer.name,
           phone: selectedCustomer.phone,
@@ -350,9 +363,41 @@ const CreateOrderPage = () => {
           )}
         </Card>
 
-        {/* Step 3: Order Summary */}
+        {/* Step 3: GST & Order Summary */}
         <Card className={`${isMobile ? 'p-3' : 'p-4'} mb-4`}>
           <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>Order Summary</h3>
+
+          {/* GST Toggle */}
+          <div style={{ padding: '12px 14px', background: 'var(--bg-secondary)', borderRadius: 8, marginBottom: 16 }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', marginBottom: gstEnabled ? 12 : 0 }}>
+              <input type="checkbox" checked={gstEnabled} onChange={(e) => setGstEnabled(e.target.checked)}
+                style={{ width: 18, height: 18, accentColor: '#ff6b35' }} />
+              <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>Apply GST</span>
+            </label>
+
+            {gstEnabled && (
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 10 }}>
+                <div>
+                  <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.5px' }}>GST Type</label>
+                  <select value={gstType} onChange={(e) => setGstType(e.target.value as 'intra' | 'inter')}
+                    style={{ width: '100%', padding: '8px 12px', border: '1px solid var(--border-primary)', borderRadius: 8, fontSize: 13, background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
+                    <option value="intra">Intra-State (CGST + SGST)</option>
+                    <option value="inter">Inter-State (IGST)</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.5px' }}>GST Rate (%)</label>
+                  <select value={gstRate} onChange={(e) => setGstRate(parseFloat(e.target.value))}
+                    style={{ width: '100%', padding: '8px 12px', border: '1px solid var(--border-primary)', borderRadius: 8, fontSize: 13, background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
+                    <option value={5}>5%</option>
+                    <option value={12}>12%</option>
+                    <option value={18}>18%</option>
+                    <option value={28}>28%</option>
+                  </select>
+                </div>
+              </div>
+            )}
+          </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12, marginBottom: 16 }}>
             <div>
@@ -382,6 +427,24 @@ const CreateOrderPage = () => {
               <span style={{ color: 'var(--text-secondary)' }}>Subtotal ({orderItems.length} items)</span>
               <span>₹{subtotal.toLocaleString('en-IN')}</span>
             </div>
+            {gstEnabled && gstType === 'intra' && (
+              <>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 4 }}>
+                  <span style={{ color: 'var(--text-secondary)' }}>CGST ({gstRate / 2}%)</span>
+                  <span>₹{cgstAmount.toLocaleString('en-IN')}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 6 }}>
+                  <span style={{ color: 'var(--text-secondary)' }}>SGST ({gstRate / 2}%)</span>
+                  <span>₹{sgstAmount.toLocaleString('en-IN')}</span>
+                </div>
+              </>
+            )}
+            {gstEnabled && gstType === 'inter' && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 6 }}>
+                <span style={{ color: 'var(--text-secondary)' }}>IGST ({gstRate}%)</span>
+                <span>₹{igstAmount.toLocaleString('en-IN')}</span>
+              </div>
+            )}
             {deliveryCharge > 0 && (
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 6 }}>
                 <span style={{ color: 'var(--text-secondary)' }}>Delivery</span>

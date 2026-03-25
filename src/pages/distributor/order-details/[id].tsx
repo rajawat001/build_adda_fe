@@ -70,8 +70,21 @@ interface OrderDetails {
   approvedAt?: string;
   rejectionReason?: string;
   isGuestOrder?: boolean;
+  isManualOrder?: boolean;
   guestEmail?: string;
   guestPhone?: string;
+  gstDetails?: {
+    enabled: boolean;
+    gstType: string;
+    taxableAmount: number;
+    cgstRate: number;
+    cgstAmount: number;
+    sgstRate: number;
+    sgstAmount: number;
+    igstRate: number;
+    igstAmount: number;
+    totalGst: number;
+  };
   createdAt: string;
   statusHistory?: Array<{
     status: string;
@@ -802,9 +815,27 @@ const OrderDetailsPage = () => {
                 <span className="inv-mono">−₹{order.discount.toLocaleString('en-IN')}</span>
               </div>
             )}
-            {order.tax > 0 && (
+            {order.gstDetails?.enabled && order.gstDetails.gstType === 'intra' && (
+              <>
+                <div className="inv-sum-row">
+                  <span>CGST ({order.gstDetails.cgstRate}%)</span>
+                  <span className="inv-mono">₹{order.gstDetails.cgstAmount.toLocaleString('en-IN')}</span>
+                </div>
+                <div className="inv-sum-row">
+                  <span>SGST ({order.gstDetails.sgstRate}%)</span>
+                  <span className="inv-mono">₹{order.gstDetails.sgstAmount.toLocaleString('en-IN')}</span>
+                </div>
+              </>
+            )}
+            {order.gstDetails?.enabled && order.gstDetails.gstType === 'inter' && (
               <div className="inv-sum-row">
-                <span>Tax / GST</span>
+                <span>IGST ({order.gstDetails.igstRate}%)</span>
+                <span className="inv-mono">₹{order.gstDetails.igstAmount.toLocaleString('en-IN')}</span>
+              </div>
+            )}
+            {!order.gstDetails?.enabled && order.tax > 0 && (
+              <div className="inv-sum-row">
+                <span>Tax</span>
                 <span className="inv-mono">₹{order.tax.toLocaleString('en-IN')}</span>
               </div>
             )}
