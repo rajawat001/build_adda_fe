@@ -191,7 +191,7 @@ export default function Header() {
     'Other': <FiPackage size={20} />,
   };
 
-  const defaultCategories = [
+  const defaultCategories: Array<{ id: string; name: string; children?: Array<{ id: string; name: string }> }> = [
     { id: 'Cement', name: 'Cement' },
     { id: 'Steel', name: 'Steel' },
     { id: 'Bricks', name: 'Bricks' },
@@ -211,10 +211,21 @@ export default function Header() {
       const response = await api.get('/products/categories');
       const categoryList = response.data.categories || [];
       if (categoryList.length > 0) {
-        setCategories(categoryList.map((cat: any) => ({
-          id: cat.id || cat._id || cat.name,
-          name: cat.name,
-        })));
+        // Only show parent categories (no parent) in main list
+        // Child categories will show on hover of parent
+        setCategories(categoryList
+          .filter((cat: any) => !cat.parent)
+          .map((cat: any) => ({
+            id: cat._id || cat.id || cat.name,
+            name: cat.name,
+            children: categoryList
+              .filter((child: any) => child.parent && (child.parent === cat._id || child.parent === cat.id))
+              .map((child: any) => ({
+                id: child._id || child.id || child.name,
+                name: child.name,
+              })),
+          }))
+        );
       }
     } catch (error) {
       console.error('Error loading categories:', error);
@@ -523,10 +534,32 @@ export default function Header() {
                         >
                           <span className="mega-menu-category-icon">{getCategoryIcon(category.name)}</span>
                           <span>{category.name}</span>
+                          {category.children && category.children.length > 0 && (
+                            <span style={{ marginLeft: 'auto', fontSize: 10, color: 'var(--text-tertiary)' }}>&#9654;</span>
+                          )}
                         </button>
                       ))}
                     </div>
                     <div className="mega-menu-right">
+                      {/* Subcategories row if parent has children */}
+                      {activeCategory && (() => {
+                        const activeCat = categories.find(c => c.id === activeCategory);
+                        return activeCat?.children && activeCat.children.length > 0 ? (
+                          <div className="mega-menu-subcategories">
+                            {activeCat.children.map((child) => (
+                              <Link
+                                key={child.id}
+                                href={`/category/${child.name.toLowerCase().replace(/\s+/g, '-')}`}
+                                className="mega-menu-subcategory-chip"
+                                onClick={handleMegaMenuClose}
+                              >
+                                {child.name}
+                              </Link>
+                            ))}
+                          </div>
+                        ) : null;
+                      })()}
+
                       {megaMenuLoading && !categoryProducts[activeCategory || ''] ? (
                         <div className="mega-menu-skeleton-grid">
                           {[1, 2, 3].map((i) => (

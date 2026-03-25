@@ -103,14 +103,24 @@ const ProductForm = () => {
   const [fetchingProduct, setFetchingProduct] = useState(false);
   const [errors, setErrors] = useState<any>({});
   const [showDimensions, setShowDimensions] = useState(false);
+  const [categories, setCategories] = useState<Array<{ _id: string; name: string }>>([]);
 
   const totalImages = existingImages.length + newImages.length;
 
   useEffect(() => {
+    fetchCategories();
     if (id) {
       fetchProduct();
     }
   }, [id]);
+
+  const fetchCategories = async () => {
+    try {
+      const res = await api.get('/products/categories');
+      const list = res.data?.categories || res.data || [];
+      setCategories(Array.isArray(list) ? list : []);
+    } catch { /* ignore */ }
+  };
 
   const fetchProduct = async () => {
     try {
@@ -125,7 +135,7 @@ const ProductForm = () => {
           description: product.description,
           realPrice: product.realPrice ? product.realPrice.toString() : '',
           price: product.price.toString(),
-          category: product.category,
+          category: typeof product.category === 'object' ? product.category._id : product.category,
           stock: product.stock.toString(),
           unit: product.unit || 'unit',
           unitType: product.unitType || 'unit',
@@ -479,13 +489,9 @@ const ProductForm = () => {
                       className={inputClass(!!errors.category)}
                     >
                       <option value="">Select Category</option>
-                      <option value="Cement">Cement</option>
-                      <option value="Steel">Steel</option>
-                      <option value="Bricks">Bricks</option>
-                      <option value="Sand">Sand</option>
-                      <option value="Paint">Paint</option>
-                      <option value="Tiles">Tiles</option>
-                      <option value="Other">Other</option>
+                      {categories.map(cat => (
+                        <option key={cat._id} value={cat._id}>{cat.name}</option>
+                      ))}
                     </select>
                     {errors.category && <p className="text-[var(--error)] text-sm mt-1">{errors.category}</p>}
                   </div>

@@ -1,310 +1,319 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Head from 'next/head';
-import Link from 'next/link';
 
 const ServerErrorPage: React.FC = () => {
-  const [serverStatus, setServerStatus] = useState<'checking' | 'down' | 'up'>('checking');
-  const [countdown, setCountdown] = useState(30);
+  const [status, setStatus] = useState<'checking' | 'down' | 'up'>('down');
+  const [countdown, setCountdown] = useState(15);
   const [retryCount, setRetryCount] = useState(0);
-
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-  const healthUrl = API_URL.replace(/\/api\/?$/, '') + '/health';
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const hasRedirected = useRef(false);
 
   const checkServer = useCallback(async () => {
-    setServerStatus('checking');
+    if (hasRedirected.current) return;
+    setStatus('checking');
     try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+      const healthUrl = API_URL.replace(/\/api\/?$/, '') + '/health';
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 5000);
+      // Use fetch directly — NOT the api.ts interceptor (avoids redirect loop)
       const res = await fetch(healthUrl, { signal: controller.signal });
       clearTimeout(timeout);
       if (res.ok) {
-        setServerStatus('up');
-        // Server is back — reload after brief delay
-        setTimeout(() => window.location.reload(), 500);
+        setStatus('up');
+        hasRedirected.current = true;
+        // Navigate to homepage (not reload — prevents infinite loop)
+        setTimeout(() => { window.location.href = '/'; }, 1000);
         return;
       }
-      setServerStatus('down');
     } catch {
-      setServerStatus('down');
+      // Server still down
     }
+    setStatus('down');
     setRetryCount(prev => prev + 1);
-    setCountdown(30);
-  }, [healthUrl]);
+    setCountdown(15);
+  }, []);
 
-  // Initial check
+  // Auto-retry countdown
   useEffect(() => {
-    checkServer();
-  }, [checkServer]);
-
-  // Auto-retry every 30 seconds
-  useEffect(() => {
-    if (serverStatus === 'up') return;
-    const interval = setInterval(checkServer, 30000);
-    return () => clearInterval(interval);
-  }, [checkServer, serverStatus]);
-
-  // Countdown ticker
-  useEffect(() => {
-    if (serverStatus === 'up') return;
-    const tick = setInterval(() => {
-      setCountdown(prev => (prev <= 1 ? 30 : prev - 1));
+    if (status === 'up') return;
+    timerRef.current = setInterval(() => {
+      setCountdown(prev => {
+        if (prev <= 1) {
+          checkServer();
+          return 15;
+        }
+        return prev - 1;
+      });
     }, 1000);
-    return () => clearInterval(tick);
-  }, [serverStatus]);
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [status, checkServer]);
 
-  const isDown = serverStatus === 'down';
-  const isChecking = serverStatus === 'checking';
+  // Initial check on mount
+  useEffect(() => { checkServer(); }, []);
+
+  const goHome = () => { window.location.href = '/'; };
+  const goContact = () => { window.location.href = '/contact'; };
 
   return (
     <>
       <Head>
-        <title>{isDown ? 'Server Down' : 'Server Error'} | BuildAdda</title>
-        <meta name="description" content="Something went wrong. We're working on fixing it." />
+        <title>Something went wrong | BuildAdda</title>
+        <meta name="robots" content="noindex" />
       </Head>
 
-      <div className="error-page">
-        <div className="error-container">
-          {/* Animated Server Status */}
-          <div className="server-status-visual">
-            <div className={`server-icon-wrapper ${isDown ? 'down' : isChecking ? 'checking' : 'up'}`}>
-              <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="2" width="20" height="8" rx="2" ry="2" />
-                <rect x="2" y="14" width="20" height="8" rx="2" ry="2" />
-                <line x1="6" y1="6" x2="6.01" y2="6" />
-                <line x1="6" y1="18" x2="6.01" y2="18" />
+      <div className="err5">
+        <div className="err5-card">
+          {/* Illustration */}
+          <div className="err5-illustration">
+            <div className={`err5-icon-ring ${status}`}>
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                {status === 'up' ? (
+                  <path d="M20 6L9 17l-5-5" />
+                ) : (
+                  <>
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                  </>
+                )}
               </svg>
             </div>
-            <div className={`status-indicator ${isDown ? 'red' : isChecking ? 'yellow' : 'green'}`} />
           </div>
 
-          <h1 className="error-title">
-            {isDown ? 'Server is Unreachable' : isChecking ? 'Checking Server...' : 'Server Error'}
-          </h1>
+          {/* Content */}
+          {status === 'up' ? (
+            <>
+              <h1 className="err5-title" style={{ color: '#16a34a' }}>We&apos;re back!</h1>
+              <p className="err5-subtitle">Redirecting you to the homepage...</p>
+            </>
+          ) : (
+            <>
+              <h1 className="err5-title">Something went wrong</h1>
+              <p className="err5-subtitle">
+                We&apos;re experiencing technical difficulties. Our team is working on it.
+                {status === 'checking' ? ' Checking now...' : ` Retrying in ${countdown}s`}
+              </p>
+            </>
+          )}
 
-          <p className="error-message">
-            {isDown
-              ? 'Our servers are currently down. Our team has been notified and is working to restore service as quickly as possible.'
-              : isChecking
-                ? 'Please wait while we check the server status...'
-                : 'An unexpected error occurred. Please try again.'
-            }
-          </p>
-
-          {/* Live Status Card */}
-          <div className="status-card">
-            <div className="status-row">
-              <span className="status-label">Server Status</span>
-              <span className={`status-badge ${isDown ? 'badge-red' : isChecking ? 'badge-yellow' : 'badge-green'}`}>
-                <span className={`badge-dot ${isDown ? 'red' : isChecking ? 'yellow' : 'green'}`} />
-                {isDown ? 'Offline' : isChecking ? 'Checking...' : 'Online'}
-              </span>
-            </div>
-            <div className="status-row">
-              <span className="status-label">Retry Attempts</span>
-              <span className="status-value">{retryCount}</span>
-            </div>
-            <div className="status-row">
-              <span className="status-label">Next Retry</span>
-              <span className="status-value">
-                {isChecking ? 'Now...' : `${countdown}s`}
-              </span>
-            </div>
-            <div className="retry-bar">
-              <div
-                className="retry-fill"
-                style={{ width: `${((30 - countdown) / 30) * 100}%` }}
-              />
-            </div>
+          {/* Status Badge */}
+          <div className="err5-status-row">
+            <span className={`err5-badge ${status}`}>
+              <span className={`err5-dot ${status}`} />
+              {status === 'up' ? 'Online' : status === 'checking' ? 'Checking...' : 'Offline'}
+            </span>
+            {retryCount > 0 && status !== 'up' && (
+              <span className="err5-retry-count">Attempt {retryCount}</span>
+            )}
           </div>
 
-          <div className="error-actions">
-            <button
-              onClick={checkServer}
-              className="btn-primary"
-              disabled={isChecking}
-            >
-              {isChecking ? '🔄 Checking...' : '🔄 Check Now'}
+          {/* Progress bar */}
+          {status !== 'up' && (
+            <div className="err5-progress">
+              <div className="err5-progress-fill" style={{ width: `${((15 - countdown) / 15) * 100}%` }} />
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="err5-actions">
+            <button onClick={checkServer} className="err5-btn-primary" disabled={status === 'checking' || status === 'up'}>
+              {status === 'checking' ? 'Checking...' : 'Retry Now'}
             </button>
-            <Link href="/" className="btn-secondary">
+            <button onClick={goHome} className="err5-btn-secondary">
               Go to Homepage
-            </Link>
+            </button>
           </div>
 
-          <div className="helpful-links">
-            <h3>While you wait:</h3>
-            <div className="links-grid">
-              <a
-                href="#"
-                onClick={(e) => { e.preventDefault(); window.location.reload(); }}
-                className="helpful-link"
-              >
-                <span className="link-icon">🔄</span>
-                <span className="link-text">Reload Page</span>
-              </a>
-              <Link href="/products" className="helpful-link">
-                <span className="link-icon">🛍️</span>
-                <span className="link-text">Browse Products</span>
-              </Link>
-              <Link href="/contact" className="helpful-link">
-                <span className="link-icon">📧</span>
-                <span className="link-text">Contact Support</span>
-              </Link>
-              <Link href="/cart" className="helpful-link">
-                <span className="link-icon">🛒</span>
-                <span className="link-text">View Cart</span>
-              </Link>
-            </div>
+          {/* Help links */}
+          <div className="err5-help">
+            <button onClick={goContact} className="err5-help-link">Contact Support</button>
+            <span className="err5-help-sep" />
+            <button onClick={() => { window.location.reload(); }} className="err5-help-link">Reload Page</button>
           </div>
 
-          <div className="error-code-info">
-            <p className="tech-info">Error Code: 500 | Server Error</p>
-          </div>
+          {/* Footer */}
+          <p className="err5-footer">Error 500 &middot; BuildAdda</p>
         </div>
       </div>
 
       <style jsx>{`
-        .server-status-visual {
-          position: relative;
-          display: flex;
-          justify-content: center;
-          margin-bottom: 2rem;
-        }
-
-        .server-icon-wrapper {
-          width: 120px;
-          height: 120px;
-          border-radius: 50%;
+        .err5 {
+          min-height: 100vh;
           display: flex;
           align-items: center;
           justify-content: center;
-          transition: all 0.5s;
+          background: #f8fafc;
+          padding: 20px;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
 
-        .server-icon-wrapper.down {
-          background: #fee2e2;
-          color: #dc2626;
-          animation: shake 0.5s ease-in-out infinite alternate;
+        .err5-card {
+          max-width: 440px;
+          width: 100%;
+          text-align: center;
+          padding: 48px 32px 36px;
+          background: #fff;
+          border-radius: 16px;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 12px 40px rgba(0,0,0,0.06);
         }
 
-        .server-icon-wrapper.checking {
-          background: #fef3c7;
-          color: #d97706;
-          animation: pulse-check 1.5s ease-in-out infinite;
-        }
+        .err5-illustration { margin-bottom: 28px; }
 
-        .server-icon-wrapper.up {
-          background: #d1fae5;
-          color: #059669;
-        }
-
-        @keyframes shake {
-          0% { transform: translateX(-2px); }
-          100% { transform: translateX(2px); }
-        }
-
-        @keyframes pulse-check {
-          0%, 100% { transform: scale(1); opacity: 1; }
-          50% { transform: scale(1.05); opacity: 0.8; }
-        }
-
-        .status-indicator {
-          position: absolute;
-          bottom: 8px;
-          right: calc(50% - 52px);
-          width: 20px;
-          height: 20px;
+        .err5-icon-ring {
+          width: 88px;
+          height: 88px;
           border-radius: 50%;
-          border: 3px solid white;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-
-        .status-indicator.red {
-          background: #ef4444;
-          animation: blink 1s infinite;
-        }
-
-        .status-indicator.yellow {
-          background: #f59e0b;
-          animation: blink 0.5s infinite;
-        }
-
-        .status-indicator.green {
-          background: #10b981;
-        }
-
-        @keyframes blink {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.3; }
-        }
-
-        .status-card {
-          max-width: 400px;
-          margin: 1.5rem auto;
-          padding: 1.25rem;
-          background: #f9fafb;
-          border: 1px solid #e5e7eb;
-          border-radius: 12px;
-        }
-
-        .status-row {
-          display: flex;
-          justify-content: space-between;
+          display: inline-flex;
           align-items: center;
-          padding: 8px 0;
+          justify-content: center;
+          transition: all 0.4s ease;
+        }
+        .err5-icon-ring.down { background: #fef2f2; color: #ef4444; }
+        .err5-icon-ring.checking { background: #fffbeb; color: #f59e0b; animation: err5-pulse 1.5s ease infinite; }
+        .err5-icon-ring.up { background: #f0fdf4; color: #16a34a; }
+
+        @keyframes err5-pulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.06); }
         }
 
-        .status-row + .status-row {
-          border-top: 1px solid #f3f4f6;
+        .err5-title {
+          font-size: 22px;
+          font-weight: 700;
+          color: #111827;
+          margin: 0 0 8px;
+          line-height: 1.3;
         }
 
-        .status-label {
+        .err5-subtitle {
           font-size: 14px;
           color: #6b7280;
+          margin: 0 0 20px;
+          line-height: 1.6;
         }
 
-        .status-value {
-          font-size: 14px;
-          font-weight: 600;
-          color: #374151;
+        .err5-status-row {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 12px;
+          margin-bottom: 16px;
         }
 
-        .status-badge {
+        .err5-badge {
           display: inline-flex;
           align-items: center;
           gap: 6px;
-          padding: 3px 10px;
-          border-radius: 20px;
-          font-size: 13px;
+          padding: 4px 12px;
+          border-radius: 100px;
+          font-size: 12px;
           font-weight: 600;
         }
+        .err5-badge.down { background: #fef2f2; color: #dc2626; }
+        .err5-badge.checking { background: #fffbeb; color: #d97706; }
+        .err5-badge.up { background: #f0fdf4; color: #16a34a; }
 
-        .badge-red { background: #fee2e2; color: #dc2626; }
-        .badge-yellow { background: #fef3c7; color: #d97706; }
-        .badge-green { background: #d1fae5; color: #059669; }
-
-        .badge-dot {
-          width: 8px;
-          height: 8px;
+        .err5-dot {
+          width: 7px;
+          height: 7px;
           border-radius: 50%;
+          flex-shrink: 0;
+        }
+        .err5-dot.down { background: #ef4444; animation: err5-blink 1.2s infinite; }
+        .err5-dot.checking { background: #f59e0b; animation: err5-blink 0.6s infinite; }
+        .err5-dot.up { background: #22c55e; }
+
+        @keyframes err5-blink {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.25; }
         }
 
-        .badge-dot.red { background: #ef4444; animation: blink 1s infinite; }
-        .badge-dot.yellow { background: #f59e0b; animation: blink 0.5s infinite; }
-        .badge-dot.green { background: #10b981; }
+        .err5-retry-count {
+          font-size: 12px;
+          color: #9ca3af;
+        }
 
-        .retry-bar {
-          margin-top: 12px;
-          height: 4px;
-          background: #e5e7eb;
-          border-radius: 2px;
+        .err5-progress {
+          height: 3px;
+          background: #f3f4f6;
+          border-radius: 3px;
           overflow: hidden;
+          margin-bottom: 24px;
         }
-
-        .retry-fill {
+        .err5-progress-fill {
           height: 100%;
           background: #ff6b35;
-          border-radius: 2px;
+          border-radius: 3px;
           transition: width 1s linear;
+        }
+
+        .err5-actions {
+          display: flex;
+          gap: 10px;
+          margin-bottom: 20px;
+        }
+
+        .err5-btn-primary,
+        .err5-btn-secondary {
+          flex: 1;
+          padding: 12px 16px;
+          border-radius: 10px;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          border: none;
+          transition: all 0.2s;
+        }
+
+        .err5-btn-primary {
+          background: #ff6b35;
+          color: #fff;
+        }
+        .err5-btn-primary:hover:not(:disabled) { background: #e85a2b; }
+        .err5-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .err5-btn-secondary {
+          background: #f3f4f6;
+          color: #374151;
+        }
+        .err5-btn-secondary:hover { background: #e5e7eb; }
+
+        .err5-help {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 16px;
+          margin-bottom: 24px;
+        }
+        .err5-help-link {
+          background: none;
+          border: none;
+          color: #6b7280;
+          font-size: 13px;
+          cursor: pointer;
+          text-decoration: underline;
+          text-underline-offset: 2px;
+          padding: 0;
+        }
+        .err5-help-link:hover { color: #ff6b35; }
+        .err5-help-sep {
+          width: 1px;
+          height: 14px;
+          background: #d1d5db;
+        }
+
+        .err5-footer {
+          font-size: 11px;
+          color: #d1d5db;
+          margin: 0;
+          letter-spacing: 0.5px;
+        }
+
+        @media (max-width: 480px) {
+          .err5-card { padding: 36px 20px 28px; }
+          .err5-title { font-size: 20px; }
+          .err5-actions { flex-direction: column; }
         }
       `}</style>
     </>
