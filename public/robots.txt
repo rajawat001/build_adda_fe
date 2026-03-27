@@ -10,7 +10,7 @@ Allow: /
 # Public pages to crawl
 Allow: /products
 Allow: /products/
-Disallow: /distributor/
+Allow: /distributor/
 Allow: /distributors
 Allow: /about
 Allow: /contact
@@ -26,11 +26,11 @@ Allow: /api/sitemap.xml
 # Block private/internal pages
 Disallow: /admin/
 Disallow: /api/
-Disallow: /distributor/dashboard
-Disallow: /distributor/orders
-Disallow: /distributor/products
-Disallow: /distributor/analytics
-Disallow: /distributor/profile
+Disallow: /distributor/dashboard/
+Disallow: /distributor/orders/
+Disallow: /distributor/products/
+Disallow: /distributor/analytics/
+Disallow: /distributor/profile/
 Disallow: /user/
 Disallow: /cart
 Disallow: /checkout
@@ -59,16 +59,16 @@ User-agent: Googlebot
 Allow: /
 Allow: /api/sitemap.xml
 Allow: /products/
-Disallow: /distributor/
+Allow: /distributor/
 Disallow: /admin/
 Disallow: /api/
 Disallow: /cart
 Disallow: /checkout
-Disallow: /distributor/dashboard
-Disallow: /distributor/orders
-Disallow: /distributor/products
-Disallow: /distributor/analytics
-Disallow: /distributor/profile
+Disallow: /distributor/dashboard/
+Disallow: /distributor/orders/
+Disallow: /distributor/products/
+Disallow: /distributor/analytics/
+Disallow: /distributor/profile/
 
 User-agent: Googlebot-Image
 Allow: /
@@ -80,12 +80,16 @@ User-agent: Bingbot
 Allow: /
 Allow: /api/sitemap.xml
 Allow: /products/
-Disallow: /distributor/
+Allow: /distributor/
 Disallow: /admin/
 Disallow: /api/
 Disallow: /cart
 Disallow: /checkout
-Disallow: /distributor/dashboard
+Disallow: /distributor/dashboard/
+Disallow: /distributor/orders/
+Disallow: /distributor/products/
+Disallow: /distributor/analytics/
+Disallow: /distributor/profile/
 
 # ───────────────────────────────────────
 # Yandex

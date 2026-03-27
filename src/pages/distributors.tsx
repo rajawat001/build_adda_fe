@@ -25,6 +25,7 @@ interface Distributor {
   isApproved: boolean;
   rating?: number;
   distance?: number;
+  productCount?: number;
 }
 
 const Distributors = () => {
@@ -295,7 +296,8 @@ const Distributors = () => {
       "@type": "LocalBusiness",
       "position": index + 1,
       "name": distributor.businessName,
-      "description": `Verified building materials distributor in ${distributor.city || 'Jaipur'}`,
+      "description": `Verified building materials distributor in ${distributor.city || 'Jaipur'}. ${distributor.productCount || 0} products available.`,
+      "url": `https://www.buildadda.in/distributor/${distributor.slug || distributor._id}`,
       "address": {
         "@type": "PostalAddress",
         "addressLocality": distributor.city || "Jaipur",
@@ -477,6 +479,13 @@ const Distributors = () => {
                       <span className="icon"><FiNavigation size={16} /></span>
                       <span>{distributor.state} - {distributor.pincode}</span>
                     </div>
+
+                    {distributor.productCount != null && distributor.productCount > 0 && (
+                      <div className="info-row">
+                        <span className="icon" style={{ fontSize: '16px' }}>📦</span>
+                        <span>{distributor.productCount} Products Available</span>
+                      </div>
+                    )}
 
                     {distributor.distance != null && distributor.distance > 0 && (
                       <div className="distance-badge">

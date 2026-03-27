@@ -297,7 +297,7 @@ const DistributorProfile = ({ ssrMeta }: { ssrMeta: SSRDistributorMeta | null })
           ogImage={ssrMeta?.profileImage || undefined}
           canonicalUrl={ssrMeta ? `https://www.buildadda.in/distributor/${ssrMeta.id}` : undefined}
           jsonLd={ssrJsonLd}
-          noindex={true}
+          noindex={false}
         />
         <Header />
         <div className={styles.loadingContainer}>
@@ -317,7 +317,7 @@ const DistributorProfile = ({ ssrMeta }: { ssrMeta: SSRDistributorMeta | null })
           description={ssrMeta ? `${ssrMeta.businessName} - Building Materials Distributor in ${ssrMeta.city}, ${ssrMeta.state}. ${ssrMeta.productCount} products available.` : 'Distributor not found'}
           ogImage={ssrMeta?.profileImage || undefined}
           canonicalUrl={ssrMeta ? `https://www.buildadda.in/distributor/${ssrMeta.id}` : undefined}
-          noindex={true}
+          noindex={false}
         />
         <Header />
         <div className={styles.errorContainer}>
@@ -341,7 +341,7 @@ const DistributorProfile = ({ ssrMeta }: { ssrMeta: SSRDistributorMeta | null })
         ogImage={distributor.profileImage || undefined}
         canonicalUrl={`https://www.buildadda.in/distributor/${distributor.slug || distributor._id}`}
         jsonLd={distributorJsonLd || undefined}
-        noindex={true}
+        noindex={false}
       />
       <Header />
 

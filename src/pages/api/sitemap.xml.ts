@@ -34,6 +34,30 @@ function escapeXml(str: string): string {
     .replace(/'/g, '&apos;');
 }
 
+async function fetchDistributors(): Promise<any[]> {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+    const res = await fetch(`${API_URL}/users/distributors?limit=1000`, {
+      signal: controller.signal,
+      headers: { 'Accept': 'application/json' }
+    });
+    clearTimeout(timeoutId);
+
+    if (!res.ok) {
+      console.error('Distributors API returned:', res.status);
+      return [];
+    }
+
+    const data = await res.json();
+    return data.distributors || [];
+  } catch (error: any) {
+    console.error('Error fetching distributors for sitemap:', error.message || error);
+    return [];
+  }
+}
+
 async function fetchProducts(): Promise<any[]> {
   try {
     const controller = new AbortController();
@@ -58,7 +82,7 @@ async function fetchProducts(): Promise<any[]> {
   }
 }
 
-function generateSitemapXml(staticPages: any[], products: any[]) {
+function generateSitemapXml(staticPages: any[], products: any[], distributors: any[]) {
   const today = new Date().toISOString().split('T')[0];
 
   let xml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -115,7 +139,18 @@ function generateSitemapXml(staticPages: any[], products: any[]) {
 `;
   }
 
-  // Distributor individual pages excluded from indexing — only /distributors listing page is indexed
+  // Individual distributor profile pages
+  for (const dist of distributors) {
+    if (!dist._id) continue;
+    const slug = dist.slug || dist._id;
+    xml += `  <url>
+    <loc>${SITE_URL}/distributor/${slug}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+`;
+  }
 
   xml += `</urlset>`;
   return xml;
@@ -126,15 +161,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
 
   try {
-    const products = await fetchProducts();
+    const [products, distributors] = await Promise.all([
+      fetchProducts(),
+      fetchDistributors(),
+    ]);
 
-    console.log(`Sitemap: ${staticPages.length} static, ${products.length} products`);
+    console.log(`Sitemap: ${staticPages.length} static, ${products.length} products, ${distributors.length} distributors`);
 
-    const sitemap = generateSitemapXml(staticPages, products);
+    const sitemap = generateSitemapXml(staticPages, products, distributors);
     res.status(200).send(sitemap);
   } catch (error) {
     console.error('Error generating sitemap:', error);
-    const sitemap = generateSitemapXml(staticPages, []);
+    const sitemap = generateSitemapXml(staticPages, [], []);
     res.status(200).send(sitemap);
   }
 }
