@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import DistributorLayout from '../../components/distributor/Layout';
-import { Button, Card, Badge, Modal, EmptyState, Loading } from '../../components/ui';
+import { Button, Card, Badge, Modal, EmptyState } from '../../components/ui';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { FilterDrawer, FilterButton, FilterSection, FilterRadioGroup } from '../../components/ui/FilterDrawer';
 import { useIsMobile } from '../../hooks';
 import {
@@ -322,7 +323,7 @@ const Products = () => {
   if (loading) {
     return (
       <DistributorLayout title="Products">
-        <Loading fullScreen text="Loading products..." />
+        <LoadingSpinner fullScreen message="Loading products..." />
       </DistributorLayout>
     );
   }

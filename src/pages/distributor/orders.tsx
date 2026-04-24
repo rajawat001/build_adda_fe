@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import DistributorLayout from '../../components/distributor/Layout';
-import { Button, Card, Badge, Modal, EmptyState, Loading, StatsCard } from '../../components/ui';
+import { Button, Card, Badge, Modal, EmptyState, StatsCard } from '../../components/ui';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { MobileDataCard, MobileDataCardList } from '../../components/ui/MobileDataCard';
 import { FilterDrawer, FilterButton, FilterSection } from '../../components/ui/FilterDrawer';
 import { useIsMobile } from '../../hooks';
@@ -279,7 +280,7 @@ const Orders = () => {
   if (loading) {
     return (
       <DistributorLayout title="Orders">
-        <Loading fullScreen text="Loading orders..." />
+        <LoadingSpinner fullScreen message="Loading orders..." />
       </DistributorLayout>
     );
   }

@@ -5,6 +5,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import authService, { User } from '../services/auth.service';
 import { getApiErrorMessage, scrollToError } from '../utils/api-error';
+import LoadingSpinner from '../components/common/LoadingSpinner';
 
 interface Address {
   _id?: string;
@@ -232,8 +233,8 @@ const Profile = () => {
       <>
         <SEO title="Profile" description="Manage your profile" />
         <Header />
-        <div className="profile-container">
-          <p>Loading...</p>
+        <div className="profile-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+          <LoadingSpinner size="large" message="Loading profile..." />
         </div>
         <Footer />
       </>

@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { FiArrowLeft, FiUser, FiPhone, FiMail, FiMapPin, FiLink, FiShoppingCart, FiDollarSign, FiPackage, FiClock } from 'react-icons/fi';
 import AdminLayout from '../../../components/admin/Layout';
 import api from '../../../services/api';
+import LoadingSpinner from '../../../components/common/LoadingSpinner';
 
 interface OfflineCustomer {
   _id: string;
@@ -86,7 +87,9 @@ const OfflineCustomerDetailPage: React.FC = () => {
   if (loading) {
     return (
       <AdminLayout>
-        <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--admin-text-secondary)' }}>Loading...</div>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem' }}>
+          <LoadingSpinner size="large" message="Loading..." />
+        </div>
       </AdminLayout>
     );
   }

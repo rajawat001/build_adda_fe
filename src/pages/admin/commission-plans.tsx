@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/admin/Layout';
-import { Card, Loading, Button, Badge, Modal, Table } from '../../components/ui';
+import { Card, Button, Badge, Modal, Table } from '../../components/ui';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { FiPlus, FiEdit2, FiToggleLeft, FiToggleRight } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import commissionService from '../../services/commission.service';
@@ -136,7 +137,7 @@ const CommissionPlansPage = () => {
     marginBottom: '0.375rem',
   };
 
-  if (loading) return <AdminLayout title="Commission Plans"><Loading /></AdminLayout>;
+  if (loading) return <AdminLayout title="Commission Plans"><LoadingSpinner /></AdminLayout>;
 
   return (
     <AdminLayout title="Commission Plans" requiredPermission="subscriptions.view">

@@ -3,7 +3,8 @@ import '../../utils/chartSetup';
 import { useRouter } from 'next/router';
 import DistributorLayout from '../../components/distributor/Layout';
 import OrderNotifications from '../../components/distributor/OrderNotifications';
-import { StatsCard, Card, Loading, Button } from '../../components/ui';
+import { StatsCard, Card, Button } from '../../components/ui';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { useIsMobile } from '../../hooks';
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import {
@@ -119,7 +120,7 @@ const Dashboard = () => {
   if (loading) {
     return (
       <DistributorLayout title="Dashboard">
-        <Loading fullScreen text="Loading dashboard..." />
+        <LoadingSpinner fullScreen message="Loading dashboard..." />
       </DistributorLayout>
     );
   }

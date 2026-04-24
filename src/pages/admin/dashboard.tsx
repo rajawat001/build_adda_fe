@@ -22,6 +22,7 @@ import {
 } from 'react-icons/fi';
 import api from '../../services/api';
 import { formatDistanceToNow } from 'date-fns';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
 
 interface DashboardStats {
   totalRevenue: number;
@@ -268,9 +269,7 @@ const AdminDashboard = () => {
   if (loading) {
     return (
       <AdminLayout title="Dashboard">
-        <div className="loading-overlay">
-          <div className="loading-spinner" />
-        </div>
+        <LoadingSpinner fullScreen message="Loading dashboard..." />
       </AdminLayout>
     );
   }

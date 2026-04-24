@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/admin/Layout';
-import { Card, Loading, Button, Badge, Modal, StatsCard } from '../../components/ui';
+import { Card, Button, Badge, Modal, StatsCard } from '../../components/ui';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { FiDollarSign, FiLock, FiAlertTriangle, FiUsers, FiUnlock, FiEdit2, FiEye } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import commissionService from '../../services/commission.service';
@@ -172,7 +173,7 @@ const CommissionManagementPage = () => {
 
       {/* Wallets Table */}
       <div style={{ background: '#ffffff', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-        {loading ? <div style={{ padding: '2rem', textAlign: 'center' }}><Loading /></div> : (
+        {loading ? <div style={{ padding: '2rem', textAlign: 'center' }}><LoadingSpinner /></div> : (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
@@ -245,7 +246,7 @@ const CommissionManagementPage = () => {
 
       {/* Wallet Detail Modal */}
       <Modal isOpen={!!selectedWallet} title={`Wallet: ${selectedWallet?.distributor?.businessName || ''}`} onClose={() => setSelectedWallet(null)}>
-          {detailLoading ? <Loading /> : selectedWallet ? (
+          {detailLoading ? <LoadingSpinner /> : selectedWallet ? (
             <div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
                 <div><div style={{ fontSize: '0.75rem', color: '#6b7280' }}>Balance</div><div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#ef4444' }}>₹{selectedWallet.balance?.toLocaleString('en-IN')}</div></div>

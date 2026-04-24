@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import AdminLayout from '../../components/admin/Layout';
 import api from '../../services/api';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
 import {
   FiMonitor,
   FiUsers,
@@ -205,7 +206,7 @@ const LiveMonitor = () => {
     return (
       <AdminLayout title="Live Monitor">
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
-          <div className="loading-spinner" />
+          <LoadingSpinner size="large" message="Loading monitor..." />
         </div>
       </AdminLayout>
     );

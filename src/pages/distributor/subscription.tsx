@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import DistributorLayout from '../../components/distributor/Layout';
-import { Card, Loading, Button, Badge, Modal } from '../../components/ui';
+import { Card, Button, Badge, Modal } from '../../components/ui';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { BottomSheet } from '../../components/ui/BottomSheet';
 import { useIsMobile } from '../../hooks';
 import {
@@ -266,7 +267,7 @@ const SubscriptionPage = () => {
   if (loading) {
     return (
       <DistributorLayout title="Subscription">
-        <Loading fullScreen text="Loading subscription details..." />
+        <LoadingSpinner fullScreen message="Loading subscription details..." />
       </DistributorLayout>
     );
   }

@@ -6,6 +6,7 @@ import Footer from '../components/Footer';
 import ProductCard from '../components/ProductCard';
 import productService from '../services/product.service';
 import { Product } from '../types';
+import LoadingSpinner from '../components/common/LoadingSpinner';
 
 const Wishlist = () => {
   const [wishlistItems, setWishlistItems] = useState<Product[]>([]);
@@ -105,8 +106,8 @@ const Wishlist = () => {
       <>
         <SEO title="Wishlist" description="Your wishlist items" />
         <Header />
-        <div className="wishlist-container">
-          <p>Loading...</p>
+        <div className="wishlist-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+          <LoadingSpinner size="large" message="Loading wishlist..." />
         </div>
         <Footer />
       </>

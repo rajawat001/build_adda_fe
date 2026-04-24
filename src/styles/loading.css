@@ -94,6 +94,71 @@
   z-index: 9998;
 }
 
+/* Logo Spinner — logo center with rotating ring */
+.loading-logo-spinner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-logo-spinner-small {
+  width: 56px;
+  height: 56px;
+}
+
+.loading-logo-spinner-medium {
+  width: 80px;
+  height: 80px;
+}
+
+.loading-logo-spinner-large {
+  width: 110px;
+  height: 110px;
+}
+
+.logo-spinner-ring {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border: 3px solid #f3f4f6;
+  border-top-color: #d97706;
+  border-right-color: #f59e0b;
+  border-radius: 50%;
+  animation: spinner-rotate 1s linear infinite;
+}
+
+.logo-spinner-image {
+  width: 60%;
+  height: 60%;
+  object-fit: contain;
+  border-radius: 50%;
+  animation: logo-pulse 1.5s ease-in-out infinite;
+  z-index: 1;
+}
+
+@keyframes logo-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(0.9);
+    opacity: 0.7;
+  }
+}
+
+@media (max-width: 640px) {
+  .loading-logo-spinner-large {
+    width: 90px;
+    height: 90px;
+  }
+  .loading-logo-spinner-medium {
+    width: 70px;
+    height: 70px;
+  }
+}
+
 /* Loading Skeleton */
 .skeleton {
   background: linear-gradient(90deg, #f3f4f6 0%, #e5e7eb 50%, #f3f4f6 100%);

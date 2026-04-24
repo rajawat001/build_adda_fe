@@ -8,6 +8,7 @@ import Filter from '../components/Filter';
 import productService from '../services/product.service';
 import { Product, Category } from '../types';
 import { FiFilter, FiX, FiMapPin } from 'react-icons/fi';
+import LoadingSpinner from '../components/common/LoadingSpinner';
 import { useLocation } from '../context/LocationContext';
 
 const Products = () => {
@@ -295,8 +296,8 @@ const Products = () => {
       <>
         <SEO title="Products" description="Browse building materials" />
         <Header />
-        <div className="products-container">
-          <p>Loading products...</p>
+        <div className="products-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+          <LoadingSpinner size="large" message="Loading products..." />
         </div>
         <Footer />
       </>

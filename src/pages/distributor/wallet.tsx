@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import DistributorLayout from '../../components/distributor/Layout';
-import { Card, Loading, Button, Badge } from '../../components/ui';
+import { Card, Button, Badge } from '../../components/ui';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { FiDollarSign, FiAlertTriangle, FiLock, FiClock, FiArrowDownRight, FiArrowUpRight, FiRefreshCw } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import commissionService from '../../services/commission.service';
@@ -82,7 +83,7 @@ const WalletPage = () => {
   };
 
   if (loading) {
-    return <DistributorLayout title="Commission Wallet"><Loading /></DistributorLayout>;
+    return <DistributorLayout title="Commission Wallet"><LoadingSpinner /></DistributorLayout>;
   }
 
   if (!wallet) {

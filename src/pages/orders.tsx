@@ -6,6 +6,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import orderService from '../services/order.service';
 import { motion, AnimatePresence } from 'framer-motion';
+import LoadingSpinner from '../components/common/LoadingSpinner';
 import {
   FiShoppingBag,
   FiPackage,
@@ -152,11 +153,8 @@ const Orders = () => {
       <>
         <SEO title="My Orders" description="View your order history" />
         <Header />
-        <div className="orders-page">
-          <div className="loading-container">
-            <div className="spinner"></div>
-            <p>Loading your orders...</p>
-          </div>
+        <div className="orders-page" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+          <LoadingSpinner size="large" message="Loading your orders..." />
         </div>
         <Footer />
       </>

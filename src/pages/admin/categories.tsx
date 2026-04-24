@@ -4,6 +4,7 @@ import AdminLayout from '../../components/admin/Layout';
 import StatCard from '../../components/admin/StatCard';
 import ConfirmDialog from '../../components/admin/ConfirmDialog';
 import { motion, AnimatePresence } from 'framer-motion';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { toast } from 'react-toastify';
 import api from '../../services/api';
 import { useConfirmDialog } from '../../hooks/useAdminTable';
@@ -347,7 +348,7 @@ const CategoriesManagement: React.FC = () => {
         >
           {loading ? (
             <div style={{ textAlign: 'center', padding: '3rem' }}>
-              <div className="loading-spinner" style={{ margin: '0 auto' }} />
+              <LoadingSpinner size="medium" message="Loading categories..." />
             </div>
           ) : categories.length > 0 ? (
             renderCategoryTree(categories)

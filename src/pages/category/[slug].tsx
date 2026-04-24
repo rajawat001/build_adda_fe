@@ -6,6 +6,7 @@ import Footer from '../../components/Footer';
 import ProductCard from '../../components/ProductCard';
 import productService from '../../services/product.service';
 import { Product, Category } from '../../types';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { getApiErrorMessage, scrollToError } from '../../utils/api-error';
 
 const CategoryPage: React.FC = () => {
@@ -192,10 +193,8 @@ const CategoryPage: React.FC = () => {
       <>
         <SEO title="Loading Category..." noindex />
         <Header />
-        <div className="category-page">
-          <div className="category-container">
-            <p className="loading-text">Loading category...</p>
-          </div>
+        <div className="category-page" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+          <LoadingSpinner size="large" message="Loading category..." />
         </div>
         <Footer />
       </>

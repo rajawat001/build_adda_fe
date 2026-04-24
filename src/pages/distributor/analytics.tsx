@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import '../../utils/chartSetup';
 import { useRouter } from 'next/router';
 import DistributorLayout from '../../components/distributor/Layout';
-import { Button, Card, Loading, Badge } from '../../components/ui';
+import { Button, Card, Badge } from '../../components/ui';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { Line, Bar, Doughnut, Pie } from 'react-chartjs-2';
 import api from '../../services/api';
 import { toast } from 'react-toastify';
@@ -165,7 +166,7 @@ const Analytics = () => {
   if (loading) {
     return (
       <DistributorLayout>
-        <Loading fullScreen text="Loading analytics..." />
+        <LoadingSpinner fullScreen message="Loading analytics..." />
       </DistributorLayout>
     );
   }

@@ -6,6 +6,7 @@ import Footer from '../components/Footer';
 import api from '../services/api';
 import { useLocation } from '../context/LocationContext';
 import { FiFilter, FiX, FiMapPin, FiSearch, FiMail, FiPhone, FiNavigation, FiStar, FiCheckCircle, FiArrowRight } from 'react-icons/fi';
+import LoadingSpinner from '../components/common/LoadingSpinner';
 
 interface Distributor {
   _id: string;
@@ -45,6 +46,7 @@ const Distributors = () => {
   const { location: userLocation, isLoading: locationLoading, retryDetection } = useLocation();
 
   const locationResolvedRef = useRef(false);
+  const requestIdRef = useRef(0);
 
   useEffect(() => {
     const searchParam = router.query.search as string | undefined;
@@ -58,20 +60,21 @@ const Distributors = () => {
     }
 
     if (locationLoading && !locationResolvedRef.current) {
-      // Still detecting location — show all distributors immediately
-      setActiveSearch('');
-      setIsNearbyMode(false);
-      fetchAllDistributors(1, true);
+      // Still detecting location — just show loading, don't fetch yet
+      // This prevents race condition where fetchAll overwrites fetchNearby
       return;
     }
 
     locationResolvedRef.current = true;
 
+    // Increment request ID to cancel stale responses
+    const currentRequest = ++requestIdRef.current;
+
     if (userLocation) {
-      // Location available — auto-filter by location
+      // Location available — show nearby + same city distributors
       setActiveSearch('');
       setIsNearbyMode(true);
-      fetchNearbyDistributors();
+      fetchNearbyDistributors(currentRequest);
     } else {
       // No location (denied or unavailable) — show all
       setActiveSearch('');
@@ -93,7 +96,7 @@ const Distributors = () => {
     };
   }, [showMobileFilters]);
 
-  const fetchNearbyDistributors = async () => {
+  const fetchNearbyDistributors = async (reqId?: number) => {
     if (!userLocation) return;
     setLoading(true);
     setNoLocalResults(false);
@@ -101,6 +104,8 @@ const Distributors = () => {
       const response = await api.get(
         `/users/distributors/nearby?pincode=${userLocation.pincode}&city=${encodeURIComponent(userLocation.city)}`
       );
+      // Ignore stale response if a newer request was made
+      if (reqId !== undefined && reqId !== requestIdRef.current) return;
       const results = response.data.distributors || [];
       if (results.length > 0) {
         setDistributors(results);
@@ -113,6 +118,7 @@ const Distributors = () => {
       }
     } catch (error) {
       console.error('No nearby distributors:', error);
+      if (reqId !== undefined && reqId !== requestIdRef.current) return;
       setNoLocalResults(true);
       await fetchAllDistributors(1, true);
     } finally {
@@ -129,6 +135,10 @@ const Distributors = () => {
       }
 
       let url = `/users/distributors?page=${pageNum}&limit=20`;
+      // Pass location params so backend shows city + nearby pincode distributors
+      if (userLocation && !search && !activeSearch) {
+        url += `&city=${encodeURIComponent(userLocation.city)}&pincode=${userLocation.pincode}`;
+      }
       const searchTerm = search ?? activeSearch;
       if (searchTerm) {
         url += `&search=${encodeURIComponent(searchTerm)}`;
@@ -259,8 +269,8 @@ const Distributors = () => {
       <>
         <SEO title="Distributors" description="Find distributors near you" />
         <Header />
-        <div className="distributors-container">
-          <p>Loading distributors...</p>
+        <div className="distributors-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+          <LoadingSpinner size="large" message="Loading distributors..." />
         </div>
         <Footer />
       </>

@@ -11,6 +11,7 @@ import { Product } from '../../types';
 import { FiShare2 } from 'react-icons/fi';
 import ShareSheet from '../../components/ShareSheet';
 import styles from '../../styles/distributor-profile.module.css';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
 
 interface Distributor {
   _id: string;
@@ -301,8 +302,7 @@ const DistributorProfile = ({ ssrMeta }: { ssrMeta: SSRDistributorMeta | null })
         />
         <Header />
         <div className={styles.loadingContainer}>
-          <div className={styles.loader}></div>
-          <p>Loading distributor information...</p>
+          <LoadingSpinner size="large" message="Loading distributor information..." />
         </div>
         <Footer />
       </>

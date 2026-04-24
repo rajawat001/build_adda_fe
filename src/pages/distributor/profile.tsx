@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import DistributorLayout from '../../components/distributor/Layout';
-import { Button, Card, Loading, Badge } from '../../components/ui';
+import { Button, Card, Badge } from '../../components/ui';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { useIsMobile } from '../../hooks';
 import { FiEdit, FiSave, FiX, FiUser, FiMail, FiPhone, FiMapPin, FiCheck, FiClock, FiStar } from 'react-icons/fi';
 import { toast } from 'react-toastify';
@@ -131,7 +132,7 @@ const Profile = () => {
   if (loading) {
     return (
       <DistributorLayout title="Profile">
-        <Loading fullScreen text="Loading profile..." />
+        <LoadingSpinner fullScreen message="Loading profile..." />
       </DistributorLayout>
     );
   }

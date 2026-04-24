@@ -4,6 +4,7 @@ import AdminLayout from '../../components/admin/Layout';
 import StatCard from '../../components/admin/StatCard';
 import FilterPanel, { FilterOption } from '../../components/admin/FilterPanel';
 import ExportButton from '../../components/admin/ExportButton';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { motion } from 'framer-motion';
 import api from '../../services/api';
 import { useTableState } from '../../hooks/useAdminTable';
@@ -276,7 +277,7 @@ const ActivityLogsPage: React.FC = () => {
         >
           {loading ? (
             <div style={{ textAlign: 'center', padding: '3rem' }}>
-              <div className="loading-spinner" style={{ margin: '0 auto' }} />
+              <LoadingSpinner size="medium" message="Loading logs..." />
             </div>
           ) : logs.length > 0 ? (
             <div style={{ background: 'white', borderRadius: '12px', border: '1px solid var(--admin-border-primary)', padding: '2rem' }}>

@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import DistributorLayout from '../../components/distributor/Layout';
-import { Card, Loading, Button } from '../../components/ui';
+import { Card, Button } from '../../components/ui';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { FiCreditCard, FiCheck, FiX, FiClock } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import commissionService from '../../services/commission.service';
@@ -126,7 +127,7 @@ const CommissionPaymentPage = () => {
   };
 
   if (loading) {
-    return <DistributorLayout title="Commission Payment"><Loading /></DistributorLayout>;
+    return <DistributorLayout title="Commission Payment"><LoadingSpinner /></DistributorLayout>;
   }
 
   if (!wallet) {

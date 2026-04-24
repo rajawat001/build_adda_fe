@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/router';
 import DistributorLayout from '../../components/distributor/Layout';
-import { Button, Card, Loading } from '../../components/ui';
+import { Button, Card } from '../../components/ui';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { useIsMobile } from '../../hooks';
 import { toast } from 'react-toastify';
 import api from '../../services/api';

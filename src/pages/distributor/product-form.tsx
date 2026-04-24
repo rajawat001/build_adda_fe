@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import DistributorLayout from '../../components/distributor/Layout';
-import { Button, Card, Badge, Loading } from '../../components/ui';
+import { Button, Card, Badge } from '../../components/ui';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { FiUpload, FiX, FiCheck, FiImage, FiArrowLeft, FiCamera, FiPlus, FiChevronDown, FiChevronUp, FiStar } from 'react-icons/fi';
 import { useDropzone } from 'react-dropzone';
 import { toast } from 'react-toastify';
@@ -350,7 +351,7 @@ const ProductForm = () => {
   if (fetchingProduct) {
     return (
       <DistributorLayout title={isEditing ? 'Edit Product' : 'Add Product'}>
-        <Loading fullScreen text="Loading product..." />
+        <LoadingSpinner fullScreen message="Loading product..." />
       </DistributorLayout>
     );
   }

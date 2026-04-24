@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import DistributorLayout from '../../components/distributor/Layout';
-import { Button, Card, Badge, Loading } from '../../components/ui';
+import { Button, Card, Badge } from '../../components/ui';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { useIsMobile } from '../../hooks';
 import { toast } from 'react-toastify';
 import { getManualOrders, getManualOrderStats } from '../../services/manualOrder.service';
@@ -164,7 +165,7 @@ const ManualOrdersPage = () => {
 
         {/* Orders List */}
         {loading ? (
-          <Loading text="Loading orders..." />
+          <LoadingSpinner message="Loading orders..." />
         ) : orders.length === 0 ? (
           <Card className="p-6">
             <div style={{ textAlign: 'center' }}>

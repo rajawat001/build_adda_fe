@@ -6,6 +6,7 @@ import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import orderService from '../../services/order.service';
 import { getApiErrorMessage, scrollToError } from '../../utils/api-error';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
 
 interface OrderItem {
   product: string;
@@ -140,8 +141,8 @@ export default function OrderDetail() {
       <>
         <SEO title="Loading Order..." />
         <Header />
-        <div className="order-detail-container">
-          <div className="loading">Loading order details...</div>
+        <div className="order-detail-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+          <LoadingSpinner size="large" message="Loading order details..." />
         </div>
         <Footer />
       </>
